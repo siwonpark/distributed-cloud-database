@@ -13,6 +13,8 @@ import logger.LogSetup;
 import static app_kvClient.PrintUtils.*;
 import client.KVCommInterface;
 import client.KVStore;
+import shared.messages.KVMessage.*;
+import shared.messages.Message;
 
 
 public class KVClient implements IKVClient {
@@ -30,7 +32,8 @@ public class KVClient implements IKVClient {
     @Override
     public void newConnection(String hostname, int port) throws Exception{
         // TODO Auto-generated method stub
-        KVStore kvStore = new KVStore(hostname, port);
+        kvStore = new KVStore(hostname, port);
+        kvStore.connect();
     }
 
     @Override
@@ -82,20 +85,20 @@ public class KVClient implements IKVClient {
                     logger.warn("An unexpected error occurred!", e);
                 }
             } else {
-                printError("Invalid number of parameters!");
+                printError("Invalid number of parameters! Use the help command for usage instructions.");
             }
 
-        } else  if (tokens[0].equals("send")) {
-            if(tokens.length >= 2) {
+        } else  if (tokens[0].equals("get")) {
+            if(tokens.length == 2) {
                 if(kvStore != null && kvStore.isRunning()){
-                    StringBuilder msg = new StringBuilder();
-                    for(int i = 1; i < tokens.length; i++) {
-                        msg.append(tokens[i]);
-                        if (i != tokens.length -1 ) {
-                            msg.append(" ");
-                        }
+                    String key = tokens[1];
+                    try {
+                        kvStore.get(key);
+                    } catch (Exception e){
+                        String errMsg = String.format("Unable to get key %s! ", key) + e;
+                        printError(errMsg);
                     }
-//                    sendMessage(msg.toString());
+
                 } else {
                     printError("Not connected!");
                 }
@@ -103,21 +106,40 @@ public class KVClient implements IKVClient {
                 printError("No message passed!");
             }
 
+        } else if (tokens[0].equals("put")) {
+            if(tokens.length == 2 || tokens.length == 3) {
+                if(kvStore != null && kvStore.isRunning()){
+                    String key = tokens[1];
+                    String value = tokens.length == 3? tokens[2]  : "";
+                    try {
+                        kvStore.put(key, value);
+                    } catch (Exception e){
+                        String errMsg = tokens.length == 3?
+                                String.format("Unable to put value %s into key %s! ", value, key) + e :
+                                String.format("Unable to delete entry corresponding to key %s! ", key) + e;
+                        printError(errMsg);
+                    }
+
+                } else {
+                    printError("Not connected!");
+                }
+            } else {
+                printError("No message passed!");
+            }
         } else if(tokens[0].equals("disconnect")) {
             disconnect();
-
         } else if(tokens[0].equals("logLevel")) {
             if(tokens.length == 2) {
                 String level = setLevel(tokens[1]);
                 if(level.equals(LogSetup.UNKNOWN_LEVEL)) {
-                    printError("No valid log level!");
+                    printError("Not a valid log level!");
                     printPossibleLogLevels();
                 } else {
                     System.out.println(PROMPT +
                             "Log level changed to level " + level);
                 }
             } else {
-                printError("Invalid number of parameters!");
+                printError("Invalid number of parameters! Use the help command to see usage instructions");
             }
 
         } else if(tokens[0].equals("help")) {
