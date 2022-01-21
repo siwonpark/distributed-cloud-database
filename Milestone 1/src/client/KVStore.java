@@ -3,6 +3,8 @@ package client;
 import shared.messages.KVMessage;
 
 public class KVStore implements KVCommInterface {
+	private boolean running = false;
+
 	/**
 	 * Initialize KVStore with address and port of KVServer
 	 * @param address the address of the KVServer
@@ -33,4 +35,9 @@ public class KVStore implements KVCommInterface {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	public boolean isRunning() {
+		return running;
+	}
+
 }
