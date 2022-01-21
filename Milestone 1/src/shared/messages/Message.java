@@ -1,0 +1,108 @@
+package shared.messages;
+
+import java.io.Serializable;
+
+/**
+ * Represents a simple text message, which is intended to be received and sent 
+ * by the server.
+ */
+public class Message implements Serializable, KVMessage {
+
+	private static final long serialVersionUID = 5549512212003782618L;
+	private String key;
+	private String value;
+	private StatusType status;
+
+	private byte[] msgBytes;
+//	private static final char LINE_FEED = 0x0A;
+//	private static final char RETURN = 0x0D;
+	private static final char START_OF_TEXT = 0x02;
+	private static final char END_OF_TEXT = 0x03;
+
+    /**
+     * Constructs a Message object with a given array of bytes that
+     * forms the message.
+     *
+     *
+     */
+	public Message(byte[] keyBytes, byte[] valueBytes, byte[] statusBytes) {
+		this.key = new String(keyBytes).trim();
+		this.value = new String(valueBytes).trim();
+		this.status = StatusType.values()[Integer.parseInt(new String(statusBytes))];
+	}
+
+	/**
+     * Constructs a TextMessage object with a given String that
+     * forms the message.
+     *
+     * @param key the String that forms the key
+	 *
+	 *
+     */
+	public Message(String key, String value, StatusType status) {
+		this.key = key;
+		this.value = value;
+		this.status = status;
+		this.msgBytes = this.toByteArray(key, status, value);
+	}
+
+	/**
+	 * Returns an array of bytes that represent the ASCII coded message content.
+	 * 
+	 * @return the content of this message as an array of bytes 
+	 * 		in ASCII coding.
+	 */
+	public byte[] getMsgBytes() {
+		return msgBytes;
+	}
+
+	private byte[] wrapTextWithCtrChars(String text) {
+		byte[] textBytes = text.getBytes();
+		byte[] ctrBytes = new byte[]{START_OF_TEXT, END_OF_TEXT};
+
+		byte[] tmp = new byte[textBytes.length + ctrBytes.length];
+		System.arraycopy(ctrBytes, 0, tmp, 0, 1);
+		System.arraycopy(textBytes, 0, tmp, 1, textBytes.length);
+		System.arraycopy(ctrBytes, 1, tmp, tmp.length - 1, 1);
+		return tmp;
+	}
+	
+	private byte[] toByteArray(String key, StatusType status, String value) {
+		byte[] statusBytes = String.valueOf(status.ordinal()).getBytes();
+		byte[] wrappedKey = wrapTextWithCtrChars(key);
+		byte[] wrappedValue = wrapTextWithCtrChars(value);
+		byte[] tmp = new byte[statusBytes.length + wrappedKey.length + wrappedValue.length];
+
+		System.arraycopy(statusBytes, 0, tmp, 0, statusBytes.length);
+		System.arraycopy(wrappedKey, 0, tmp, statusBytes.length, wrappedKey.length);
+		System.arraycopy(wrappedValue, 0, tmp, statusBytes.length + wrappedKey.length, wrappedValue.length);
+
+		return tmp;
+	}
+
+	private byte[] toByteArray(String key, StatusType status) {
+		byte[] statusBytes = String.valueOf(status.ordinal()).getBytes();
+		byte[] wrappedKey = wrapTextWithCtrChars(key);
+		byte[] tmp = new byte[statusBytes.length + wrappedKey.length];
+
+		System.arraycopy(statusBytes, 0, tmp, 0, statusBytes.length);
+		System.arraycopy(wrappedKey, 0, tmp, statusBytes.length, wrappedKey.length);
+
+		return tmp;
+	}
+
+	@Override
+	public String getKey() {
+		return this.key;
+	}
+
+	@Override
+	public String getValue() {
+		return this.value;
+	}
+
+	@Override
+	public StatusType getStatus() {
+		return this.status;
+	}
+}
