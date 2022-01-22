@@ -57,9 +57,11 @@ public class KVClient implements IKVClient {
         }
     }
 
-    private void handleCommand(String cmdLine) {
+    public void handleCommand(String cmdLine) {
+        if(cmdLine == null || cmdLine.isEmpty() ){
+            return;
+        }
         String[] tokens = cmdLine.split("\\s+");
-
         if(tokens[0].equals("quit")) {
             stop = true;
             disconnect();
@@ -103,7 +105,7 @@ public class KVClient implements IKVClient {
                     printError("Not connected!");
                 }
             } else {
-                printError("No message passed!");
+                printError("Invalid number of parameters. Use the help command to see usage instructions");
             }
 
         } else if (tokens[0].equals("put")) {
@@ -124,7 +126,7 @@ public class KVClient implements IKVClient {
                     printError("Not connected!");
                 }
             } else {
-                printError("No message passed!");
+                printError("Invalid number of parameters. Use the help command to see usage instructions");
             }
         } else if(tokens[0].equals("disconnect")) {
             disconnect();
