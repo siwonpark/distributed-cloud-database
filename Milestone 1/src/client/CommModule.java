@@ -45,11 +45,11 @@ public class CommModule implements ICommModule {
     };
 
     @Override
-    public Message receiveMessage(){
+    public Message receiveMessage() throws IOException {
         return null;
     };
     @Override
-    public void sendMessage(Message message){
+    public void sendMessage(Message message) throws IOException{
 
     };
 

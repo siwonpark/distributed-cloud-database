@@ -10,7 +10,7 @@ public interface ICommModule {
 
     public void disconnect() throws IOException;
 
-    public Message receiveMessage();
+    public Message receiveMessage() throws IOException;
 
-    public void sendMessage(Message msg);
+    public void sendMessage(Message msg) throws IOException;
 }
