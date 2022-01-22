@@ -17,7 +17,7 @@ import shared.messages.KVMessage.*;
 import shared.messages.Message;
 
 
-public class KVClient implements IKVClient {
+public class KVClient implements IKVClient, ClientSocketListener {
 
     private static Logger logger = Logger.getRootLogger();
     private String PROMPT = PrintUtils.PROMPT;
@@ -184,6 +184,30 @@ public class KVClient implements IKVClient {
             return Level.OFF.toString();
         } else {
             return LogSetup.UNKNOWN_LEVEL;
+        }
+    }
+
+    @Override
+    public void handleNewMessage(Message msg) {
+        if(!stop) {
+            // TODO: print the status prompt
+            System.out.print(PROMPT);
+        }
+    }
+
+    @Override
+    public void handleStatus(SocketStatus status) {
+        if(status == SocketStatus.CONNECTED) {
+
+        } else if (status == SocketStatus.DISCONNECTED) {
+            System.out.print(PROMPT);
+            System.out.println("Connection terminated: "
+                    + serverAddress + " / " + serverPort);
+
+        } else if (status == SocketStatus.CONNECTION_LOST) {
+            System.out.println("Connection lost: "
+                    + serverAddress + " / " + serverPort);
+            System.out.print(PROMPT);
         }
     }
 
