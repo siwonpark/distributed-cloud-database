@@ -13,6 +13,7 @@ import logger.LogSetup;
 import static app_kvClient.PrintUtils.*;
 import client.KVCommInterface;
 import client.KVStore;
+import shared.messages.KVMessage;
 import shared.messages.KVMessage.*;
 import shared.messages.Message;
 
@@ -33,6 +34,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
     public void newConnection(String hostname, int port) throws Exception{
         // TODO Auto-generated method stub
         kvStore = new KVStore(hostname, port);
+        kvStore.addListener(this);
         kvStore.connect();
     }
 
@@ -83,7 +85,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                     printError("Could not establish connection!");
                     logger.warn("Could not establish connection!", e);
                 } catch (Exception e) {
-                    printError("An unexpected error occurred!");
+                    printError("An unexpected error occurred while trying to connect! Please try again.");
                     logger.warn("An unexpected error occurred!", e);
                 }
             } else {
@@ -95,7 +97,8 @@ public class KVClient implements IKVClient, ClientSocketListener {
                 if(kvStore != null && kvStore.isRunning()){
                     String key = tokens[1];
                     try {
-                        kvStore.get(key);
+                        KVMessage response = kvStore.get(key);
+                        printResponseToUser(response);
                     } catch (Exception e){
                         String errMsg = String.format("Unable to get key %s! ", key) + e;
                         printError(errMsg);
@@ -112,9 +115,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
             if(tokens.length == 2 || tokens.length == 3) {
                 if(kvStore != null && kvStore.isRunning()){
                     String key = tokens[1];
-                    String value = tokens.length == 3? tokens[2]  : "";
+                    String value = tokens.length == 3? tokens[2]  : null;
                     try {
-                        kvStore.put(key, value);
+                        KVMessage response = kvStore.put(key, value);
+                        printResponseToUser(response);
                     } catch (Exception e){
                         String errMsg = tokens.length == 3?
                                 String.format("Unable to put value %s into key %s! ", value, key) + e :

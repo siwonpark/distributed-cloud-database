@@ -32,12 +32,12 @@ public class Message implements Serializable, KVMessage {
 	}
 
 	/**
-     * Constructs a TextMessage object with a given String that
+     * Constructs a Message object with a given String that
      * forms the message.
      *
      * @param key the String that forms the key
-	 *
-	 *
+	 * @param value the String that forms the value
+	 * @param status the StatusType of the message
      */
 	public Message(String key, String value, StatusType status) {
 		this.key = key;

@@ -8,7 +8,7 @@ public interface ICommModule {
 
     public void connect() throws IOException;
 
-    public void disconnect();
+    public void disconnect() throws IOException;
 
     public Message receiveMessage();
 

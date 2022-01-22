@@ -1,5 +1,7 @@
 package app_kvClient;
 
+import shared.messages.KVMessage;
+
 public class PrintUtils {
 
 
@@ -50,5 +52,18 @@ public class PrintUtils {
                 + "Possible log levels are:");
         System.out.println(PROMPT
                 + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
+    }
+
+    public static void printResponseToUser(KVMessage message){
+        String key = message.getKey();
+        String value = message.getValue();
+        KVMessage.StatusType status = message.getStatus();
+        StringBuilder outputString = new StringBuilder("The server replied with: ");
+        outputString.append("Status: " + status);
+        outputString.append("\t\t Key: " + key);
+        if (value != null){
+            outputString.append("\t\t Value: " + value);
+        }
+        System.out.println(outputString);
     }
 }
