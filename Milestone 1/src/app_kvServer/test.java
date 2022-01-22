@@ -29,14 +29,14 @@ public class test {
         return buffer.toString();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         int test_length = 5;
         Data[] lis = new Data[test_length];
         for (int i = 0; i < test_length; i++) {
             lis[i] = new Data(test.getRandomString(10), test.getRandomString(20));
         }
         long time1 = System.nanoTime();
-        Btree b = new Btree();
+        Btree b = new Btree(3);
         for (int i = 0; i < test_length; i++) {
             System.out.println("test: put " + lis[i].key + " " + lis[i].value);
             b.put(lis[i].key, lis[i].value);
