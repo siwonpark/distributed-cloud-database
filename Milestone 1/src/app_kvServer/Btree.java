@@ -1,50 +1,54 @@
 package app_kvServer;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 public class Btree {
     static int maxNumber;
     private Node root;
-    private LeafNode left = null;
+    static Logger logger;
 
-    public Btree(int maxNumber) {
+    public Btree(int maxNumber, Logger logger) {
         Btree.maxNumber = maxNumber;
         root = new LeafNode();
+        Btree.logger = logger;
     }
 
     public LeafNode getLeft() {
-        return this.left;
+        return this.root.refreshLeft();
     }
 
     private void printNode(Node node, int depth) {
-        for (int i = 0; i < node.number; i++) {
-            for (int j = 0; j < depth; j++)
-                System.out.print("  ");
-            System.out.println("key: " + node.keys[i]);
-            if (node.values != null) {
+        if (Btree.logger.getLevel() == Level.DEBUG) {
+            for (int i = 0; i < node.number; i++) {
+                StringBuilder space = new StringBuilder();
                 for (int j = 0; j < depth; j++)
-                    System.out.print("  ");
-                System.out.println("values: " + node.values[i]);
-            } else if (node.children != null) {
-                this.printNode(node.children[i], depth + 1);
+                    space.append("    ");
+                Btree.logger.debug(space + "key: " + node.keys[i]);
+                if (node.values != null) {
+                    Btree.logger.debug(space + "values: " + node.values[i]);
+                } else if (node.children != null) {
+                    this.printNode(node.children[i], depth + 1);
+                }
             }
         }
     }
 
     public void printTree() {
-        System.out.println("\nPrint Btree");
+        Btree.logger.debug("\nPrint Btree");
         this.printNode(this.root, 0);
-        System.out.println("END of Btree\n");
+        Btree.logger.debug("END of Btree\n");
     }
 
     public String get(String key) throws Exception {
-        System.out.println("Btree: get successfully. ");
+        Btree.logger.debug("Btree: get successfully. ");
         return this.root.get(key);
     }
 
     public void put(String key, String value) throws Exception {
         if (key == null)
             return;
-        Node rigNode = this.root.put(key, value);
+        Node rigNode = this.root.put(key, value, null);
         if (rigNode != null) {//we need a new root
             BtreeNode newRoot = new BtreeNode();
             newRoot.keys[0] = this.root.keys[this.root.number - 1];
@@ -57,9 +61,8 @@ public class Btree {
 
             this.root = newRoot;
         }
-        this.left = this.root.refreshLeft();
 
-        System.out.println("Btree: put successfully. ");
+        Btree.logger.debug("Btree: put successfully. ");
         this.printTree();
     }
 
@@ -80,7 +83,7 @@ abstract class Node {
 
     abstract String get(String key) throws Exception;
 
-    abstract Node put(String key, String value) throws Exception;
+    abstract Node put(String key, String value, String LeadThis) throws Exception;
 
     abstract LeafNode refreshLeft();
 
@@ -123,7 +126,7 @@ abstract class Node {
             } else {
                 if (middle == this.number - 1) {
                     //biggest place
-                    return middle;
+                    return this.number;
                 } else {
                     left = middle;
                 }
@@ -139,6 +142,7 @@ abstract class Node {
 
     <T> void insertDirectly(T[] lis, int insertPos, String key, T value) {
         //insert the key and value/node, I think for loop is better than arraycopy which need more buffer and time
+        Btree.logger.debug("insertPos: " + insertPos);
         for (int i = this.number; i > insertPos; i--) {
             this.keys[i] = this.keys[i - 1];
             lis[i] = lis[i - 1];
@@ -154,6 +158,7 @@ abstract class Node {
     }
 
     <T> void splitInsert(Node rigNode, T[] lefLis, T[] rigLis, int insertPos, String key, T value) {
+        Btree.logger.debug("insertPos: " + insertPos);
         int middle = (this.number + 1) / 2;
         rigNode.number = this.number + 1 - middle;
         if (middle > insertPos) {//need to insert into lefNode(this)
@@ -183,7 +188,7 @@ abstract class Node {
             rigLis[j] = value;
             j++;
             //copy to right
-            for (; i < this.number - 1; i++, j++) {
+            for (; i < this.number; i++, j++) {
                 rigNode.keys[j] = this.keys[i];
                 rigLis[j] = lefLis[i];
             }
@@ -201,7 +206,7 @@ class BtreeNode extends Node {
     @Override
     String get(String key) throws Exception {
         int pos = this.findInsertPos(key);
-        if (pos == this.number - 1 && !key.equals(this.keys[this.number - 1])) {
+        if (pos == this.number) {
             return null;
         } else {
             return this.children[pos].get(key);
@@ -209,41 +214,40 @@ class BtreeNode extends Node {
     }
 
     @Override
-    Node put(String key, String value) throws Exception {
+    Node put(String key, String value, String keyLeadThis) throws Exception {
         int putPos = this.findInsertPos(key);
-        if (putPos == this.number - 1) {//may exceed the maximum
+        if (putPos == this.number) {//may exceed the maximum
             //renew the rightmost key
             this.keys[this.number - 1] = key;
+            putPos--;
         }
 
-        Node newNode = this.children[putPos].put(key, value);
+        Node newNode = this.children[putPos].put(key, value, this.keys[putPos]);
 
         if (newNode == null) {
             return null;
         } else {//we got a new node for inserting.
-            String oldKey = this.keys[this.number - 1];
             String newKey = newNode.keys[newNode.number - 1];
             //find the insert position
             int insertPos = this.findInsertPos(newKey);
             if (this.number + 1 <= Btree.maxNumber) {//2. don't need to split
                 this.insertDirectly(this.children, insertPos, newKey, newNode);
-                System.out.println("inserted k-n without split: " + newKey);
+                Btree.logger.debug("inserted k-n without split: " + newKey);
 
                 newNode.parent = this;
                 return null;
             } else {//3. need to split
                 BtreeNode rigNode = new BtreeNode();
                 this.splitInsert(rigNode, this.children, rigNode.children, insertPos, newKey, newNode);
-                System.out.println("inserted k-n, split: " + newKey);
+                Btree.logger.debug("inserted k-n, split: " + newKey);
 
                 //renew the nodes' parent link
                 newNode.parent = this;
                 for (int i = 0; i < rigNode.number; i++) {
                     rigNode.children[i].parent = rigNode;
                 }
-
-                if (this.parent != null) {
-                    this.updateParentKey(oldKey);
+                if (keyLeadThis != null) {
+                    this.updateParentKey(keyLeadThis);
                 }
                 //return the new node
                 return rigNode;
@@ -280,35 +284,30 @@ class LeafNode extends Node {
     }
 
     @Override
-    Node put(String key, String value) throws Exception {
-        String oldKey = null;
-        if (this.number != 0) {
-            oldKey = this.keys[this.number - 1];
-        } else {
-            if (this.parent != null) {
-                throw new Exception("should have parent");
-            }
-        }
+    Node put(String key, String value, String keyLeadThis) throws Exception {
 
         //find the insert position
         int insertPos = this.findInsertPos(key);
-        if (key.equals(this.keys[insertPos])) {//1. the key is existed
+        if (insertPos < this.number && key.equals(this.keys[insertPos])) {//1. the key is existed
             this.values[insertPos] = value;
             return null;
         } else if (this.number + 1 <= Btree.maxNumber) {//2. don't need to split
             this.insertDirectly(this.values, insertPos, key, value);
-            System.out.println("leaf node inserted k-v without split: " + key + "-" + value);
+            Btree.logger.debug("leaf node inserted k-v without split: " + key + "-" + value);
             return null;
         } else {//3. need to split
             //new the right leaf
             LeafNode rigNode = new LeafNode();
             this.splitInsert(rigNode, this.values, rigNode.values, insertPos, key, value);
-            System.out.println("leaf node inserted k-v, split: " + key + "-" + value);
-            if (this.parent != null) {
-                this.updateParentKey(oldKey);
+            Btree.logger.debug("leaf node inserted k-v, split: " + key + "-" + value);
+            if (keyLeadThis != null) {
+                this.updateParentKey(keyLeadThis);
             }
             //re-chain the leaves
-            rigNode.right = this.right;
+            if (this.right != null) {
+                rigNode.right = this.right;
+                this.right.left = rigNode;
+            }
             this.right = rigNode;
             rigNode.left = this;
             //return the new node
