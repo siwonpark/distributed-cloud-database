@@ -1,5 +1,7 @@
 package shared.messages;
 
+import org.apache.log4j.Logger;
+
 import java.io.Serializable;
 
 /**
@@ -8,6 +10,7 @@ import java.io.Serializable;
  */
 public class Message implements Serializable, KVMessage {
 
+	private static Logger logger = Logger.getRootLogger();
 	private static final long serialVersionUID = 5549512212003782618L;
 	private String key;
 	private String value;
@@ -27,7 +30,14 @@ public class Message implements Serializable, KVMessage {
      */
 	public Message(byte[] keyBytes, byte[] valueBytes, byte[] statusBytes) {
 		this.key = new String(keyBytes).trim();
-		this.status = StatusType.values()[Integer.parseInt(new String(statusBytes))];
+		try {
+			int index = Integer.parseInt(new String(statusBytes));
+			this.status = 0 <= index && index < StatusType.values().length ?
+					StatusType.values()[index] : StatusType.FAILED;
+		} catch(NumberFormatException e) {
+			logger.error("The byte format supplied as statusBytes could not be parsed as an integer");
+			this.status = StatusType.FAILED;
+		}
 		if (valueBytes == null) {
 			this.msgBytes = this.toByteArray(key, status);
 		} else {
