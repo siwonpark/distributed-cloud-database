@@ -131,6 +131,7 @@ public class ClientConnection implements Runnable {
 		byte read = (byte) input.read(statusByte);
 		if (read != 1) {
 			logger.error("Did not receive correct status byte format from server");
+			throw new IOException("Connection Lost!");
 		}
 
 		byte[] keyBytes = readText();
