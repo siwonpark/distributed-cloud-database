@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 
@@ -21,6 +22,7 @@ public class CommModule implements ICommModule {
 
     private static final int BUFFER_SIZE = 1024;
     private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
+    private static final int SOCKET_READ_TIMEOUT = 5000;
 
     public CommModule(String address, int port) {
         this.address = address;
@@ -31,6 +33,7 @@ public class CommModule implements ICommModule {
     public void connect() throws IOException {
         logger.info("HELLO WORLD");
         clientSocket = new Socket(this.address, this.port);
+        clientSocket.setSoTimeout(SOCKET_READ_TIMEOUT);
         input = clientSocket.getInputStream();
         output = clientSocket.getOutputStream();
     }
