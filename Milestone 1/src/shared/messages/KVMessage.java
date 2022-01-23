@@ -12,8 +12,7 @@ public interface KVMessage {
 		PUT_ERROR, 		/* Put - request not successful */
 		DELETE_SUCCESS, /* Delete - request successful */
 		DELETE_ERROR, 	/* Delete - request successful */
-		FAILED, 		/* Request failed for some general reason e.g. improper message format */
-		UNKNOWN         /* CatchAll for all invalid StatusTypes in message constructor */
+		FAILED 			/* Request failed for some general reason e.g. improper message format */
 	}
 
 	/**

@@ -33,10 +33,10 @@ public class Message implements Serializable, KVMessage {
 		try {
 			int index = Integer.parseInt(new String(statusBytes));
 			this.status = 0 <= index && index < StatusType.values().length ?
-					StatusType.values()[index] : StatusType.UNKNOWN;
+					StatusType.values()[index] : StatusType.FAILED;
 		} catch(NumberFormatException e) {
 			logger.error("The byte format supplied as statusBytes could not be parsed as an integer");
-			this.status = StatusType.UNKNOWN;
+			this.status = StatusType.FAILED;
 		}
 		if (valueBytes == null) {
 			this.msgBytes = this.toByteArray(key, status);

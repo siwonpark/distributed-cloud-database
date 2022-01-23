@@ -55,7 +55,7 @@ public class AdditionalTest extends TestCase {
 		byte[] statusType = String.valueOf(5000).getBytes();
 
 		Message msg = new Message(keyBytes, null, statusType);
-		assertEquals(msg.getStatus(), StatusType.UNKNOWN);
+		assertEquals(msg.getStatus(), StatusType.FAILED);
 		assertEquals(msg.getKey(), key);
 		assertEquals(msg.getValue(), null);
 	}
