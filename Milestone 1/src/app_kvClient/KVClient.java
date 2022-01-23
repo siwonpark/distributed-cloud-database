@@ -68,92 +68,104 @@ public class KVClient implements IKVClient, ClientSocketListener {
             stop = true;
             disconnect();
             System.out.println(PROMPT + "Application exit!");
-
         } else if (tokens[0].equals("connect")){
-            if(tokens.length == 3) {
-                try{
-                    serverAddress = tokens[1];
-                    serverPort = Integer.parseInt(tokens[2]);
-                    newConnection(serverAddress, serverPort);
-                    System.out.println(PROMPT + "Connection established!");
-                } catch(NumberFormatException nfe) {
-                    printError("No valid address. Port must be a number!");
-                    logger.info("Unable to parse argument <port>", nfe);
-                } catch (UnknownHostException e) {
-                    printError("Unknown Host!");
-                    logger.info("Unknown Host!", e);
-                } catch (IOException e) {
-                    printError("Could not establish connection!");
-                    logger.warn("Could not establish connection!", e);
-                } catch (Exception e) {
-                    printError("An unexpected error occurred while trying to connect! Please try again.");
-                    logger.warn("An unexpected error occurred!", e);
-                }
-            } else {
-                printError("Invalid number of parameters! Use the help command for usage instructions.");
-            }
-
+            handleConnect(tokens);
         } else  if (tokens[0].equals("get")) {
-            if(tokens.length == 2) {
-                if(kvStore != null && kvStore.isRunning()){
-                    String key = tokens[1];
-                    try {
-                        KVMessage response = kvStore.get(key);
-                        printResponseToUser(response);
-                    } catch (Exception e){
-                        String errMsg = String.format("Unable to get key %s! ", key) + e;
-                        printError(errMsg);
-                    }
-
-                } else {
-                    printError("Not connected!");
-                }
-            } else {
-                printError("Invalid number of parameters. Use the help command to see usage instructions");
-            }
-
+            handleGet(tokens);
         } else if (tokens[0].equals("put")) {
-            if(tokens.length == 2 || tokens.length == 3) {
-                if(kvStore != null && kvStore.isRunning()){
-                    String key = tokens[1];
-                    String value = tokens.length == 3? tokens[2]  : null;
-                    try {
-                        KVMessage response = kvStore.put(key, value);
-                        printResponseToUser(response);
-                    } catch (Exception e){
-                        String errMsg = tokens.length == 3?
-                                String.format("Unable to put value %s into key %s! ", value, key) + e :
-                                String.format("Unable to delete entry corresponding to key %s! ", key) + e;
-                        printError(errMsg);
-                    }
-
-                } else {
-                    printError("Not connected!");
-                }
-            } else {
-                printError("Invalid number of parameters. Use the help command to see usage instructions");
-            }
+            handlePut(tokens);
         } else if(tokens[0].equals("disconnect")) {
             disconnect();
         } else if(tokens[0].equals("logLevel")) {
-            if(tokens.length == 2) {
-                String level = setLevel(tokens[1]);
-                if(level.equals(LogSetup.UNKNOWN_LEVEL)) {
-                    printError("Not a valid log level!");
-                    printPossibleLogLevels();
-                } else {
-                    System.out.println(PROMPT +
-                            "Log level changed to level " + level);
-                }
-            } else {
-                printError("Invalid number of parameters! Use the help command to see usage instructions");
-            }
-
+            handleLogLevel(tokens);
         } else if(tokens[0].equals("help")) {
             printHelp();
         } else {
             printError("Unknown command");
             printHelp();
+        }
+    }
+
+    private void handleLogLevel(String[] tokens) {
+        if(tokens.length == 2) {
+            String level = setLevel(tokens[1]);
+            if(level.equals(LogSetup.UNKNOWN_LEVEL)) {
+                printError("Not a valid log level!");
+                printPossibleLogLevels();
+            } else {
+                System.out.println(PROMPT +
+                        "Log level changed to level " + level);
+            }
+        } else {
+            printError("Invalid number of parameters! Use the help command to see usage instructions");
+        }
+    }
+
+    private void handlePut(String[] tokens) {
+        if(tokens.length == 2 || tokens.length == 3) {
+            if(kvStore != null && kvStore.isRunning()){
+                String key = tokens[1];
+                String value = tokens.length == 3? tokens[2]  : null;
+                try {
+                    KVMessage response = kvStore.put(key, value);
+                    printResponseToUser(response);
+                } catch (Exception e){
+                    String errMsg = tokens.length == 3?
+                            String.format("Unable to put value %s into key %s! ", value, key) + e :
+                            String.format("Unable to delete entry corresponding to key %s! ", key) + e;
+                    printError(errMsg);
+                }
+
+            } else {
+                printError("Not connected!");
+            }
+        } else {
+            printError("Invalid number of parameters. Use the help command to see usage instructions");
+        }
+    }
+
+    private void handleGet(String[] tokens) {
+        if(tokens.length == 2) {
+            if(kvStore != null && kvStore.isRunning()){
+                String key = tokens[1];
+                try {
+                    KVMessage response = kvStore.get(key);
+                    printResponseToUser(response);
+                } catch (Exception e){
+                    String errMsg = String.format("Unable to get key %s! ", key) + e;
+                    printError(errMsg);
+                }
+
+            } else {
+                printError("Not connected!");
+            }
+        } else {
+            printError("Invalid number of parameters. Use the help command to see usage instructions");
+        }
+    }
+
+    private void handleConnect(String[] tokens) {
+        if(tokens.length == 3) {
+            try{
+                serverAddress = tokens[1];
+                serverPort = Integer.parseInt(tokens[2]);
+                newConnection(serverAddress, serverPort);
+                System.out.println(PROMPT + "Connection established!");
+            } catch(NumberFormatException nfe) {
+                printError("No valid address. Port must be a number!");
+                logger.info("Unable to parse argument <port>", nfe);
+            } catch (UnknownHostException e) {
+                printError("Unknown Host!");
+                logger.info("Unknown Host!", e);
+            } catch (IOException e) {
+                printError("Could not establish connection!");
+                logger.warn("Could not establish connection!", e);
+            } catch (Exception e) {
+                printError("An unexpected error occurred while trying to connect! Please try again.");
+                logger.warn("An unexpected error occurred!", e);
+            }
+        } else {
+            printError("Invalid number of parameters! Use the help command for usage instructions.");
         }
     }
 
@@ -163,7 +175,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
             kvStore = null;
         }
     }
-
+    
     private String setLevel(String levelString) {
         if(levelString.equals(Level.ALL.toString())) {
             logger.setLevel(Level.ALL);
