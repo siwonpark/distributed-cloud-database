@@ -30,8 +30,8 @@ public class AdditionalTest extends TestCase {
 	 * Test that a given byte array can be successfully decoded into a message
 	 */
 	public void testMessageDecode() {
-		String testKey = "TestKey1 key";
-		String testValue = "TestValue value";
+		String testKey = "TestKey1key";
+		String testValue = "TestValuevalue";
 		StatusType testStatusType = StatusType.PUT;
 
 		byte[] statusBytes = String.valueOf(testStatusType.ordinal()).getBytes();
@@ -43,5 +43,20 @@ public class AdditionalTest extends TestCase {
 		assertEquals(testKey, msg.getKey());
 		assertEquals(testValue, msg.getValue());
 		assertEquals(testStatusType, msg.getStatus());
+	}
+
+	/**
+	 * Test that if an incorrect status bytes is supplied to message constructor
+	 * Then a message is created with no status
+	 */
+	public void testMessageInvalidStatusBytes(){
+		String key = "TestKey1key";
+		byte[] keyBytes = key.getBytes();
+		byte[] statusType = String.valueOf(5000).getBytes();
+
+		Message msg = new Message(keyBytes, null, statusType);
+		assertEquals(msg.getStatus(), StatusType.UNKNOWN);
+		assertEquals(msg.getKey(), key);
+		assertEquals(msg.getValue(), null);
 	}
 }

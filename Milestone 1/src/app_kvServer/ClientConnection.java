@@ -101,8 +101,11 @@ public class ClientConnection implements Runnable {
 				responseStatus = StatusType.PUT_ERROR;
 			}
 		} else {
-			logger.error("Request contained a status unknown to the server: " + message.getStatus());
-			responseStatus = StatusType.FAILED;
+			String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
+			logger.error(errorMsg);
+			Message failedResponse = new Message(errorMsg, null, StatusType.FAILED);
+			sendMessage(failedResponse);
+			return;
 		}
 
 		Message response = new Message(key, value, responseStatus);
@@ -127,7 +130,7 @@ public class ClientConnection implements Runnable {
 		/* read the status byte, always the first byte in the message */
 		byte read = (byte) input.read(statusByte);
 		if (read != 1) {
-			logger.error("Did not receive correct status byte from server");
+			logger.error("Did not receive correct status byte format from server");
 		}
 
 		byte[] keyBytes = readText();
