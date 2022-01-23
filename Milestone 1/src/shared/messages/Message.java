@@ -27,23 +27,32 @@ public class Message implements Serializable, KVMessage {
      */
 	public Message(byte[] keyBytes, byte[] valueBytes, byte[] statusBytes) {
 		this.key = new String(keyBytes).trim();
-		this.value = new String(valueBytes).trim();
 		this.status = StatusType.values()[Integer.parseInt(new String(statusBytes))];
+		if (valueBytes == null) {
+			this.msgBytes = this.toByteArray(key, status);
+		} else {
+			this.value = new String(valueBytes).trim();
+			this.msgBytes = this.toByteArray(key, status, value);
+		}
 	}
 
 	/**
-     * Constructs a TextMessage object with a given String that
+     * Constructs a Message object with a given String that
      * forms the message.
      *
      * @param key the String that forms the key
-	 *
-	 *
+	 * @param value the String that forms the value
+	 * @param status the StatusType of the message
      */
 	public Message(String key, String value, StatusType status) {
 		this.key = key;
 		this.value = value;
 		this.status = status;
-		this.msgBytes = this.toByteArray(key, status, value);
+		if (value == null) {
+			this.msgBytes = this.toByteArray(key, status);
+		} else {
+			this.msgBytes = this.toByteArray(key, status, value);
+		}
 	}
 
 	/**
@@ -89,6 +98,18 @@ public class Message implements Serializable, KVMessage {
 		System.arraycopy(wrappedKey, 0, tmp, statusBytes.length, wrappedKey.length);
 
 		return tmp;
+	}
+
+	public String getMessageString() {
+		StringBuilder outputString = new StringBuilder("");
+		outputString.append("Status: " + status);
+		outputString.append(" Key: " + key);
+		if (value != null){
+			outputString.append(" Value: " + value);
+		}
+		outputString.append("Bytes: " + new String(msgBytes));
+
+		return outputString.toString();
 	}
 
 	@Override

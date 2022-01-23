@@ -13,11 +13,12 @@ import logger.LogSetup;
 import static app_kvClient.PrintUtils.*;
 import client.KVCommInterface;
 import client.KVStore;
+import shared.messages.KVMessage;
 import shared.messages.KVMessage.*;
 import shared.messages.Message;
 
 
-public class KVClient implements IKVClient {
+public class KVClient implements IKVClient, ClientSocketListener {
 
     private static Logger logger = Logger.getRootLogger();
     private String PROMPT = PrintUtils.PROMPT;
@@ -33,6 +34,7 @@ public class KVClient implements IKVClient {
     public void newConnection(String hostname, int port) throws Exception{
         // TODO Auto-generated method stub
         kvStore = new KVStore(hostname, port);
+        kvStore.addListener(this);
         kvStore.connect();
     }
 
@@ -73,6 +75,7 @@ public class KVClient implements IKVClient {
                     serverAddress = tokens[1];
                     serverPort = Integer.parseInt(tokens[2]);
                     newConnection(serverAddress, serverPort);
+                    System.out.println(PROMPT + "Connection established!");
                 } catch(NumberFormatException nfe) {
                     printError("No valid address. Port must be a number!");
                     logger.info("Unable to parse argument <port>", nfe);
@@ -83,7 +86,7 @@ public class KVClient implements IKVClient {
                     printError("Could not establish connection!");
                     logger.warn("Could not establish connection!", e);
                 } catch (Exception e) {
-                    printError("An unexpected error occurred!");
+                    printError("An unexpected error occurred while trying to connect! Please try again.");
                     logger.warn("An unexpected error occurred!", e);
                 }
             } else {
@@ -95,7 +98,8 @@ public class KVClient implements IKVClient {
                 if(kvStore != null && kvStore.isRunning()){
                     String key = tokens[1];
                     try {
-                        kvStore.get(key);
+                        KVMessage response = kvStore.get(key);
+                        printResponseToUser(response);
                     } catch (Exception e){
                         String errMsg = String.format("Unable to get key %s! ", key) + e;
                         printError(errMsg);
@@ -112,9 +116,10 @@ public class KVClient implements IKVClient {
             if(tokens.length == 2 || tokens.length == 3) {
                 if(kvStore != null && kvStore.isRunning()){
                     String key = tokens[1];
-                    String value = tokens.length == 3? tokens[2]  : "";
+                    String value = tokens.length == 3? tokens[2]  : null;
                     try {
-                        kvStore.put(key, value);
+                        KVMessage response = kvStore.put(key, value);
+                        printResponseToUser(response);
                     } catch (Exception e){
                         String errMsg = tokens.length == 3?
                                 String.format("Unable to put value %s into key %s! ", value, key) + e :
@@ -184,6 +189,29 @@ public class KVClient implements IKVClient {
             return Level.OFF.toString();
         } else {
             return LogSetup.UNKNOWN_LEVEL;
+        }
+    }
+
+    @Override
+    public void handleNewMessage(Message msg) {
+        if(!stop) {
+            // TODO: print the status prompt
+            System.out.print(PROMPT);
+        }
+    }
+
+    @Override
+    public void handleStatus(SocketStatus status) {
+        if(status == SocketStatus.CONNECTED) {
+        } else if (status == SocketStatus.DISCONNECTED) {
+            System.out.print(PROMPT);
+            System.out.println("Connection terminated: "
+                    + serverAddress + " / " + serverPort);
+
+        } else if (status == SocketStatus.CONNECTION_LOST) {
+            System.out.println("Connection lost: "
+                    + serverAddress + " / " + serverPort);
+            System.out.print(PROMPT);
         }
     }
 
