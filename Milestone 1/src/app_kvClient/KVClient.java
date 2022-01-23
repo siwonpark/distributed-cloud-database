@@ -165,7 +165,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
     }
 
     private String setLevel(String levelString) {
-
         if(levelString.equals(Level.ALL.toString())) {
             logger.setLevel(Level.ALL);
             return Level.ALL.toString();

@@ -123,7 +123,6 @@ public class ClientConnection implements Runnable {
 
 	public Message receiveMessage() throws IOException {
 		byte[] statusByte = new byte[1];
-		byte[] valueBytes = null;
 
 		/* read the status byte, always the first byte in the message */
 		byte read = (byte) input.read(statusByte);
@@ -131,12 +130,12 @@ public class ClientConnection implements Runnable {
 			logger.error("Did not receive correct status byte from server");
 		}
 
-		/* get actual status */
-		StatusType statusType = StatusType.values()[Integer.parseInt(new String(statusByte))];
-
 		byte[] keyBytes = readText();
+		byte[] valueBytes = null;
 
-		if (statusType == StatusType.PUT) {
+		int numRemainingBytes = input.available();
+
+		if (numRemainingBytes > 0) {
 			valueBytes = readText();
 		}
 
@@ -155,7 +154,6 @@ public class ClientConnection implements Runnable {
 		/* load start of message */
 		byte read = (byte) input.read();
 		if (read != 2) {
-			logger.error("This message does not contain a start of text control character");
 			return null;
 		}
 

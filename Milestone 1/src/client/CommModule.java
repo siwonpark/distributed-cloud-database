@@ -54,7 +54,6 @@ public class CommModule implements ICommModule {
     @Override
     public Message receiveMessage() throws IOException {
         byte[] statusByte = new byte[1];
-        byte[] valueBytes = null;
 
         /* read the status byte, always the first byte in the message */
         byte read = (byte) input.read(statusByte);
@@ -62,15 +61,15 @@ public class CommModule implements ICommModule {
             logger.error("Did not receive correct status byte from server");
         }
 
-        /* get actual status */
-        KVMessage.StatusType statusType = KVMessage.StatusType.values()[Integer.parseInt(new String(statusByte))];
-
         byte[] keyBytes = readText();
+        byte[] valueBytes = null;
 
-        if (statusType == KVMessage.StatusType.PUT || statusType == KVMessage.StatusType.GET_SUCCESS) {
+        int numRemainingBytes = input.available();
+
+        if (numRemainingBytes > 0) {
             valueBytes = readText();
         }
-
+        
         /* build final String */
         Message msg = new Message(keyBytes, valueBytes, statusByte);
         logger.info("Received message: " + msg.getMessageString());
@@ -86,7 +85,6 @@ public class CommModule implements ICommModule {
         /* load start of message */
         byte read = (byte) input.read();
         if (read != 2) {
-            logger.error("This message does not contain a start of text control character");
             return null;
         }
 

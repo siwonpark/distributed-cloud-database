@@ -96,7 +96,6 @@ public class Message implements Serializable, KVMessage {
 
 		System.arraycopy(statusBytes, 0, tmp, 0, statusBytes.length);
 		System.arraycopy(wrappedKey, 0, tmp, statusBytes.length, wrappedKey.length);
-
 		return tmp;
 	}
 
@@ -107,7 +106,7 @@ public class Message implements Serializable, KVMessage {
 		if (value != null){
 			outputString.append(" Value: " + value);
 		}
-		outputString.append("Bytes: " + new String(msgBytes));
+		outputString.append(" Bytes: " + new String(msgBytes));
 
 		return outputString.toString();
 	}
