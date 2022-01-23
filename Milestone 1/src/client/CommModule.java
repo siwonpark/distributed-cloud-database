@@ -2,6 +2,7 @@ package client;
 
 import app_kvClient.ClientSocketListener;
 import org.apache.log4j.Logger;
+import shared.messages.KVMessage;
 import shared.messages.Message;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 
 public class CommModule implements ICommModule {
-    private Logger logger =Logger.getRootLogger();
+    private Logger logger = Logger.getRootLogger();
     private Socket clientSocket;
     private String address;
     private int port;
@@ -31,7 +32,6 @@ public class CommModule implements ICommModule {
 
     @Override
     public void connect() throws IOException {
-        logger.info("HELLO WORLD");
         clientSocket = new Socket(this.address, this.port);
         clientSocket.setSoTimeout(SOCKET_READ_TIMEOUT);
         input = clientSocket.getInputStream();
@@ -50,23 +50,31 @@ public class CommModule implements ICommModule {
         logger.info("Client socket disconnected");
     };
 
+
     @Override
     public Message receiveMessage() throws IOException {
-		byte[] statusByte = new byte[1];
+        byte[] statusByte = new byte[1];
+        byte[] valueBytes = null;
 
-		/* read the status byte, always the first byte in the message */
-		byte read = (byte) input.read(statusByte);
-		if (read != 1) {
-			logger.error("Did not receive correct status byte from server");
-		}
+        /* read the status byte, always the first byte in the message */
+        byte read = (byte) input.read(statusByte);
+        if (read != 1) {
+            logger.error("Did not receive correct status byte from server");
+        }
+
+        /* get actual status */
+        KVMessage.StatusType statusType = KVMessage.StatusType.values()[Integer.parseInt(new String(statusByte))];
 
         byte[] keyBytes = readText();
-        byte[] valueBytes = readText();
 
-		/* build final String */
-		Message msg = new Message(keyBytes, valueBytes, statusByte);
-		logger.info("Received message");
-		return msg;
+        if (statusType == KVMessage.StatusType.PUT || statusType == KVMessage.StatusType.GET_SUCCESS) {
+            valueBytes = readText();
+        }
+
+        /* build final String */
+        Message msg = new Message(keyBytes, valueBytes, statusByte);
+        logger.info("Received message: " + msg.getMessageString());
+        return msg;
     };
 
     public byte[] readText() throws IOException {
@@ -116,6 +124,18 @@ public class CommModule implements ICommModule {
             read = (byte) input.read();
         }
 
+        /* commit what's left in the buffer */
+        if (textBytes == null){
+            tmp = new byte[index];
+            System.arraycopy(bufferBytes, 0, tmp, 0, index);
+        } else {
+            tmp = new byte[textBytes.length + index];
+            System.arraycopy(textBytes, 0, tmp, 0, textBytes.length);
+            System.arraycopy(bufferBytes, 0, tmp, textBytes.length, index);
+        }
+
+        textBytes = tmp;
+
         return textBytes;
     };
 
@@ -124,6 +144,6 @@ public class CommModule implements ICommModule {
         byte[] msgBytes = message.getMsgBytes();
         output.write(msgBytes, 0, msgBytes.length);
         output.flush();
-        logger.info("Send message:");
+        logger.info("Send message: " + message.getMessageString());
     };
 }

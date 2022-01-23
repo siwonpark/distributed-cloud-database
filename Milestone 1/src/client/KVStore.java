@@ -18,11 +18,8 @@ import shared.messages.Message;
 public class KVStore implements KVCommInterface {
 	private Logger logger = Logger.getRootLogger();
 	private boolean running = false;
-	private Socket clientSocket;
 	private CommModule commModule;
 	private Set<ClientSocketListener> listeners;
-	private OutputStream output;
-	private InputStream input;
 
 
 	/**
@@ -33,7 +30,7 @@ public class KVStore implements KVCommInterface {
 	public KVStore(String address, int port) {
 		commModule = new CommModule(address, port);
 		listeners = new HashSet<ClientSocketListener>();
-		setRunning(true);
+		// setRunning(true);
 	}
 
 	public void setRunning(boolean run) {

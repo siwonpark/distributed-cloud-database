@@ -60,9 +60,9 @@ public class PrintUtils {
         KVMessage.StatusType status = message.getStatus();
         StringBuilder outputString = new StringBuilder("The server replied with: ");
         outputString.append("Status: " + status);
-        outputString.append("\t\t Key: " + key);
+        outputString.append(" Key: " + key);
         if (value != null){
-            outputString.append("\t\t Value: " + value);
+            outputString.append(" Value: " + value);
         }
         System.out.println(outputString);
     }

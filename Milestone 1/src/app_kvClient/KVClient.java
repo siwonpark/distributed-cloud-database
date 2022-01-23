@@ -75,6 +75,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                     serverAddress = tokens[1];
                     serverPort = Integer.parseInt(tokens[2]);
                     newConnection(serverAddress, serverPort);
+                    System.out.println(PROMPT + "Connection established!");
                 } catch(NumberFormatException nfe) {
                     printError("No valid address. Port must be a number!");
                     logger.info("Unable to parse argument <port>", nfe);
@@ -202,7 +203,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
     @Override
     public void handleStatus(SocketStatus status) {
         if(status == SocketStatus.CONNECTED) {
-
         } else if (status == SocketStatus.DISCONNECTED) {
             System.out.print(PROMPT);
             System.out.println("Connection terminated: "
