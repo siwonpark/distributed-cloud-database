@@ -24,8 +24,6 @@ public class KVStore implements KVCommInterface {
 	private OutputStream output;
 	private InputStream input;
 
-	private static final int BUFFER_SIZE = 1024;
-	private static final int DROP_SIZE = 1024 * BUFFER_SIZE;
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
