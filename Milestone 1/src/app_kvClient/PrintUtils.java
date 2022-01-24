@@ -1,6 +1,7 @@
 package app_kvClient;
 
 import shared.messages.KVMessage;
+import shared.messages.KVMessage.StatusType;
 
 public class PrintUtils {
 
@@ -57,13 +58,26 @@ public class PrintUtils {
     public static void printResponseToUser(KVMessage message){
         String key = message.getKey();
         String value = message.getValue();
-        KVMessage.StatusType status = message.getStatus();
-        StringBuilder outputString = new StringBuilder("The server replied with: ");
+        StatusType status = message.getStatus();
+        if (status == StatusType.FAILED){
+            printFailedResponseToUser(key);
+            return;
+        }
+        StringBuilder outputString = new StringBuilder("Success! The server replied with: ");
         outputString.append("Status: " + status);
         outputString.append(" Key: " + key);
         if (value != null){
             outputString.append(" Value: " + value);
         }
+        System.out.println(outputString);
+    }
+
+    /**
+     *
+     * @param text The Failure text associated with the failed message
+     */
+    public static void printFailedResponseToUser(String text){
+        String outputString = "The request failed with error response: " + text;
         System.out.println(outputString);
     }
 }
