@@ -18,23 +18,18 @@ class Data {
 
 public class test {
     private static final Logger logger = Logger.getLogger(test.class);
+    static final Random random = new Random();
 
     static String getRandomString(int length) {
-        int leftLimit = 97; // letter 'a'
-        int rightLimit = 122; // letter 'z'
-        int targetStringLength = 10;
-        Random random = new Random();
-        StringBuilder buffer = new StringBuilder(targetStringLength);
+        StringBuilder buffer = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            int randomLimitedInt = leftLimit + (int)
-                    (random.nextFloat() * (rightLimit - leftLimit + 1));
-            buffer.append((char) randomLimitedInt);
+            buffer.append((char) (97 + random.nextInt(122 - 97 + 1)));
         }
         return buffer.toString();
     }
 
 
-    static void testChain(Btree b) throws Exception {
+    static void testChain(BTree b) throws Exception {
         LeafNode lef = b.getLeft();
         while (lef.right != null) {
             for (int i = 0; i < lef.number - 1; i++) {
@@ -57,13 +52,13 @@ public class test {
 
         BasicConfigurator.configure();
         logger.setLevel(Level.INFO);
-        int test_length = 30000;
+        int test_length = 30;
         Data[] lis = new Data[test_length];
         for (int i = 0; i < test_length; i++) {
             lis[i] = new Data(test.getRandomString(10), test.getRandomString(20));
         }
 //        long time1 = System.nanoTime();
-        Btree b = new Btree(100, logger);
+        BTree b = new BTree(100, logger);
         for (int i = 0; i < test_length; i++) {
             logger.debug("test: put " + lis[i].key + " " + lis[i].value);
             b.put(lis[i].key, lis[i].value);
