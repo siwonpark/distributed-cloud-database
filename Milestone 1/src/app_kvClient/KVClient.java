@@ -203,13 +203,13 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
-    @Override
-    public void handleNewMessage(Message msg) {
-        if(!stop) {
-            // TODO: print the status prompt
-            System.out.print(PROMPT);
-        }
-    }
+//    @Override
+//    public void handleNewMessage(Message msg) {
+//        if(!stop) {
+//            // TODO: print the status prompt
+//            System.out.print(PROMPT);
+//        }
+//    }
 
     @Override
     public void handleStatus(SocketStatus status) {
