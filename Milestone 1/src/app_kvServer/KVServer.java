@@ -13,8 +13,10 @@ public class KVServer implements IKVServer {
 
 	private static Logger logger = Logger.getRootLogger();
 	private ServerSocket serverSocket;
+	private static int MAX_NUMBER = 2000;
 	private int port;
 	private int cacheSize;
+	private Btree bTree;
 	private String strategy;
 	private boolean isRunning;
 
@@ -33,6 +35,7 @@ public class KVServer implements IKVServer {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
+		this.bTree = new Btree(MAX_NUMBER, logger);
 	}
 	
 	@Override
@@ -62,7 +65,12 @@ public class KVServer implements IKVServer {
 	@Override
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
-		return false;
+		try{
+			bTree.get(key);
+			return true;
+		} catch (Exception e){
+			return false;
+		}
 	}
 
 	@Override
@@ -73,13 +81,17 @@ public class KVServer implements IKVServer {
 
 	@Override
     public String getKV(String key) throws Exception{
-		// TODO Auto-generated method stub
-		return "1";
+		String result = bTree.get(key);
+		if (result != null){
+			return result;
+		} else{
+			throw new RuntimeException(String.format("No such key %s exists", key));
+		}
 	}
 
 	@Override
     public void putKV(String key, String value) throws Exception{
-		// TODO Auto-generated method stub
+		bTree.put(key, value);
 	}
 
 	@Override
