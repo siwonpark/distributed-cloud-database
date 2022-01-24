@@ -41,13 +41,13 @@ public class KVServer implements IKVServer {
 	@Override
 	public int getPort(){
 		// TODO Auto-generated method stub
-		return port;
+		return serverSocket.getLocalPort();
 	}
 
 	@Override
     public String getHostname(){
 		// TODO Auto-generated method stub
-		return null;
+		return serverSocket.getInetAddress().getHostName();
 	}
 
 	@Override
