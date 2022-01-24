@@ -22,4 +22,4 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
     - name: Build with Ant
-      run: pwd
+      run: cd 'Milestone 1' && ant
