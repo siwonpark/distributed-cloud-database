@@ -5,30 +5,35 @@ import org.apache.log4j.Logger;
 
 public class BTree {
     static int maxNumber;
-    private Node root;
+    private String root;
     static Logger logger;
+    FileOp f;
 
     public BTree(int maxNumber, Logger logger) {
         BTree.maxNumber = maxNumber;
-        root = new LeafNode();
+        this.f = new FileOp();
+        this.root = f.newFile(FileType.DATA);
         BTree.logger = logger;
     }
 
-    public LeafNode getLeft() {
-        return this.root.refreshLeft();
+    public String getLeft() {
+        return f.loadFile(this.root).refreshLeft();
     }
 
-    private void printNode(Node node, int depth) {
+    private void printNode(String node, int depth) {
+        Node tmp_node = f.loadFile(node);
         if (BTree.logger.getLevel() == Level.DEBUG) {
-            for (int i = 0; i < node.number; i++) {
+            for (int i = 0; i < tmp_node.number; i++) {
                 StringBuilder space = new StringBuilder();
                 for (int j = 0; j < depth; j++)
                     space.append("    ");
-                BTree.logger.debug(space + "key: " + node.keys[i]);
-                if (node.values != null) {
-                    BTree.logger.debug(space + "values: " + node.values[i]);
-                } else if (node.children != null) {
-                    this.printNode(node.children[i], depth + 1);
+                BTree.logger.debug(space + "key: " + tmp_node.keys[i]);
+                if (tmp_node.type == FileType.DATA) {
+                    assert tmp_node instanceof DataNode;
+                    BTree.logger.debug(space + "values: " + ((DataNode) tmp_node).values[i]);
+                } else {
+                    assert tmp_node instanceof IndexNode;
+                    this.printNode(((IndexNode) tmp_node).children[i], depth + 1);
                 }
             }
         }
@@ -40,53 +45,56 @@ public class BTree {
         BTree.logger.debug("END of Btree\n");
     }
 
-    public String get(String key) throws Exception {
+    public String get(String key) {
         BTree.logger.debug("Btree: get successfully. ");
-        return this.root.get(key);
+        return f.loadFile(this.root).get(key);
     }
 
-    public void put(String key, String value) throws Exception {
+    public void put(String key, String value) {
         if (key == null)
             return;
-        Node rigNode = this.root.put(key, value, null);
+        String rigNode = f.loadFile(this.root).put(key, value);
         if (rigNode != null) {//we need a new root
-            BtreeNode newRoot = new BtreeNode();
-            newRoot.keys[0] = this.root.keys[this.root.number - 1];
-            newRoot.keys[1] = rigNode.keys[this.root.number - 1];
-            newRoot.children[0] = this.root;
-            newRoot.children[1] = rigNode;
-            newRoot.number = 2;
-            rigNode.parent = newRoot;
-            this.root.parent = newRoot;
-
+            String newRoot = f.newFile(FileType.INDEX);
+            IndexNode tmp_newRoot = (IndexNode) f.loadFile(newRoot);
+            Node tmp_rigNode = f.loadFile(rigNode);
+            Node tmp_root = f.loadFile(this.root);
+            tmp_newRoot.keys[0] = tmp_root.keys[tmp_root.number - 1];
+            tmp_newRoot.keys[1] = tmp_rigNode.keys[tmp_root.number - 1];
+            tmp_newRoot.children[0] = this.root;
+            tmp_newRoot.children[1] = rigNode;
+            tmp_newRoot.number = 2;
+            f.dumpFile(tmp_rigNode);
+            f.dumpFile(tmp_root);
             this.root = newRoot;
         }
 
         BTree.logger.debug("Btree: put successfully. ");
         this.printTree();
     }
-
 }
 
 abstract class Node {
     int size = 0;
-    Node parent;
     int number;
     String[] keys;
-    Node[] children;
-    String[] values;
+    FileOp f;
+    String name;
+    FileType type;
 
-    public Node() {
+    public Node(FileOp file, String name, FileType type) {
         this.keys = new String[BTree.maxNumber];
         this.number = 0;
-        this.parent = null;
+        this.f = file;
+        this.name = name;
+        this.type = type;
     }
 
-    abstract String get(String key) throws Exception;
+    abstract String get(String key);
 
-    abstract Node put(String key, String value, String LeadThis) throws Exception;
+    abstract String put(String key, String value);
 
-    abstract LeafNode refreshLeft();
+    abstract String refreshLeft();
 
     int findKey(String key) {
         if (this.number == 0)
@@ -109,7 +117,7 @@ abstract class Node {
         return -1;
     }
 
-    int findInsertPos(String key) throws Exception {
+    int findInsertPos(String key) {
         int left = 0;
         int right = this.number;
         int middle = (left + right) / 2;
@@ -134,14 +142,14 @@ abstract class Node {
             }
             middle = (left + right) / 2;
         }
-        if (this.number == 0)
-            return 0;
-        else {
-            throw new Exception("shouldn't get here");
+        if (this.number != 0) {
+            System.out.println("shouldn't get here");
         }
+        return 0;
     }
 
-    <T> void insertDirectly(T[] lis, int insertPos, String key, T value) {
+    //this function is just for code reuse, so there are no load or dump
+    void insertDirectly(String[] lis, int insertPos, String key, String value) {
         //insert the key and value/node, I think for loop is better than arraycopy which need more buffer and time
         BTree.logger.debug("insertPos: " + insertPos);
         for (int i = this.number; i > insertPos; i--) {
@@ -153,12 +161,8 @@ abstract class Node {
         this.number++;
     }
 
-    void updateParentKey(String oldKey) {
-        int parentKeyPos = this.parent.findKey(oldKey);
-        this.parent.keys[parentKeyPos] = this.keys[this.number - 1];
-    }
-
-    <T> void splitInsert(Node rigNode, T[] lefLis, T[] rigLis, int insertPos, String key, T value) {
+    //this function is just for code reuse, so there are no load or dump
+    void splitInsert(Node rigNode, String[] lefLis, String[] rigLis, int insertPos, String key, String value) {
         BTree.logger.debug("insertPos: " + insertPos);
         int middle = (this.number + 1) / 2;
         rigNode.number = this.number + 1 - middle;
@@ -198,24 +202,26 @@ abstract class Node {
     }
 }
 
-class BtreeNode extends Node {
-    public BtreeNode() {
-        super();
-        this.children = new Node[BTree.maxNumber];
+class IndexNode extends Node {
+    String[] children;
+
+    public IndexNode(FileOp file, String name, FileType type) {
+        super(file, name, type);
+        this.children = new String[BTree.maxNumber];
     }
 
     @Override
-    String get(String key) throws Exception {
+    String get(String key) {
         int pos = this.findInsertPos(key);
         if (pos == this.number) {
             return null;
         } else {
-            return this.children[pos].get(key);
+            return f.loadFile(this.children[pos]).get(key);
         }
     }
 
     @Override
-    Node put(String key, String value, String keyLeadThis) throws Exception {
+    String put(String key, String value) {
         int putPos = this.findInsertPos(key);
         if (putPos == this.number) {//exceed the maximum
             //renew the rightmost key
@@ -223,33 +229,32 @@ class BtreeNode extends Node {
             putPos--;
         }
 
-        Node newNode = this.children[putPos].put(key, value, this.keys[putPos]);
-
+        String newNode = f.loadFile(this.children[putPos]).put(key, value);
         if (newNode == null) {
             return null;
         } else {//we got a new node for inserting.
-            String newKey = newNode.keys[newNode.number - 1];
-            //find the insert position
-            int insertPos = this.findInsertPos(newKey);
+            //renew the lef key
+            Node tmp_child = f.loadFile(this.children[putPos]);
+            this.keys[putPos] = tmp_child.keys[tmp_child.number - 1];
+            //insert the newNode(rigNode)
+            Node tmp_newNode = f.loadFile(newNode);
+            String newKey = tmp_newNode.keys[tmp_newNode.number - 1];
+            //the insert position must be putPos + 1
+            int insertPos = putPos + 1;
             if (this.number + 1 <= BTree.maxNumber) {//2. don't need to split
                 this.insertDirectly(this.children, insertPos, newKey, newNode);
                 BTree.logger.debug("inserted k-n without split: " + newKey);
-
-                newNode.parent = this;
+                f.dumpFile(this);
+                f.dumpFile(tmp_newNode);
                 return null;
             } else {//3. need to split
-                BtreeNode rigNode = new BtreeNode();
-                this.splitInsert(rigNode, this.children, rigNode.children, insertPos, newKey, newNode);
+                String rigNode = f.newFile(FileType.INDEX);
+                IndexNode tmp_rigNode = (IndexNode) f.loadFile(rigNode);
+                this.splitInsert(tmp_rigNode, this.children, tmp_rigNode.children, insertPos, newKey, newNode);
                 BTree.logger.debug("inserted k-n, split: " + newKey);
-
-                //renew the nodes' parent link
-                newNode.parent = this;
-                for (int i = 0; i < rigNode.number; i++) {
-                    rigNode.children[i].parent = rigNode;
-                }
-                if (keyLeadThis != null) {
-                    this.updateParentKey(keyLeadThis);
-                }
+                f.dumpFile(tmp_newNode);
+                f.dumpFile(tmp_rigNode);
+                f.dumpFile(this);
                 //return the new node
                 return rigNode;
             }
@@ -257,18 +262,19 @@ class BtreeNode extends Node {
     }
 
     @Override
-    LeafNode refreshLeft() {
-        return this.children[0].refreshLeft();
+    String refreshLeft() {
+        return f.loadFile(this.children[0]).refreshLeft();
     }
 }
 
-class LeafNode extends Node {
+class DataNode extends Node {
     //these leaf nodes form a chain
-    protected LeafNode left;
-    protected LeafNode right;
+    String left;
+    String right;
+    String[] values;
 
-    public LeafNode() {
-        super();
+    public DataNode(FileOp file, String name, FileType type) {
+        super(file, name, type);
         this.values = new String[BTree.maxNumber];
         this.left = null;
         this.right = null;
@@ -285,7 +291,7 @@ class LeafNode extends Node {
     }
 
     @Override
-    Node put(String key, String value, String keyLeadThis) throws Exception {
+    String put(String key, String value) {
 
         //find the insert position
         int insertPos = this.findInsertPos(key);
@@ -295,32 +301,35 @@ class LeafNode extends Node {
         } else if (this.number + 1 <= BTree.maxNumber) {//2. don't need to split
             this.insertDirectly(this.values, insertPos, key, value);
             BTree.logger.debug("leaf node inserted k-v without split: " + key + "-" + value);
+            f.dumpFile(this);
             return null;
         } else {//3. need to split
             //new the right leaf
-            LeafNode rigNode = new LeafNode();
-            this.splitInsert(rigNode, this.values, rigNode.values, insertPos, key, value);
+            String rigNode = f.newFile(FileType.DATA);
+            DataNode tmp_rigNode = (DataNode) f.loadFile(rigNode);
+            this.splitInsert(tmp_rigNode, this.values, tmp_rigNode.values, insertPos, key, value);
             BTree.logger.debug("leaf node inserted k-v, split: " + key + "-" + value);
-            if (keyLeadThis != null) {
-                this.updateParentKey(keyLeadThis);
-            }
             //re-chain the leaves
             if (this.right != null) {
-                rigNode.right = this.right;
-                this.right.left = rigNode;
+                tmp_rigNode.right = this.right;
+                DataNode tmp_rig = (DataNode) f.loadFile(this.right);
+                tmp_rig.left = rigNode;
+                f.dumpFile(tmp_rig);
             }
             this.right = rigNode;
-            rigNode.left = this;
+            tmp_rigNode.left = this.name;
             //return the new node
+            f.dumpFile(this);
+            f.dumpFile(tmp_rigNode);
             return rigNode;
         }
     }
 
     @Override
-    LeafNode refreshLeft() {
+    String refreshLeft() {
         if (this.number <= 0)
             return null;
-        return this;
+        return this.name;
     }
 }
 

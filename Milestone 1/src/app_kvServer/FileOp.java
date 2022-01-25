@@ -1,8 +1,7 @@
 package app_kvServer;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -13,11 +12,11 @@ enum FileType {
 
 public class FileOp {
     final static int fileNameLength = 20;
-    static int keyLength;
-    static int valueLength;
     final Random random = new Random();
     final static int charNum = 26 + 26 + 10;
-    ArrayList<TrieNode> FileNameRootList = new ArrayList<TrieNode>();
+    ArrayList<TrieNode> FileNameRootList = new ArrayList<>();
+    final String filePath = "./data/";
+
 
     public static int char2int(char c) {
         if ((int) c >= 97) {
@@ -39,16 +38,15 @@ public class FileOp {
         }
     }
 
-    public boolean isFileExists(String name, FileType type) {
+    public boolean isFileExists(String name) {
         ArrayList<TrieNode> lis = this.FileNameRootList;
         for (int i = 0; ; i++) {
             int tmp = char2int(name.charAt(i));
             if (lis.get(tmp) == null) {
                 return false;
             } else {
-                TrieNode son = lis.get(tmp);
                 if (i == name.length() - 1) {
-                    return son.type == type && lis.get(tmp).occupied;
+                    return lis.get(tmp).occupied;
                 } else {
                     lis = lis.get(tmp).children;
                 }
@@ -110,82 +108,112 @@ public class FileOp {
     }
 
     public String newFile(FileType type) {
-        if (type == FileType.INDEX) {
-            String name = genFileName();
-            this.addFileName(name, type);
+        String name;
+        do {
+            name = genFileName();
+        } while (isFileExists(name));
+        this.addFileName(name, type);
+        try {
+            OutputStream output = new FileOutputStream(filePath + name);
+            if (type == FileType.INDEX) {
+                output.write(0);
+            } else if (type == FileType.DATA) {
+                output.write(1);
+                //left, right
+                writeLine(output, "");
+                writeLine(output, "");
+            }
+        } catch (IOException e) {
+            System.out.println("Can't new file!");
+        }
+        return name;
+    }
 
-            return name;
-        } else if (type == FileType.DATA) {
-            String name = genFileName();
-            this.addFileName(name, type);
-            return name;
-        } else {
-            return null;
+    private static String readLine(InputStream input) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        int b;
+        while (true) {
+            b = input.read();
+            if (b == 0)
+                return sb.toString();
+            if (b == -1)
+                return null;
+            sb.append(b);
         }
     }
 
-    public Node loadFile(String name, FileType type) {
-        InputStream input;
+    private static void writeLine(OutputStream output, String s) throws IOException {
+        output.write(s.getBytes(StandardCharsets.US_ASCII));
+        output.write(0);
+    }
+
+    public Node loadFile(String name) {
         try {
-            input = new FileInputStream("./data/" + name);
+            InputStream input = new FileInputStream(filePath + name);
             int t = input.read();
-            Node node;
-            if (t == 0 && type == FileType.INDEX) {
-                node = new BtreeNode();
-            } else if (t == 1 && type == FileType.DATA) {
-                node = new LeafNode();
+            if (t == 0) {
+                IndexNode node = new IndexNode(this, name, FileType.INDEX);
+                for (node.number = 0; ; node.number++) {
+                    String s = readLine(input);
+                    if (s == null)
+                        break;
+                    node.keys[node.number] = readLine(input);
+                    node.children[node.number] = readLine(input);
+                }
+                node.size = input.available();
+                return node;
+            } else if (t == 1) {
+                DataNode node = new DataNode(this, name, FileType.DATA);
+                node.left = readLine(input);
+                node.right = readLine(input);
+                for (node.number = 0; ; node.number++) {
+                    String s = readLine(input);
+                    if (s == null)
+                        break;
+                    node.keys[node.number] = readLine(input);
+                    node.values[node.number] = readLine(input);
+                }
+                node.size = input.available();
+                input.close();
+                return node;
             } else {
                 return null;
             }
-            node.size = input.available();
-            int b;
-            for (node.number = 0; ; node.number++) {
-                StringBuilder sb = new StringBuilder();
-                while (true) {
-                    b = input.read();
-                    if (b == -1)
-                        break;
-                    if (b == 0)
-                        break;
-                    sb.append(b);
-                }
-                node.keys[node.number] = sb.toString();
-                while (true) {
-                    b = input.read();
-                    if (b == -1)
-                        break;
-                    if (b == 0)
-                        break;
-                    sb.append(b);
-                }
-                node.keys[node.number] = sb.toString();
-                if (b == -1) {
-                    break;
-                }
-            }
-            node.number += 1;
-            return node;
+
+
         } catch (IOException e) {
             return null;
         }
     }
 
-    public static boolean dumpFile(String name, FileType type, Node node) {
-        if (type == FileType.INDEX) {
-
+    public boolean dumpFile(Node node) {
+        try {
+            OutputStream output = new FileOutputStream(filePath + node.name);
+            if (node.type == FileType.INDEX) {
+                IndexNode bn = (IndexNode) node;
+                output.write(0);
+                for (int i = 0; i < node.number; i++) {
+                    writeLine(output, bn.keys[i]);
+                    writeLine(output, bn.children[i]);
+                }
+            } else if (node.type == FileType.DATA) {
+                DataNode ln = (DataNode) node;
+                output.write(1);
+                writeLine(output, ln.left);
+                writeLine(output, ln.right);
+                for (int i = 0; i < node.number; i++) {
+                    writeLine(output, ln.keys[i]);
+                    writeLine(output, ln.values[i]);
+                }
+            }
+            output.close();
             return true;
-        } else if (type == FileType.DATA) {
-
-            return true;
-        } else {
-
+        } catch (IOException e) {
             return false;
         }
     }
 
-    public FileOp(int keyLength, int valueLength) {
-        FileOp.keyLength = keyLength;
-        FileOp.valueLength = valueLength;
+    public FileOp() {
         for (int i = 0; i < FileOp.charNum; i++) {
             this.FileNameRootList.add(null);
         }
@@ -194,7 +222,7 @@ public class FileOp {
 
 
 class TrieNode {
-    ArrayList<TrieNode> children = new ArrayList<TrieNode>();
+    ArrayList<TrieNode> children = new ArrayList<>();
     boolean occupied = false;
     FileType type = null;
 

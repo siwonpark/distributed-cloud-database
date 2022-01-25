@@ -30,19 +30,20 @@ public class test {
 
 
     static void testChain(BTree b) throws Exception {
-        LeafNode lef = b.getLeft();
-        while (lef.right != null) {
-            for (int i = 0; i < lef.number - 1; i++) {
-                if (lef.keys[i].compareTo(lef.keys[i + 1]) >= 0) {
+        String lef = b.getLeft();
+        DataNode tmp_lef = (DataNode) b.f.loadFile(lef);
+        while (tmp_lef.right != null) {
+            for (int i = 0; i < tmp_lef.number - 1; i++) {
+                if (tmp_lef.keys[i].compareTo(tmp_lef.keys[i + 1]) >= 0) {
                     throw new Exception("The sequences is disordered!");
                 }
             }
-            LeafNode tmp = lef;
-            lef = lef.right;
-            if (lef.left != tmp) {
-                throw new Exception("The left pointer is wrong!" + lef.left);
+            DataNode tmp = tmp_lef;
+            tmp_lef = (DataNode) b.f.loadFile(tmp_lef.right);
+            if (!tmp_lef.left.equals(tmp.name)) {
+                throw new Exception("The left pointer is wrong!" + tmp_lef.left);
             }
-            if (tmp.keys[tmp.number - 1].compareTo(lef.keys[0]) >= 0) {
+            if (tmp.keys[tmp.number - 1].compareTo(tmp_lef.keys[0]) >= 0) {
                 throw new Exception("The chain is disordered!");
             }
         }
