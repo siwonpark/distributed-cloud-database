@@ -102,7 +102,6 @@ public class ClientConnection implements Runnable {
 			}
 		} else if (message.getStatus() == StatusType.HEARTBEAT){
 			logger.debug("Received heartbeat request from client");
-			server.running();
 			responseStatus = StatusType.HEARTBEAT;
 		}
 		else {
