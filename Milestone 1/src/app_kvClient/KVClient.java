@@ -1,21 +1,20 @@
 package app_kvClient;
 
+import client.KVCommInterface;
+import client.KVStore;
+import logger.LogSetup;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import shared.PrintUtils;
+import shared.messages.KVMessage;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import logger.LogSetup;
-
+import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.*;
-import client.KVCommInterface;
-import client.KVStore;
-import shared.PrintUtils;
-import shared.messages.KVMessage;
-import shared.LogUtils;
 
 
 
@@ -99,7 +98,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
      */
     private void handleLogLevel(String[] tokens) {
         if(tokens.length == 2) {
-            String level = LogUtils.setLevel(tokens[1]);
+            String level = setLevel(tokens[1]);
             if(level.equals(LogSetup.UNKNOWN_LEVEL)) {
                 printError("Not a valid log level!");
                 printPossibleLogLevels();
