@@ -8,7 +8,6 @@ import app_kvServer.KVServer;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import logger.LogSetup;
-import shared.ServerThread;
 
 
 public class AllTests {
