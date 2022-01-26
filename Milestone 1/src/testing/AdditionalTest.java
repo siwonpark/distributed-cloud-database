@@ -34,11 +34,11 @@ public class AdditionalTest extends TestCase {
 		String testValue = "TestValuevalue";
 		StatusType testStatusType = StatusType.PUT;
 
-		byte[] statusBytes = new byte[]{(byte) testStatusType.ordinal()};
+		byte statusByte = (byte) testStatusType.ordinal();
 		byte[] keyBytes = testKey.getBytes();
 		byte[] valueBytes = testValue.getBytes();
 
-		Message msg = new Message(keyBytes, valueBytes, statusBytes);
+		Message msg = new Message(keyBytes, valueBytes, statusByte);
 
 		assertEquals(testKey, msg.getKey());
 		assertEquals(testValue, msg.getValue());
@@ -52,7 +52,7 @@ public class AdditionalTest extends TestCase {
 	public void testMessageInvalidStatusBytes(){
 		String key = "TestKey1key";
 		byte[] keyBytes = key.getBytes();
-		byte[] statusType = String.valueOf(5000).getBytes();
+		byte statusType = (byte) 127;
 
 		Message msg = new Message(keyBytes, null, statusType);
 		assertEquals(msg.getStatus(), StatusType.FAILED);

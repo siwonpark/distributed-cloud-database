@@ -101,7 +101,7 @@ abstract class Node {
             } else if (key.compareTo(middleKey) < 0) {
                 right = middle;
             } else {
-                left = middle;
+                left = middle + 1;
             }
             middle = (left + right) / 2;
         }

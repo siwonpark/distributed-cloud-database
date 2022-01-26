@@ -15,6 +15,8 @@ public class Heartbeat implements Runnable{
     private KVStore kvStore;
     private boolean continueProbing;
     private Set<ClientSocketListener> listeners;
+    // How often should we send a heartbeat to the server?
+    private final int HEARTBEAT_FREQ_MS = 2000;
 
     public Heartbeat(KVStore kvStore){
         this.kvStore = kvStore;
@@ -32,7 +34,7 @@ public class Heartbeat implements Runnable{
         try {
             while(continueProbing) {
                 kvStore.heartbeat();
-                sleep(3000);
+                sleep(HEARTBEAT_FREQ_MS);
             }
         } catch (IOException ioe) {
             /* connection either terminated by the client or lost due to

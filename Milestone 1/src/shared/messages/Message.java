@@ -17,8 +17,6 @@ public class Message implements Serializable, KVMessage {
 	private StatusType status;
 
 	private byte[] msgBytes;
-//	private static final char LINE_FEED = 0x0A;
-//	private static final char RETURN = 0x0D;
 	private static final char START_OF_TEXT = 0x02;
 	private static final char END_OF_TEXT = 0x03;
 
@@ -28,10 +26,10 @@ public class Message implements Serializable, KVMessage {
      *
      *
      */
-	public Message(byte[] keyBytes, byte[] valueBytes, byte[] statusBytes) {
+	public Message(byte[] keyBytes, byte[] valueBytes, byte statusByte) {
 		this.key = keyBytes != null ? new String(keyBytes).trim() : "";
 		try {
-			int index = statusBytes[0];
+			int index = statusByte;
 			this.status = 0 <= index && index < StatusType.values().length ?
 					StatusType.values()[index] : StatusType.FAILED;
 		} catch(NumberFormatException e) {
@@ -87,25 +85,25 @@ public class Message implements Serializable, KVMessage {
 	}
 	
 	private byte[] toByteArray(String key, StatusType status, String value) {
-		byte[] statusBytes = new byte[]{(byte) status.ordinal()};
+		byte statusByte = (byte) status.ordinal();
 		byte[] wrappedKey = wrapTextWithCtrChars(key);
 		byte[] wrappedValue = wrapTextWithCtrChars(value);
-		byte[] tmp = new byte[statusBytes.length + wrappedKey.length + wrappedValue.length];
+		byte[] tmp = new byte[wrappedKey.length + wrappedValue.length + 1];
 
-		System.arraycopy(statusBytes, 0, tmp, 0, statusBytes.length);
-		System.arraycopy(wrappedKey, 0, tmp, statusBytes.length, wrappedKey.length);
-		System.arraycopy(wrappedValue, 0, tmp, statusBytes.length + wrappedKey.length, wrappedValue.length);
+		tmp[0] = statusByte;
+		System.arraycopy(wrappedKey, 0, tmp, 1, wrappedKey.length);
+		System.arraycopy(wrappedValue, 0, tmp, 1 + wrappedKey.length, wrappedValue.length);
 
 		return tmp;
 	}
 
 	private byte[] toByteArray(String key, StatusType status) {
-		byte[] statusBytes = new byte[]{(byte) status.ordinal()};
+		byte statusByte = (byte) status.ordinal();
 		byte[] wrappedKey = wrapTextWithCtrChars(key);
-		byte[] tmp = new byte[statusBytes.length + wrappedKey.length];
+		byte[] tmp = new byte[wrappedKey.length + 1];
 
-		System.arraycopy(statusBytes, 0, tmp, 0, statusBytes.length);
-		System.arraycopy(wrappedKey, 0, tmp, statusBytes.length, wrappedKey.length);
+		tmp[0] = statusByte;
+		System.arraycopy(wrappedKey, 0, tmp, 1, wrappedKey.length);
 		return tmp;
 	}
 
