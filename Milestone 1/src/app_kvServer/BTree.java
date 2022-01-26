@@ -16,9 +16,7 @@ public class BTree {
         System.out.println(this.root);
         BTree.logger = logger;
     }
-    public boolean dumpTree(){
-        
-    }
+
     public String getLeft() {
         return f.loadFile(this.root).refreshLeft();
     }
