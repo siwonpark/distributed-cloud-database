@@ -24,6 +24,8 @@ public class ClientConnection implements Runnable {
 	private boolean isOpen;
 	private static final int BUFFER_SIZE = 1024;
 	private static final int DROP_SIZE = 128 * BUFFER_SIZE;
+	private static final int MAX_KEY_BYTES = 20; // 20 Bytes
+	private static final int MAX_VALUE_BYTES = 1000 * 120; // 1kByte
 	
 	private Socket clientSocket;
 	private InputStream input;
@@ -84,7 +86,18 @@ public class ClientConnection implements Runnable {
 		String key = message.getKey();
 		String value = message.getValue();
 
-		if (message.getStatus() == StatusType.GET) {
+		if (key.length() > MAX_KEY_BYTES) {
+			String errorMsg = String.format("Key of length %s exceeds max key length (%s Bytes)",
+					key.length(), MAX_KEY_BYTES);
+			sendFailure(errorMsg);
+			return;
+		} else if (value != null && value.length() > MAX_VALUE_BYTES){
+			String errorMsg = String.format("Value of length %s exceeds max key length (%s Bytes)",
+					value.length(), MAX_VALUE_BYTES);
+			sendFailure(errorMsg);
+			return;
+		}
+		else if (message.getStatus() == StatusType.GET) {
 			try {
 				value = server.getKV(message.getKey());
 				responseStatus = StatusType.GET_SUCCESS;
@@ -106,9 +119,7 @@ public class ClientConnection implements Runnable {
 		}
 		else {
 			String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
-			logger.error(errorMsg);
-			Message failedResponse = new Message(errorMsg, null, StatusType.FAILED);
-			sendMessage(failedResponse);
+			sendFailure("errorMsg");
 			return;
 		}
 
@@ -116,7 +127,17 @@ public class ClientConnection implements Runnable {
 
 		sendMessage(response);
 	};
-	
+
+	/**
+	 * Send a failure message back to client
+	 * Note: This sends a message with StatusType.Failure!
+	 */
+	private void sendFailure(String errorMsg) throws IOException {
+		logger.error(errorMsg);
+		Message failedResponse = new Message(errorMsg, null, StatusType.FAILED);
+		sendMessage(failedResponse);
+	}
+
 	/**
 	 * Method sends a TextMessage using this socket.
 	 * @throws IOException some I/O error regarding the output stream
