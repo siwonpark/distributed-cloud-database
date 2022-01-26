@@ -2,7 +2,6 @@ package testing;
 
 import junit.framework.TestCase;
 import app_kvClient.KVClient;
-import app_kvClient.PrintUtils;
 
 import java.io.*;
 

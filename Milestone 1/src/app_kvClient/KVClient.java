@@ -1,21 +1,21 @@
 package app_kvClient;
 
+import client.KVCommInterface;
+import client.KVStore;
+import logger.LogSetup;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import shared.PrintUtils;
+import shared.messages.KVMessage;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import static shared.LogUtils.setLevel;
+import static shared.PrintUtils.*;
 
-import logger.LogSetup;
-
-import static app_kvClient.PrintUtils.*;
-import client.KVCommInterface;
-import client.KVStore;
-import shared.messages.KVMessage;
-import shared.messages.KVMessage.*;
-import shared.messages.Message;
 
 
 public class KVClient implements IKVClient, ClientSocketListener {
@@ -198,38 +198,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
             heartbeat.stopProbing();
             kvStore.disconnect();
             kvStore = null;
-        }
-    }
-
-    /**
-     * Set the logging level to the appropriate level
-     * @param levelString The logging level
-     * @return The updated log level
-     */
-    private String setLevel(String levelString) {
-        if(levelString.equals(Level.ALL.toString())) {
-            logger.setLevel(Level.ALL);
-            return Level.ALL.toString();
-        } else if(levelString.equals(Level.DEBUG.toString())) {
-            logger.setLevel(Level.DEBUG);
-            return Level.DEBUG.toString();
-        } else if(levelString.equals(Level.INFO.toString())) {
-            logger.setLevel(Level.INFO);
-            return Level.INFO.toString();
-        } else if(levelString.equals(Level.WARN.toString())) {
-            logger.setLevel(Level.WARN);
-            return Level.WARN.toString();
-        } else if(levelString.equals(Level.ERROR.toString())) {
-            logger.setLevel(Level.ERROR);
-            return Level.ERROR.toString();
-        } else if(levelString.equals(Level.FATAL.toString())) {
-            logger.setLevel(Level.FATAL);
-            return Level.FATAL.toString();
-        } else if(levelString.equals(Level.OFF.toString())) {
-            logger.setLevel(Level.OFF);
-            return Level.OFF.toString();
-        } else {
-            return LogSetup.UNKNOWN_LEVEL;
         }
     }
 
