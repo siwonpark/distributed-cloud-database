@@ -27,7 +27,7 @@ public class Message implements Serializable, KVMessage {
      *
      */
 	public Message(byte[] keyBytes, byte[] valueBytes, byte statusByte) {
-		this.key = keyBytes != null ? new String(keyBytes).trim() : "";
+		this.key = new String(keyBytes).trim();
 		try {
 			int index = statusByte;
 			this.status = 0 <= index && index < StatusType.values().length ?

@@ -50,10 +50,17 @@ public class Heartbeat implements Runnable{
         }
     }
 
+    /**
+     * Add a listener to this heartbeat
+     * @param listener The listener to add
+     */
     public void addListener(ClientSocketListener listener){
         listeners.add(listener);
     }
 
+    /**
+     * Stop probing the server
+     */
     public void stopProbing(){
         continueProbing = false;
     }

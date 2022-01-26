@@ -28,8 +28,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
     private int serverPort;
     private KVStore kvStore;
     private Heartbeat heartbeat;
-    private boolean probeHeartbeat;
-
 
 
     @Override
@@ -39,7 +37,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
         kvStore.connect();
         heartbeat = new Heartbeat(kvStore);
         heartbeat.addListener(this);
-//        new Thread(heartbeat).start();
+        new Thread(heartbeat).start();
     }
 
     @Override
@@ -63,6 +61,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
+    /**
+     * Handle command line input and perform appropriate actions
+     * @param cmdLine Command line input
+     */
     public void handleCommand(String cmdLine) {
         if(cmdLine == null || cmdLine.isEmpty() ){
             return;
@@ -90,6 +92,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
+    /**
+     * Handle adjustment of logging level
+     * @param tokens The command line arguments
+     */
     private void handleLogLevel(String[] tokens) {
         if(tokens.length == 2) {
             String level = setLevel(tokens[1]);
@@ -104,6 +110,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
+    /**
+     * Handle the 'get' operation from the command line interface
+     * @param tokens The command line arguments
+     */
     private void handlePut(String[] tokens) {
         if(tokens.length == 2 || tokens.length == 3) {
             if(kvStore != null && kvStore.isRunning()){
@@ -127,6 +137,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
+    /**
+     * Handle the 'get' operation from the command line interface
+     * @param tokens The command line arguments
+     */
     private void handleGet(String[] tokens) {
         if(tokens.length == 2) {
             if(kvStore != null && kvStore.isRunning()){
@@ -147,6 +161,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
+    /**
+     * Handle the 'connect' command
+     * @param tokens The command line arguments
+     */
     private void handleConnect(String[] tokens) {
         if(tokens.length == 3) {
             try{
@@ -172,6 +190,9 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
+    /**
+     * Handle the disconnect of the client
+     */
     private void disconnect() {
         if(kvStore != null) {
             heartbeat.stopProbing();
@@ -179,7 +200,12 @@ public class KVClient implements IKVClient, ClientSocketListener {
             kvStore = null;
         }
     }
-    
+
+    /**
+     * Set the logging level to the appropriate level
+     * @param levelString The logging level
+     * @return The updated log level
+     */
     private String setLevel(String levelString) {
         if(levelString.equals(Level.ALL.toString())) {
             logger.setLevel(Level.ALL);
@@ -207,14 +233,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
         }
     }
 
-//    @Override
-//    public void handleNewMessage(Message msg) {
-//        if(!stop) {
-//            // TODO: print the status prompt
-//            System.out.print(PROMPT);
-//        }
-//    }
-
+    /**
+     * Perform actions based on socket status
+     * @param status The status of the socket
+     */
     @Override
     public void handleStatus(SocketStatus status) {
         if(status == SocketStatus.CONNECTED) {

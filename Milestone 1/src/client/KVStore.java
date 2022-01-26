@@ -26,7 +26,6 @@ public class KVStore implements KVCommInterface {
 	public KVStore(String address, int port) {
 		commModule = new CommModule(address, port);
 		listeners = new HashSet<ClientSocketListener>();
-		// setRunning(true);
 	}
 
 	public void setRunning(boolean run) {
@@ -91,13 +90,27 @@ public class KVStore implements KVCommInterface {
 		}
 	}
 
+	/**
+	 * Is KVStore running?
+	 * @return True if KVstore is running, false otherwise
+	 */
 	public boolean isRunning() {
 		return running;
 	}
+
+	/**
+	 * Add a listener to KVStore
+	 * @param listener The listener to add
+	 */
 	public void addListener(ClientSocketListener listener){
 		listeners.add(listener);
 	}
 
+	/**
+	 * Send a no-op to the server, used to check for liveness
+	 * @return The returned message from the server
+	 * @throws IOException If no connection can be made with the server
+	 */
 	public KVMessage heartbeat() throws IOException {
 		logger.debug("Sending heartbeat");
 		String key = "Heartbeat";
