@@ -39,6 +39,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
         kvStore.addListener(this);
         kvStore.connect();
         heartbeat = new Heartbeat(kvStore);
+        heartbeat.addListener(this);
         new Thread(heartbeat).start();
     }
 
@@ -223,12 +224,12 @@ public class KVClient implements IKVClient, ClientSocketListener {
             System.out.print(PROMPT);
             System.out.println("Connection terminated: "
                     + serverAddress + " / " + serverPort);
-
         } else if (status == SocketStatus.CONNECTION_LOST) {
             System.out.println("Connection lost: "
                     + serverAddress + " / " + serverPort);
             System.out.print(PROMPT);
             heartbeat.stopProbing();
+            kvStore = null;
         }
     }
 
