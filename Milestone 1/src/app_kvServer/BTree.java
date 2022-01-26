@@ -45,7 +45,7 @@ public class BTree {
     }
 
     public String get(String key) {
-        BTree.logger.debug("Btree: get successfully. ");
+        BTree.logger.debug("BTree: get successfully. ");
         return f.loadFile(this.root).get(key);
     }
 
@@ -66,7 +66,7 @@ public class BTree {
             f.dumpFile(tmp_newRoot);
             this.root = newRoot;
         }
-        BTree.logger.debug("Btree: put successfully. ");
+        BTree.logger.debug("BTree: put successfully. ");
         this.printTree();
     }
 }
