@@ -9,7 +9,7 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class KVServer implements IKVServer {
+public class KVServer extends Thread implements IKVServer {
 
 	private static Logger logger = Logger.getRootLogger();
 	private ServerSocket serverSocket;
@@ -167,7 +167,7 @@ public class KVServer implements IKVServer {
 				System.out.println("Usage: Server <port>!");
 			} else {
 				int port = Integer.parseInt(args[0]);
-				new KVServer(port, 0, null).run();
+				new KVServer(port, 0, null).start();
 			}
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");
