@@ -20,7 +20,7 @@ public class KVServer extends Thread implements IKVServer {
 	private static int MAX_NUMBER = 2000;
 	private int port;
 	private int cacheSize;
-	private Btree bTree;
+	private BTree bTree;
 	private String strategy;
 	private boolean isRunning;
 
@@ -39,7 +39,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
-		this.bTree = new Btree(MAX_NUMBER, logger);
+		this.bTree = new Btree(MAX_NUMBER);
 	}
 	
 	@Override
