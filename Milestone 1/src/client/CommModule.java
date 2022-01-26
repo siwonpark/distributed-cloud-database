@@ -1,17 +1,12 @@
 package client;
 
-import app_kvClient.ClientSocketListener;
 import org.apache.log4j.Logger;
-import shared.messages.KVMessage;
 import shared.messages.Message;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.util.HashSet;
 
 public class CommModule implements ICommModule {
     private Logger logger = Logger.getRootLogger();
