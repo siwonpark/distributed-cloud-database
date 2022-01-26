@@ -6,13 +6,14 @@ import org.apache.log4j.Logger;
 public class BTree {
     static int maxNumber;
     private String root;
-    static Logger logger;
+    static Logger logger = Logger.getRootLogger();
     FileOp f;
 
     public BTree(int maxNumber, Logger logger) {
         BTree.maxNumber = maxNumber;
         this.f = new FileOp();
         this.root = f.newFile(FileType.DATA);
+        System.out.println(this.root);
         BTree.logger = logger;
     }
 
@@ -64,8 +65,7 @@ public class BTree {
             tmp_newRoot.children[0] = this.root;
             tmp_newRoot.children[1] = rigNode;
             tmp_newRoot.number = 2;
-            f.dumpFile(tmp_rigNode);
-            f.dumpFile(tmp_root);
+            f.dumpFile(tmp_newRoot);
             this.root = newRoot;
         }
 
@@ -245,14 +245,12 @@ class IndexNode extends Node {
                 this.insertDirectly(this.children, insertPos, newKey, newNode);
                 BTree.logger.debug("inserted k-n without split: " + newKey);
                 f.dumpFile(this);
-                f.dumpFile(tmp_newNode);
                 return null;
             } else {//3. need to split
                 String rigNode = f.newFile(FileType.INDEX);
                 IndexNode tmp_rigNode = (IndexNode) f.loadFile(rigNode);
                 this.splitInsert(tmp_rigNode, this.children, tmp_rigNode.children, insertPos, newKey, newNode);
                 BTree.logger.debug("inserted k-n, split: " + newKey);
-                f.dumpFile(tmp_newNode);
                 f.dumpFile(tmp_rigNode);
                 f.dumpFile(this);
                 //return the new node
@@ -297,6 +295,7 @@ class DataNode extends Node {
         int insertPos = this.findInsertPos(key);
         if (insertPos < this.number && key.equals(this.keys[insertPos])) {//1. the key is existed
             this.values[insertPos] = value;
+            f.dumpFile(this);
             return null;
         } else if (this.number + 1 <= BTree.maxNumber) {//2. don't need to split
             this.insertDirectly(this.values, insertPos, key, value);
