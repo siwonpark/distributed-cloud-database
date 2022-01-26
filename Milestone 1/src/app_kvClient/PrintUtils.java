@@ -86,6 +86,8 @@ public class PrintUtils {
             case GET_ERROR:
                 printError("There is no entry with key: \"" + key + "\" in the database.");
                 break;
+            case PUT_UPDATE:
+                printSuccess(String.format("Updated key \"%s\" with value \"%s\".", key, value));
             default:
                 break;
         }

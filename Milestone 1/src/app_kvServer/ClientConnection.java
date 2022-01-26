@@ -109,8 +109,10 @@ public class ClientConnection implements Runnable {
 				}
 				break;
 			case PUT:
+				boolean isInStorage = server.inStorage(key);
+
 				if (value == null) {
-					if (!server.inStorage(key)) {
+					if (!isInStorage) {
 						logger.error("Trying to delete key that does not exist: Key " + message.getKey());
 						responseStatus = StatusType.DELETE_ERROR;
 						break;
@@ -126,7 +128,7 @@ public class ClientConnection implements Runnable {
 				} else {
 					try {
 						server.putKV(key, value);
-						responseStatus = StatusType.PUT_SUCCESS;
+						responseStatus = isInStorage ? StatusType.PUT_UPDATE : StatusType.PUT_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
 						responseStatus = StatusType.PUT_ERROR;
