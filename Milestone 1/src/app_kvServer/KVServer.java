@@ -39,7 +39,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
-		this.bTree = new Btree(MAX_NUMBER);
+		this.bTree = new BTree(MAX_NUMBER);
 	}
 	
 	@Override

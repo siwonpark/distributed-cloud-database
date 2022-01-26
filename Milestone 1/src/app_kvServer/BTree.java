@@ -13,7 +13,6 @@ public class BTree {
         BTree.maxNumber = maxNumber;
         this.f = new FileOp();
         this.root = f.newFile(FileType.DATA);
-        System.out.println(this.root);
     }
 
     public String getLeft() {
@@ -40,9 +39,9 @@ public class BTree {
     }
 
     public void printTree() {
-        BTree.logger.debug("\nPrint Btree");
+        BTree.logger.debug("\nPrint BTree");
         this.printNode(this.root, 0);
-        BTree.logger.debug("END of Btree\n");
+        BTree.logger.debug("END of BTree\n");
     }
 
     public String get(String key) {

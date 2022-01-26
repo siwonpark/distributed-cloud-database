@@ -19,7 +19,7 @@ public class FileOp {
     final Random random = new Random();
     final static int charNum = 26 + 26 + 10;
     ArrayList<TrieNode> FileNameRootList = new ArrayList<>();
-    final String filePath = "E:/桌面/ECE419/Milestone 1/src/app_kvServer/data/";
+    final String filePath = "E:/桌面/Distributed Systems/milestone1/ECE419-Project/Milestone 1/src/app_kvServer/data";
 
 
     public static int char2int(char c) {
