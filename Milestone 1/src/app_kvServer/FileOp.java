@@ -1,5 +1,8 @@
 package app_kvServer;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -11,11 +14,12 @@ enum FileType {
 
 
 public class FileOp {
+    static Logger logger = Logger.getRootLogger();
     final static int fileNameLength = 20;
     final Random random = new Random();
     final static int charNum = 26 + 26 + 10;
     ArrayList<TrieNode> FileNameRootList = new ArrayList<>();
-    final String filePath = "./data/";
+    final String filePath = "E:/桌面/ECE419/Milestone 1/src/app_kvServer/data/";
 
 
     public static int char2int(char c) {
@@ -76,7 +80,7 @@ public class FileOp {
         }
     }
 
-//    public boolean delFileName(String name, FileType type) {
+    //    public boolean delFileName(String name, FileType type) {
 //        ArrayList<TrieNode> lis = this.rootList;
 //        for (int i = 0; ; i++) {
 //            int tmp = char2int(name.charAt(i));
@@ -97,9 +101,7 @@ public class FileOp {
 //            }
 //        }
 //    }
-
     public String genFileName() {
-        //TODO make it collision free(Trie tree or hash)
         StringBuilder buffer = new StringBuilder(fileNameLength);
         for (int i = 0; i < fileNameLength; i++) {
             buffer.append(int2char(random.nextInt(charNum)));
@@ -123,9 +125,12 @@ public class FileOp {
                 writeLine(output, "");
                 writeLine(output, "");
             }
+            output.close();
         } catch (IOException e) {
-            System.out.println("Can't new file!");
+            e.printStackTrace();
+            logger.debug("Can't new file!");
         }
+        logger.debug("new file " + name);
         return name;
     }
 
@@ -134,20 +139,24 @@ public class FileOp {
         int b;
         while (true) {
             b = input.read();
-            if (b == 0)
+            if (b == 0) {
                 return sb.toString();
+            }
             if (b == -1)
                 return null;
-            sb.append(b);
+            sb.append((char) b);
         }
+
     }
 
     private static void writeLine(OutputStream output, String s) throws IOException {
-        output.write(s.getBytes(StandardCharsets.US_ASCII));
+        if (s != null)
+            output.write(s.getBytes(StandardCharsets.US_ASCII));
         output.write(0);
     }
 
     public Node loadFile(String name) {
+        logger.debug("load file " + name);
         try {
             InputStream input = new FileInputStream(filePath + name);
             int t = input.read();
@@ -161,11 +170,14 @@ public class FileOp {
                     node.children[node.number] = readLine(input);
                 }
                 node.size = input.available();
+                input.close();
                 return node;
             } else if (t == 1) {
                 DataNode node = new DataNode(this, name, FileType.DATA);
-                node.left = readLine(input);
-                node.right = readLine(input);
+                String s_lef = readLine(input);
+                String s_rig = readLine(input);
+                node.left = "".equals(s_lef) ? null : s_lef;
+                node.right = "".equals(s_rig) ? null : s_rig;
                 for (node.number = 0; ; node.number++) {
                     String s = readLine(input);
                     if (s == null)
@@ -187,6 +199,10 @@ public class FileOp {
     }
 
     public boolean dumpFile(Node node) {
+        logger.debug("dump file " + node.name);
+//        if(logger.getLevel()== Level.DEBUG){
+//            for(int i=0;i<node.hashCode())
+//        }
         try {
             OutputStream output = new FileOutputStream(filePath + node.name);
             if (node.type == FileType.INDEX) {

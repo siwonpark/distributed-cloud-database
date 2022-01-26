@@ -17,6 +17,7 @@ class Data {
 }
 
 public class test {
+
     private static final Logger logger = Logger.getLogger(test.class);
     static final Random random = new Random();
 
@@ -50,16 +51,16 @@ public class test {
     }
 
     public static void main(String[] args) throws Exception {
-
+        System.out.println("File test");
         BasicConfigurator.configure();
-        logger.setLevel(Level.INFO);
+        logger.setLevel(Level.DEBUG);
         int test_length = 30;
         Data[] lis = new Data[test_length];
         for (int i = 0; i < test_length; i++) {
             lis[i] = new Data(test.getRandomString(10), test.getRandomString(20));
         }
 //        long time1 = System.nanoTime();
-        BTree b = new BTree(100, logger);
+        BTree b = new BTree(4, logger);
         for (int i = 0; i < test_length; i++) {
             logger.debug("test: put " + lis[i].key + " " + lis[i].value);
             b.put(lis[i].key, lis[i].value);
