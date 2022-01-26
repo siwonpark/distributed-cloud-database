@@ -27,20 +27,23 @@ public class KVClient implements IKVClient, ClientSocketListener {
     private String serverAddress;
     private int serverPort;
     private KVStore kvStore;
+    private Heartbeat heartbeat;
+    private boolean probeHeartbeat;
 
 
 
     @Override
     public void newConnection(String hostname, int port) throws Exception{
-        // TODO Auto-generated method stub
         kvStore = new KVStore(hostname, port);
         kvStore.addListener(this);
         kvStore.connect();
+        heartbeat = new Heartbeat(kvStore);
+        heartbeat.addListener(this);
+        new Thread(heartbeat).start();
     }
 
     @Override
     public KVCommInterface getStore(){
-        // TODO Auto-generated method stub
         return kvStore;
     }
 
@@ -50,6 +53,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
             System.out.print(PROMPT);
 
             try {
+
                 String cmdLine = stdin.readLine();
                 this.handleCommand(cmdLine);
             } catch (IOException e) {
@@ -171,6 +175,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
 
     private void disconnect() {
         if(kvStore != null) {
+            heartbeat.stopProbing();
             kvStore.disconnect();
             kvStore = null;
         }
@@ -218,11 +223,12 @@ public class KVClient implements IKVClient, ClientSocketListener {
             System.out.print(PROMPT);
             System.out.println("Connection terminated: "
                     + serverAddress + " / " + serverPort);
-
         } else if (status == SocketStatus.CONNECTION_LOST) {
             System.out.println("Connection lost: "
                     + serverAddress + " / " + serverPort);
             System.out.print(PROMPT);
+            heartbeat.stopProbing();
+            kvStore = null;
         }
     }
 

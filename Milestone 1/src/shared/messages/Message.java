@@ -29,9 +29,9 @@ public class Message implements Serializable, KVMessage {
      *
      */
 	public Message(byte[] keyBytes, byte[] valueBytes, byte[] statusBytes) {
-		this.key = new String(keyBytes).trim();
+		this.key = keyBytes != null ? new String(keyBytes).trim() : "";
 		try {
-			int index = Integer.parseInt(new String(statusBytes));
+			int index = statusBytes[0];
 			this.status = 0 <= index && index < StatusType.values().length ?
 					StatusType.values()[index] : StatusType.FAILED;
 		} catch(NumberFormatException e) {
@@ -87,7 +87,7 @@ public class Message implements Serializable, KVMessage {
 	}
 	
 	private byte[] toByteArray(String key, StatusType status, String value) {
-		byte[] statusBytes = String.valueOf(status.ordinal()).getBytes();
+		byte[] statusBytes = new byte[]{(byte) status.ordinal()};
 		byte[] wrappedKey = wrapTextWithCtrChars(key);
 		byte[] wrappedValue = wrapTextWithCtrChars(value);
 		byte[] tmp = new byte[statusBytes.length + wrappedKey.length + wrappedValue.length];
@@ -100,7 +100,7 @@ public class Message implements Serializable, KVMessage {
 	}
 
 	private byte[] toByteArray(String key, StatusType status) {
-		byte[] statusBytes = String.valueOf(status.ordinal()).getBytes();
+		byte[] statusBytes = new byte[]{(byte) status.ordinal()};
 		byte[] wrappedKey = wrapTextWithCtrChars(key);
 		byte[] tmp = new byte[statusBytes.length + wrappedKey.length];
 

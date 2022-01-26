@@ -17,7 +17,7 @@ public class AdditionalTest extends TestCase {
 	 */
 	public void testMessageEncode() {
 		Message messageEncode = new Message("key", "value", StatusType.PUT);
-		byte[] expectedByteArray = new byte[] {51, 2, 107, 101, 121, 3, 2, 118, 97, 108, 117, 101, 3};
+		byte[] expectedByteArray = new byte[] {(byte) StatusType.PUT.ordinal(), 2, 107, 101, 121, 3, 2, 118, 97, 108, 117, 101, 3};
 
 		assertEquals("key", messageEncode.getKey());
 		assertEquals("value", messageEncode.getValue());
@@ -34,7 +34,7 @@ public class AdditionalTest extends TestCase {
 		String testValue = "TestValuevalue";
 		StatusType testStatusType = StatusType.PUT;
 
-		byte[] statusBytes = String.valueOf(testStatusType.ordinal()).getBytes();
+		byte[] statusBytes = new byte[]{(byte) testStatusType.ordinal()};
 		byte[] keyBytes = testKey.getBytes();
 		byte[] valueBytes = testValue.getBytes();
 

@@ -100,7 +100,11 @@ public class ClientConnection implements Runnable {
 				logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
 				responseStatus = StatusType.PUT_ERROR;
 			}
-		} else {
+		} else if (message.getStatus() == StatusType.HEARTBEAT){
+			logger.debug("Received heartbeat request from client");
+			responseStatus = StatusType.HEARTBEAT;
+		}
+		else {
 			String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 			logger.error(errorMsg);
 			Message failedResponse = new Message(errorMsg, null, StatusType.FAILED);
@@ -121,7 +125,7 @@ public class ClientConnection implements Runnable {
 		byte[] msgBytes = message.getMsgBytes();
 		output.write(msgBytes, 0, msgBytes.length);
 		output.flush();
-		logger.info("Send message: " + message.getMessageString());
+		logger.debug("Send message: " + message.getMessageString());
 	};
 
 	public Message receiveMessage() throws IOException {
@@ -145,7 +149,7 @@ public class ClientConnection implements Runnable {
 
 		/* build final String */
 		Message msg = new Message(keyBytes, valueBytes, statusByte);
-		logger.info("Received message: " + msg.getMessageString());
+		logger.debug("Received message: " + msg.getMessageString());
 		return msg;
 	};
 
