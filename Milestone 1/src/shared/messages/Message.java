@@ -20,12 +20,13 @@ public class Message implements Serializable, KVMessage {
 	private static final char START_OF_TEXT = 0x02;
 	private static final char END_OF_TEXT = 0x03;
 
-    /**
-     * Constructs a Message object with a given array of bytes that
-     * forms the message.
-     *
-     *
-     */
+	/**
+	 * Constructs a Message object with a given array of bytes that
+	 * forms the message.
+	 * @param keyBytes
+	 * @param valueBytes
+	 * @param statusByte
+	 */
 	public Message(byte[] keyBytes, byte[] valueBytes, byte statusByte) {
 		this.key = new String(keyBytes).trim();
 		try {
@@ -73,6 +74,12 @@ public class Message implements Serializable, KVMessage {
 		return msgBytes;
 	}
 
+	/**
+	 * Helper function for toByteArray() to wrap the key/value text with control characters
+	 * based on the ASCII protocol.
+	 * @param text
+	 * @return byte[]
+	 */
 	private byte[] wrapTextWithCtrChars(String text) {
 		byte[] textBytes = text.getBytes();
 		byte[] ctrBytes = new byte[]{START_OF_TEXT, END_OF_TEXT};
@@ -83,7 +90,14 @@ public class Message implements Serializable, KVMessage {
 		System.arraycopy(ctrBytes, 1, tmp, tmp.length - 1, 1);
 		return tmp;
 	}
-	
+
+	/**
+	 * Convert properties to a byte array used for socket communication.
+	 * @param key
+	 * @param status
+	 * @param value
+	 * @return byte[]
+	 */
 	private byte[] toByteArray(String key, StatusType status, String value) {
 		byte statusByte = (byte) status.ordinal();
 		byte[] wrappedKey = wrapTextWithCtrChars(key);
@@ -97,6 +111,12 @@ public class Message implements Serializable, KVMessage {
 		return tmp;
 	}
 
+	/**
+	 * Convert properties to a byte array used for socket communication.
+	 * @param key
+	 * @param status
+	 * @return byte[]
+	 */
 	private byte[] toByteArray(String key, StatusType status) {
 		byte statusByte = (byte) status.ordinal();
 		byte[] wrappedKey = wrapTextWithCtrChars(key);
@@ -107,6 +127,10 @@ public class Message implements Serializable, KVMessage {
 		return tmp;
 	}
 
+	/**
+	 * Helper method to make it easier to print out messages for server logs
+	 * @return String
+	 */
 	public String getMessageString() {
 		StringBuilder outputString = new StringBuilder("");
 		outputString.append("Status: " + status);

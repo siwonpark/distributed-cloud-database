@@ -59,6 +59,10 @@ public class PrintUtils {
         System.out.println("ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
+    /**
+     * Prints the response that the user receives in shell based on the message
+     * @param message
+     */
     public static void printResponseToUser(KVMessage message){
         String key = message.getKey();
         String value = message.getValue();

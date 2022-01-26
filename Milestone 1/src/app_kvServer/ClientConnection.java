@@ -81,6 +81,11 @@ public class ClientConnection implements Runnable {
 		}
 	}
 
+	/**
+	 * Takes the client request as a message and actions on it depending on the StatusType of the request.
+	 * @param message
+	 * @throws IOException
+	 */
 	public void handleRequest(Message message) throws IOException {
 		StatusType responseStatus;
 		String key = message.getKey();
@@ -150,7 +155,7 @@ public class ClientConnection implements Runnable {
 		Message response = new Message(key, value, responseStatus);
 
 		sendMessage(response);
-	};
+	}
 
 	/**
 	 * Send a failure message back to client
@@ -166,14 +171,20 @@ public class ClientConnection implements Runnable {
 	 * Method sends a TextMessage using this socket.
 	 * @throws IOException some I/O error regarding the output stream
 	 */
-	public void sendMessage(Message message) throws IOException{
+	private void sendMessage(Message message) throws IOException{
 		byte[] msgBytes = message.getMsgBytes();
 		output.write(msgBytes, 0, msgBytes.length);
 		output.flush();
 		logger.debug("Send message: " + message.getMessageString());
-	};
+	}
 
-	public Message receiveMessage() throws IOException {
+	/**
+	 * Read from the socket input stream to get the messages based on the following format.
+	 * StatusCode - TXTSTART - Key - TXTEND - TXTSTART - Value (optional) - TXTEND
+	 * @return
+	 * @throws IOException
+	 */
+	private Message receiveMessage() throws IOException {
 		/* read the status byte, always the first byte in the message */
 		byte statusByte = (byte) input.read();
 
@@ -194,9 +205,14 @@ public class ClientConnection implements Runnable {
 		Message msg = new Message(keyBytes, valueBytes, statusByte);
 		logger.debug("Received message: " + msg.getMessageString());
 		return msg;
-	};
+	}
 
-	public byte[] readText() throws IOException {
+	/**
+	 * Helper function for receiveMessage() to do the actual byte processing of the input stream.
+	 * @return
+	 * @throws IOException
+	 */
+	private byte[] readText() throws IOException {
 		int index = 0;
 		byte[] textBytes = null, tmp = null;
 		byte[] bufferBytes = new byte[BUFFER_SIZE];
@@ -255,5 +271,5 @@ public class ClientConnection implements Runnable {
 		textBytes = tmp;
 
 		return textBytes;
-	};
+	}
 }

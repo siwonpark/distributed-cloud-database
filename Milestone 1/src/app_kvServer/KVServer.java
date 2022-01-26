@@ -138,6 +138,10 @@ public class KVServer implements IKVServer {
 		// TODO Auto-generated method stub
 	}
 
+	/**
+	 * Initialize the server by opening up a ServerSocket to listen to incoming connection requests.
+	 * @return
+	 */
 	private boolean initializeServer() {
 		logger.info("Initialize server ...");
 		try {
