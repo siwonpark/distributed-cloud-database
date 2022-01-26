@@ -94,6 +94,10 @@ public class KVServer implements IKVServer {
 		bTree.put(key, value);
 	}
 
+	public boolean running(){
+		return isRunning;
+	}
+
 	@Override
     public void clearCache(){
 		// TODO Auto-generated method stub

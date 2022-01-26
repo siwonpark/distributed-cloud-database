@@ -5,10 +5,6 @@ import app_kvClient.ClientSocketListener.SocketStatus;
 import shared.messages.KVMessage;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -100,5 +96,14 @@ public class KVStore implements KVCommInterface {
 	}
 	public void addListener(ClientSocketListener listener){
 		listeners.add(listener);
+	}
+
+	public KVMessage heartbeat() throws IOException {
+		logger.debug("Sending heartbeat");
+		String key = "Heartbeat";
+		Message msg = new Message(key, null, KVMessage.StatusType.HEARTBEAT);
+		commModule.sendMessage(msg);
+		Message response = commModule.receiveMessage();
+		return response;
 	}
 }
