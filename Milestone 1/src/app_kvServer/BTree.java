@@ -16,7 +16,9 @@ public class BTree {
         System.out.println(this.root);
         BTree.logger = logger;
     }
-
+    public boolean dumpTree(){
+        
+    }
     public String getLeft() {
         return f.loadFile(this.root).refreshLeft();
     }
@@ -68,7 +70,6 @@ public class BTree {
             f.dumpFile(tmp_newRoot);
             this.root = newRoot;
         }
-
         BTree.logger.debug("Btree: put successfully. ");
         this.printTree();
     }
@@ -227,6 +228,7 @@ class IndexNode extends Node {
             //renew the rightmost key
             this.keys[this.number - 1] = key;
             putPos--;
+            f.dumpFile(this);
         }
 
         String newNode = f.loadFile(this.children[putPos]).put(key, value);
