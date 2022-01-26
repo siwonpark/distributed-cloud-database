@@ -166,7 +166,7 @@ public class FileOp {
                     String s = readLine(input);
                     if (s == null)
                         break;
-                    node.keys[node.number] = readLine(input);
+                    node.keys[node.number] = s;
                     node.children[node.number] = readLine(input);
                 }
                 node.size = input.available();
@@ -182,7 +182,7 @@ public class FileOp {
                     String s = readLine(input);
                     if (s == null)
                         break;
-                    node.keys[node.number] = readLine(input);
+                    node.keys[node.number] = s;
                     node.values[node.number] = readLine(input);
                 }
                 node.size = input.available();
@@ -201,7 +201,13 @@ public class FileOp {
     public boolean dumpFile(Node node) {
         logger.debug("dump file " + node.name);
 //        if(logger.getLevel()== Level.DEBUG){
-//            for(int i=0;i<node.hashCode())
+//            for (int i = 0; i < node.number; i++) {
+//                BTree.logger.debug("dump file key: " + node.keys[i]);
+//                if (node.type == FileType.DATA) {
+//                    assert node instanceof DataNode;
+//                    BTree.logger.debug("dump file values: " + ((DataNode) node).values[i]);
+//                }
+//            }
 //        }
         try {
             OutputStream output = new FileOutputStream(filePath + node.name);
