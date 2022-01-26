@@ -26,7 +26,7 @@ public class ClientConnection implements Runnable {
 	private static final int DROP_SIZE = 128 * BUFFER_SIZE;
 	private static final int MAX_KEY_BYTES = 20; // 20 Bytes
 	private static final int MAX_VALUE_BYTES = 1000 * 120; // 1kByte
-	
+
 	private Socket clientSocket;
 	private InputStream input;
 	private OutputStream output;
@@ -82,7 +82,7 @@ public class ClientConnection implements Runnable {
 	}
 
 	public void handleRequest(Message message) throws IOException {
-		StatusType responseStatus = null;
+		StatusType responseStatus;
 		String key = message.getKey();
 		String value = message.getValue();
 
@@ -97,30 +97,54 @@ public class ClientConnection implements Runnable {
 			sendFailure(errorMsg);
 			return;
 		}
-		else if (message.getStatus() == StatusType.GET) {
-			try {
-				value = server.getKV(message.getKey());
-				responseStatus = StatusType.GET_SUCCESS;
-			} catch (Exception e) {
-				logger.error("Unable to get value for key: " + message.getKey());
-				responseStatus = StatusType.GET_ERROR;
-			}
-		} else if (message.getStatus() == StatusType.PUT) {
-			try {
-				server.putKV(key, value);
-				responseStatus = StatusType.PUT_SUCCESS;
-			} catch (Exception e) {
-				logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
-				responseStatus = StatusType.PUT_ERROR;
-			}
-		} else if (message.getStatus() == StatusType.HEARTBEAT){
-			logger.debug("Received heartbeat request from client");
-			responseStatus = StatusType.HEARTBEAT;
-		}
-		else {
-			String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
-			sendFailure("errorMsg");
-			return;
+
+		switch(message.getStatus()) {
+			case GET:
+				try {
+					value = server.getKV(message.getKey());
+					responseStatus = StatusType.GET_SUCCESS;
+				} catch (Exception e) {
+					logger.error("Unable to get value for key: " + message.getKey());
+					responseStatus = StatusType.GET_ERROR;
+				}
+				break;
+			case PUT:
+				boolean isInStorage = server.inStorage(key);
+
+				if (value == null) {
+					if (!isInStorage) {
+						logger.error("Trying to delete key that does not exist: Key " + message.getKey());
+						responseStatus = StatusType.DELETE_ERROR;
+						break;
+					}
+
+					try {
+						server.putKV(key, null);
+						responseStatus = StatusType.DELETE_SUCCESS;
+					} catch (Exception e) {
+						logger.error("Unable to delete from store: Key " + message.getKey());
+						responseStatus = StatusType.DELETE_ERROR;
+					}
+				} else {
+					try {
+						server.putKV(key, value);
+						responseStatus = isInStorage ? StatusType.PUT_UPDATE : StatusType.PUT_SUCCESS;
+					} catch (Exception e) {
+						logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
+						responseStatus = StatusType.PUT_ERROR;
+					}
+				}
+				break;
+			case HEARTBEAT:
+				logger.debug("Received heartbeat request from client");
+				responseStatus = StatusType.HEARTBEAT;
+				break;
+			default:
+				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
+				logger.error(errorMsg);
+				key = errorMsg;
+				responseStatus = StatusType.FAILED;
+				break;
 		}
 
 		Message response = new Message(key, value, responseStatus);
@@ -150,12 +174,10 @@ public class ClientConnection implements Runnable {
 	};
 
 	public Message receiveMessage() throws IOException {
-		byte[] statusByte = new byte[1];
-
 		/* read the status byte, always the first byte in the message */
-		byte read = (byte) input.read(statusByte);
-		if (read != 1) {
-			logger.error("Did not receive correct status byte format from server");
+		byte statusByte = (byte) input.read();
+
+		if (statusByte == -1) {
 			throw new IOException("Connection Lost!");
 		}
 

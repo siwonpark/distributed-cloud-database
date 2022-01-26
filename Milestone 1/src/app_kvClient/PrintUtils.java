@@ -13,27 +13,25 @@ public class PrintUtils {
      */
     public static void printHelp() {
         StringBuilder sb = new StringBuilder();
-        sb.append(PROMPT).append("KVClient HELP (Usage):\n");
-        sb.append(PROMPT);
+        sb.append("KVClient HELP (Usage):\n");
         sb.append("::::::::::::::::::::::::::::::::");
         sb.append("::::::::::::::::::::::::::::::::\n");
-        sb.append(PROMPT).append("connect <host> <port>");
+        sb.append("connect <host> <port>");
         sb.append("\t Establishes a connection to a server\n");
-        sb.append(PROMPT).append("put <key> <value>");
-        sb.append("\t\t Put a key-value pair in the database. " +
+        sb.append("put <key> <value>");
+        sb.append("\t Put a key-value pair in the database. " +
                 "If value is not supplied, then deletes entry key from the database \n");
-        sb.append(PROMPT).append("get <key>");
-        sb.append("\t\t\t\t Get the value corresponding to key\n");
-        sb.append(PROMPT).append("disconnect");
-        sb.append("\t\t\t disconnects from the server \n");
+        sb.append("get <key>");
+        sb.append("\t\t Get the value corresponding to key\n");
+        sb.append("disconnect");
+        sb.append("\t\t Disconnects from the server \n");
 
-        sb.append(PROMPT).append("logLevel");
-        sb.append("\t\t\t\t changes the logLevel \n");
-        sb.append(PROMPT).append("\t\t\t\t ");
-        sb.append("\t\t ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF \n");
+        sb.append("logLevel");
+        sb.append("\t\t Changes the logLevel \n");
+        sb.append("\t\t\t ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF \n");
 
-        sb.append(PROMPT).append("quit ");
-        sb.append("\t\t\t\t\t exits the program");
+        sb.append("quit");
+        sb.append("\t\t\t Exits the program");
         System.out.println(sb.toString());
     }
 
@@ -42,34 +40,57 @@ public class PrintUtils {
      * @param error
      */
     public static void printError(String error){
-        System.out.println(PROMPT + "Error! " +  error);
+        System.out.println("Error! " +  error);
+    }
+
+    /**
+     * Wrapper function to print errors
+     * @param msg
+     */
+    public static void printSuccess(String msg){
+        System.out.println("Success! " +  msg);
     }
 
     /**
      * Prints the possible log levels
      */
     public static void printPossibleLogLevels() {
-        System.out.println(PROMPT
-                + "Possible log levels are:");
-        System.out.println(PROMPT
-                + "ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
+        System.out.println("Possible log levels are:");
+        System.out.println("ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
     }
 
     public static void printResponseToUser(KVMessage message){
         String key = message.getKey();
         String value = message.getValue();
         StatusType status = message.getStatus();
-        if (status == StatusType.FAILED){
-            printFailedResponseToUser(key);
-            return;
+
+        switch (status) {
+            case FAILED:
+                printFailedResponseToUser(key);
+                break;
+            case PUT_SUCCESS:
+                printSuccess(String.format("Inserted {\"%s\": \"%s\"} to the database.", key, value));
+                break;
+            case DELETE_SUCCESS:
+                printSuccess("Deleted key \"" + key + "\" from the database.");
+                break;
+            case DELETE_ERROR:
+                printError("Failed to delete key \"" + key + "\" from the database.");
+                break;
+            case PUT_ERROR:
+                printError(String.format("Failed to insert {\"%s\": \"%s\"} to the database.", key, value));
+                break;
+            case GET_SUCCESS:
+                printSuccess("Retrieved value \"" + value + "\" from the database.");
+                break;
+            case GET_ERROR:
+                printError("There is no entry with key: \"" + key + "\" in the database.");
+                break;
+            case PUT_UPDATE:
+                printSuccess(String.format("Updated key \"%s\" with value \"%s\".", key, value));
+            default:
+                break;
         }
-        StringBuilder outputString = new StringBuilder("Success! The server replied with: ");
-        outputString.append("Status: " + status);
-        outputString.append(" Key: " + key);
-        if (value != null){
-            outputString.append(" Value: " + value);
-        }
-        System.out.println(outputString);
     }
 
     /**

@@ -11,8 +11,6 @@ public class CLITest extends TestCase{
     private KVClient app;
     private final PrintStream SysOut = System.out;
     private final ByteArrayOutputStream testOut = new ByteArrayOutputStream();
-    private final String PROMPT = PrintUtils.PROMPT;
-
 
     @Override
     protected void setUp(){
@@ -34,7 +32,7 @@ public class CLITest extends TestCase{
         String INVALID_STRING = "Hello world";
         app.handleCommand(INVALID_STRING);
         String output = testOut.toString();
-        assertTrue(output.startsWith(PROMPT + "Error! Unknown command"));
+        assertTrue(output.startsWith("Error! Unknown command"));
     }
 
     /**
@@ -42,7 +40,7 @@ public class CLITest extends TestCase{
      */
     public void testInvalidGetParameters(){
         String INVALID_STRING = "get";
-        String EXPECTED_OUTPUT = PROMPT + "Error! Invalid number of parameters.";
+        String EXPECTED_OUTPUT = "Error! Invalid number of parameters.";
         app.handleCommand(INVALID_STRING);
         String output = testOut.toString();
         assertTrue(output.startsWith(EXPECTED_OUTPUT));
@@ -58,7 +56,7 @@ public class CLITest extends TestCase{
      */
     public void testInvalidPutParameters(){
         String INVALID_STRING = "put";
-        String EXPECTED_OUTPUT = PROMPT + "Error! Invalid number of parameters.";
+        String EXPECTED_OUTPUT = "Error! Invalid number of parameters.";
         app.handleCommand(INVALID_STRING);
         String output = testOut.toString();
         assertTrue(output.startsWith(EXPECTED_OUTPUT));

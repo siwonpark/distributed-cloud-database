@@ -66,8 +66,8 @@ public class KVServer implements IKVServer {
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
 		try{
-			bTree.get(key);
-			return true;
+			String value = bTree.get(key);
+			return value != null;
 		} catch (Exception e){
 			return false;
 		}

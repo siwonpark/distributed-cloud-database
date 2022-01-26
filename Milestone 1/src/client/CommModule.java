@@ -53,12 +53,11 @@ public class CommModule implements ICommModule {
 
     @Override
     public Message receiveMessage() throws IOException {
-        byte[] statusByte = new byte[1];
-
         /* read the status byte, always the first byte in the message */
-        byte read = (byte) input.read(statusByte);
-        if (read != 1) {
-            logger.error("Did not receive correct status byte from server");
+        byte statusByte = (byte) input.read();
+
+        if (statusByte == -1) {
+            throw new IOException("Connection Lost!");
         }
 
         byte[] keyBytes = readText();

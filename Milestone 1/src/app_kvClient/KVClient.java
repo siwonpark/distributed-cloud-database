@@ -73,7 +73,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
         if(tokens[0].equals("quit")) {
             stop = true;
             disconnect();
-            System.out.println(PROMPT + "Application exit!");
+            System.out.println("Application exit!");
         } else if (tokens[0].equals("connect")){
             handleConnect(tokens);
         } else  if (tokens[0].equals("get")) {
@@ -103,8 +103,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                 printError("Not a valid log level!");
                 printPossibleLogLevels();
             } else {
-                System.out.println(PROMPT +
-                        "Log level changed to level " + level);
+                System.out.println("Log level changed to level " + level);
             }
         } else {
             printError("Invalid number of parameters! Use the help command to see usage instructions");
@@ -172,7 +171,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                 serverAddress = tokens[1];
                 serverPort = Integer.parseInt(tokens[2]);
                 newConnection(serverAddress, serverPort);
-                System.out.println(PROMPT + String.format("Connected to %s port %s!", serverAddress, serverPort));
+                System.out.println(String.format("Connected to %s port %s!", serverAddress, serverPort));
             } catch(NumberFormatException nfe) {
                 printError("No valid address. Port must be a number!");
                 logger.info("Unable to parse argument <port>", nfe);
