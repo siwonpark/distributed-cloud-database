@@ -9,6 +9,10 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import static shared.PrintUtils.printError;
+import static shared.PrintUtils.printPossibleLogLevels;
+import static shared.LogUtils.setLevel;
+
 public class KVServer extends Thread implements IKVServer {
 
 	private static Logger logger = Logger.getRootLogger();
@@ -165,12 +169,22 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public static void main(String[] args) {
 		try {
-			new LogSetup("logs/server.log", Level.ALL);
-			if(args.length != 1) {
+			if(args.length < 1 || args.length > 2) {
 				System.out.println("Error! Invalid number of arguments!");
-				System.out.println("Usage: Server <port>!");
+				System.out.println("Usage: Server <port> [<logLevel>]!");
 			} else {
+				new LogSetup("logs/server.log", Level.ALL);
 				int port = Integer.parseInt(args[0]);
+
+				if (args.length == 2) {
+					String level = setLevel(args[1]);
+					if (level.equals(LogSetup.UNKNOWN_LEVEL)) {
+						printError("Not a valid log level!");
+						printPossibleLogLevels();
+						return;
+					}
+				}
+
 				new KVServer(port, 0, null).start();
 			}
 		} catch (IOException e) {

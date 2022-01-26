@@ -1,4 +1,4 @@
-package app_kvClient;
+package shared;
 
 import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
