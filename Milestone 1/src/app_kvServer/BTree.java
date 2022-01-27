@@ -4,20 +4,24 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class BTree {
-    static int maxNumber;
-    private String root;
+    public String treeName;
+    public int maxNumber;
+    public String root;
     static Logger logger = Logger.getRootLogger();
     FileOp f;
 
-    public BTree(int maxNumber) {
-        BTree.maxNumber = maxNumber;
-        this.f = new FileOp();
-        this.root = f.newFile(FileType.DATA);
+
+    public BTree(int maxNumber, FileOp f, String treeName, String root) {
+        this.treeName = treeName;
+        this.maxNumber = maxNumber;
+        this.f = f;
+        this.root = root;
     }
 
     public String getLeft() {
         return f.loadFile(this.root).refreshLeft();
     }
+
 
     private void printNode(String node, int depth) {
         Node tmp_node = f.loadFile(node);
@@ -65,6 +69,7 @@ public class BTree {
             tmp_newRoot.number = 2;
             f.dumpFile(tmp_newRoot);
             this.root = newRoot;
+            f.dumpTree(this);
         }
         BTree.logger.debug("BTree: put successfully. ");
         this.printTree();
@@ -74,13 +79,15 @@ public class BTree {
 abstract class Node {
     int size = 0;
     int number;
+    int maxNumber;
     String[] keys;
     FileOp f;
     String name;
     FileType type;
 
-    public Node(FileOp file, String name, FileType type) {
-        this.keys = new String[BTree.maxNumber];
+    public Node(FileOp file, String name, FileType type, int maxNumber) {
+        this.maxNumber = maxNumber;
+        this.keys = new String[maxNumber];
         this.number = 0;
         this.f = file;
         this.name = name;
@@ -202,9 +209,9 @@ abstract class Node {
 class IndexNode extends Node {
     String[] children;
 
-    public IndexNode(FileOp file, String name, FileType type) {
-        super(file, name, type);
-        this.children = new String[BTree.maxNumber];
+    public IndexNode(FileOp file, String name, FileType type, int maxNumber) {
+        super(file, name, type, maxNumber);
+        this.children = new String[maxNumber];
     }
 
     @Override
@@ -239,7 +246,7 @@ class IndexNode extends Node {
             String newKey = tmp_newNode.keys[tmp_newNode.number - 1];
             //the insert position must be putPos + 1
             int insertPos = putPos + 1;
-            if (this.number + 1 <= BTree.maxNumber) {//2. don't need to split
+            if (this.number + 1 <= this.maxNumber) {//2. don't need to split
                 this.insertDirectly(this.children, insertPos, newKey, newNode);
                 BTree.logger.debug("inserted k-n without split: " + newKey);
                 f.dumpFile(this);
@@ -269,9 +276,9 @@ class DataNode extends Node {
     String right;
     String[] values;
 
-    public DataNode(FileOp file, String name, FileType type) {
-        super(file, name, type);
-        this.values = new String[BTree.maxNumber];
+    public DataNode(FileOp file, String name, FileType type, int maxNumber) {
+        super(file, name, type, maxNumber);
+        this.values = new String[this.maxNumber];
         this.left = null;
         this.right = null;
     }
@@ -295,7 +302,7 @@ class DataNode extends Node {
             this.values[insertPos] = value;
             f.dumpFile(this);
             return null;
-        } else if (this.number + 1 <= BTree.maxNumber) {//2. don't need to split
+        } else if (this.number + 1 <= this.maxNumber) {//2. don't need to split
             this.insertDirectly(this.values, insertPos, key, value);
             BTree.logger.debug("leaf node inserted k-v without split: " + key + "-" + value);
             f.dumpFile(this);
