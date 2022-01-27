@@ -207,6 +207,24 @@ public class InteractionTest extends TestCase {
 
 	}
 
+	@Test
+	public void testDeleteError() {
+		String key = "deleteTestValue";
+		String value = "toDelete";
+
+		KVMessage response = null;
+		Exception ex = null;
+
+		try {
+			response = kvClient.put(key, null);
+
+		} catch (Exception e) {
+			ex = e;
+		}
+
+		assertTrue(ex == null && response.getStatus() == StatusType.DELETE_ERROR);
+	}
+
 	private char[] getFilledCharArrayOfLength(int n){
 		char[] a = new char[n];
 		Arrays.fill(a, 'c');
