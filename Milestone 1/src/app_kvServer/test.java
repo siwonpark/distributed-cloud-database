@@ -1,11 +1,9 @@
 package app_kvServer;
-
 import java.util.Random;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
-
 class Data {
     public final String key;
     public String value;
@@ -20,8 +18,10 @@ public class test {
 
     private static final Logger logger = Logger.getRootLogger();
     static final Random random = new Random();
+    private static Object ConsoleAppender;
 
     static String getRandomString(int length) {
+
         StringBuilder buffer = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
             buffer.append((char) (97 + random.nextInt(122 - 97 + 1)));
@@ -50,8 +50,8 @@ public class test {
         }
     }
 
-    static void putAndGetTest(BTree b){
-        int test_length = 5000;
+    static void repeatPutAndGetTest(BTree b){
+        int test_length = 50;
         Data[] lis = new Data[test_length];
         for (int i = 0; i < test_length; i++) {
             lis[i] = new Data(test.getRandomString(10), test.getRandomString(20));
@@ -92,7 +92,17 @@ public class test {
     }
 
     public static void main(String[] args){
+        logger.setLevel(Level.DEBUG);
+        BasicConfigurator.configure();
         BTree b = new BTree(4);
-        putAndGetTest(b);
+        b.put("1","a");
+        b.put("2","b");
+        System.out.println(b.get("3"));
+        b.put("3","c");
+        System.out.println(b.get("3"));
+        b.put("shit","hole");
+        b.get("shit");
+        b.put("shit","ass");
+        b.get("shit");
     }
 }

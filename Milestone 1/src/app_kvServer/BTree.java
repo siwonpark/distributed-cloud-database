@@ -107,7 +107,7 @@ abstract class Node {
             } else if (key.compareTo(middleKey) < 0) {
                 right = middle;
             } else {
-                left = middle;
+                left = middle + 1;
             }
             middle = (left + right) / 2;
         }
@@ -134,7 +134,7 @@ abstract class Node {
                     //biggest place
                     return this.number;
                 } else {
-                    left = middle;
+                    left = middle + 1;
                 }
             }
             middle = (left + right) / 2;
@@ -279,7 +279,7 @@ class DataNode extends Node {
     @Override
     String get(String key) {
         int pos = this.findKey(key);
-        if (this.number == -1) {
+        if (pos == -1) {
             return null;
         } else {
             return this.values[pos];

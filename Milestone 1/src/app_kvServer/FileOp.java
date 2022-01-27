@@ -1,8 +1,6 @@
 package app_kvServer;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,7 +17,7 @@ public class FileOp {
     final Random random = new Random();
     final static int charNum = 26 + 26 + 10;
     ArrayList<TrieNode> FileNameRootList = new ArrayList<>();
-    final String filePath = "E:/桌面/Distributed Systems/milestone1/ECE419-Project/Milestone 1/src/app_kvServer/";
+    String filePath;
 
 
     public static int char2int(char c) {
@@ -236,6 +234,7 @@ public class FileOp {
     }
 
     public FileOp() {
+        System.out.println(System.getProperty("user.dir"));
         for (int i = 0; i < FileOp.charNum; i++) {
             this.FileNameRootList.add(null);
         }
