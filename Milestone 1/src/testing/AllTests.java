@@ -15,7 +15,8 @@ public class AllTests {
 
 	static {
 		try {
-			FileOp.deleteDirectory("data");
+			/* Refresh data directory when running tests */
+			FileOp.deleteDirectory(System.getProperty("user.dir") + "/data");
 			new LogSetup("logs/testing/test.log", Level.ERROR);
 			new KVServer(50000, 0, null).start();
 		} catch (IOException e) {
