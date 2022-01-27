@@ -30,8 +30,6 @@ public class LoadTest extends TestCase {
      * Runs 100 puts and then gets
      */
     public void test100PutGet() throws Exception {
-        String key = "foo2";
-        String value = "bar2";
         KVMessage response = null;
         Exception ex = null;
 
