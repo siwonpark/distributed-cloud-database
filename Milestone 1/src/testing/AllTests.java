@@ -28,7 +28,6 @@ public class AllTests {
 		clientSuite.addTestSuite(InteractionTest.class); 
 		clientSuite.addTestSuite(AdditionalTest.class);
 		clientSuite.addTestSuite(CLITest.class);
-		clientSuite.addTestSuite(BTreeTest.class);
 		return clientSuite;
 	}
 	
