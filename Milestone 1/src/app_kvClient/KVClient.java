@@ -123,7 +123,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                     KVMessage response = kvStore.put(key, value);
                     printResponseToUser(response);
                 } catch (Exception e){
-                    String errMsg = !value.equals(DELETE_STRING) ?
+                    String errMsg = value.equals(DELETE_STRING) ?
                             String.format("Unable to put value %s into key %s! ", value, key) + e :
                             String.format("Unable to delete entry corresponding to key %s! ", key) + e;
                     printError(errMsg);

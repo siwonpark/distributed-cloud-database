@@ -9,8 +9,9 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import static shared.PrintUtils.printError;
+import static shared.PrintUtils.printPossibleLogLevels;
 import static shared.LogUtils.setLevel;
-import static shared.PrintUtils.*;
 
 public class KVServer extends Thread implements IKVServer {
 
@@ -91,7 +92,7 @@ public class KVServer extends Thread implements IKVServer {
     public String getKV(String key) throws Exception{
 		String result = bTree.get(key);
 		// We should be removing the check for length == 0 once bug in Btree returns null properly
-		if (result == null || result.equals(DELETE_STRING)){
+		if (result == null || result.length() == 0){
 			throw new RuntimeException(String.format("No such key %s exists", key));
 		} else {
 			return result;
