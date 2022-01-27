@@ -11,6 +11,7 @@ enum FileType {
     INDEX, DATA
 }
 
+//TODO make all the FileOp functions static
 
 public class FileOp {
     static Logger logger = Logger.getRootLogger();
@@ -284,6 +285,44 @@ public class FileOp {
             logger.error("Can't load the tree information!");
             return false;
         }
+    }
+
+    public static boolean deleteDirectory(String dir) {
+        if (!dir.endsWith(File.separator)) {
+            dir = dir + File.separator;
+        }
+        File dirFile = new File(dir);
+        if (!dirFile.exists() || !dirFile.isDirectory()) {
+            logger.error("this tree doesn't exist!");
+            return false;
+        }
+        File[] files = dirFile.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile()) {
+                boolean flag = files[i].delete();
+                if (!flag) {
+                    logger.error("Can't delete the tree due to IOException!");
+                    return false;
+                }
+            } else {
+                boolean flag = deleteDirectory(files[i].toString());
+                if (!flag) {
+                    logger.error("Can't delete the tree due to IOException!");
+                    return false;
+                }
+            }
+        }
+        if (dirFile.delete()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean deleteTree(String treeName) {
+        String rootPath = System.getProperty("user.dir");
+        logger.debug(rootPath);
+        return deleteDirectory(rootPath + "/data/" + treeName);
     }
 
     public BTree newTree(int maxNumber, String treeName) {//make a new tree

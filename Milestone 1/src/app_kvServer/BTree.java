@@ -3,6 +3,8 @@ package app_kvServer;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+//TODO make BTree split according to size rather than maxNumber
+
 public class BTree {
     public String treeName;
     public int maxNumber;

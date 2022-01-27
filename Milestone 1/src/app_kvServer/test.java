@@ -109,15 +109,19 @@ public class test {
         System.out.println(b.get("3"));
         b.put("1", "a");
         b.put("2", "b");
-        System.out.println(b.get("3"));
+        b.put("1", null);
+        String s = b.get("1");
+        System.out.println(s==null);
+        System.out.println(s.equals(""));
         b.put("3", "c");
         System.out.println(b.get("3"));
-        b.put("shit", "hole");
-        System.out.println(b.get("shit"));
-        b.put("shit", "ass");
-        System.out.println(b.get("shit"));
+        b.put("4", "abc");
+        System.out.println(b.get("4"));
+        b.put("4", "cba");
+        System.out.println(b.get("4"));
     }
-    static void alwaysChooseATreeExample(){
+
+    static void alwaysChooseATreeExample() {
         FileOp f = new FileOp();
         BTree b = f.loadTree("A");
         if (b == null) {//A haven't been build
@@ -125,10 +129,11 @@ public class test {
         }
         //do something else with b
     }
+
     public static void main(String[] args) {
-        logger.setLevel(Level.DEBUG);
+        logger.setLevel(Level.INFO);
         BasicConfigurator.configure();
-        newTreeExample("C");
-        loadTreeExample("C");
+        FileOp.deleteTree("main1");
+
     }
 }
