@@ -1,9 +1,12 @@
 package app_kvServer;
+
+import java.io.File;
 import java.util.Random;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.BasicConfigurator;
+
 class Data {
     public final String key;
     public String value;
@@ -18,7 +21,6 @@ public class test {
 
     private static final Logger logger = Logger.getRootLogger();
     static final Random random = new Random();
-    private static Object ConsoleAppender;
 
     static String getRandomString(int length) {
 
@@ -30,7 +32,7 @@ public class test {
     }
 
 
-    static void testChain(BTree b){
+    static void testChain(BTree b) {
         String lef = b.getLeft();
         DataNode tmp_lef = (DataNode) b.f.loadFile(lef);
         while (tmp_lef.right != null) {
@@ -50,8 +52,7 @@ public class test {
         }
     }
 
-    static void repeatPutAndGetTest(BTree b){
-        int test_length = 50;
+    static void repeatPutAndGetTest(BTree b, int test_length) {
         Data[] lis = new Data[test_length];
         for (int i = 0; i < test_length; i++) {
             lis[i] = new Data(test.getRandomString(10), test.getRandomString(20));
@@ -91,18 +92,43 @@ public class test {
 //        logger.debug("time for get: " + (time3 - time2));
     }
 
-    public static void main(String[] args){
+    static void newTreeExample(String treeName) {
+        FileOp f = new FileOp();
+        BTree b = f.newTree(4, treeName);
+        //do something else with b
+    }
+
+    static void loadTreeExample(String treeName) {
+        FileOp f = new FileOp();
+        BTree b = f.loadTree(treeName);
+        //do something else with b
+        simpleTest(b);
+    }
+
+    static void simpleTest(BTree b) {
+        System.out.println(b.get("3"));
+        b.put("1", "a");
+        b.put("2", "b");
+        System.out.println(b.get("3"));
+        b.put("3", "c");
+        System.out.println(b.get("3"));
+        b.put("shit", "hole");
+        System.out.println(b.get("shit"));
+        b.put("shit", "ass");
+        System.out.println(b.get("shit"));
+    }
+    static void alwaysChooseATreeExample(){
+        FileOp f = new FileOp();
+        BTree b = f.loadTree("A");
+        if (b == null) {//A haven't been build
+            b = f.newTree(4, "A");
+        }
+        //do something else with b
+    }
+    public static void main(String[] args) {
         logger.setLevel(Level.DEBUG);
         BasicConfigurator.configure();
-        BTree b = new BTree(4);
-        b.put("1","a");
-        b.put("2","b");
-        System.out.println(b.get("3"));
-        b.put("3","c");
-        System.out.println(b.get("3"));
-        b.put("shit","hole");
-        b.get("shit");
-        b.put("shit","ass");
-        b.get("shit");
+        newTreeExample("C");
+        loadTreeExample("C");
     }
 }

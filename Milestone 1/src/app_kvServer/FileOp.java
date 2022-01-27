@@ -1,6 +1,7 @@
 package app_kvServer;
 
 import org.apache.log4j.Logger;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class FileOp {
     final static int charNum = 26 + 26 + 10;
     ArrayList<TrieNode> FileNameRootList = new ArrayList<>();
     String filePath;
+    BTree b;
 
 
     public static int char2int(char c) {
@@ -159,7 +161,7 @@ public class FileOp {
             InputStream input = new FileInputStream(filePath + name);
             int t = input.read();
             if (t == 0) {
-                IndexNode node = new IndexNode(this, name, FileType.INDEX);
+                IndexNode node = new IndexNode(this, name, FileType.INDEX, b.maxNumber);
                 for (node.number = 0; ; node.number++) {
                     String s = readLine(input);
                     if (s == null)
@@ -171,7 +173,7 @@ public class FileOp {
                 input.close();
                 return node;
             } else if (t == 1) {
-                DataNode node = new DataNode(this, name, FileType.DATA);
+                DataNode node = new DataNode(this, name, FileType.DATA, b.maxNumber);
                 String s_lef = readLine(input);
                 String s_rig = readLine(input);
                 node.left = "".equals(s_lef) ? null : s_lef;
@@ -234,10 +236,72 @@ public class FileOp {
     }
 
     public FileOp() {
-        System.out.println(System.getProperty("user.dir"));
         for (int i = 0; i < FileOp.charNum; i++) {
             this.FileNameRootList.add(null);
         }
+    }
+
+    public BTree loadTree(String treeName) {
+        String rootPath = System.getProperty("user.dir");
+        logger.debug(rootPath);
+        File treeInfoPath = new File(rootPath + "/data/" + treeName + "/treeinfo");
+        if (!treeInfoPath.exists()) {
+            logger.error("this tree doesn't exist!");
+            return null;
+        }
+        this.filePath = rootPath + "/data/" + treeName + "/";
+        logger.debug(this.filePath);
+        try {
+            InputStream input = new FileInputStream(filePath + "treeinfo");
+            String root = readLine(input);
+            String maxNumerString = readLine(input);
+            if (maxNumerString == null) {
+                logger.error("the tree information is broken!");
+                return null;
+            }
+            int maxNumber = Integer.parseInt(maxNumerString);
+            this.b = new BTree(maxNumber, this, treeName, root);
+            return this.b;
+        } catch (IOException e) {
+            logger.error("Can't load the tree information!");
+            return null;
+        }
+    }
+
+    public boolean dumpTree(BTree b) {
+        String rootPath = System.getProperty("user.dir");
+        File treeInfoPath = new File(rootPath + "/data/" + b.treeName);
+        if (!treeInfoPath.exists()) {
+            logger.error("this tree doesn't exist!");
+            return false;
+        }
+        try {
+            OutputStream ouput = new FileOutputStream(rootPath + "/data/" + b.treeName + "/treeinfo");
+            writeLine(ouput, b.root);
+            writeLine(ouput, Integer.toString(b.maxNumber));
+            return true;
+        } catch (IOException e) {
+            logger.error("Can't load the tree information!");
+            return false;
+        }
+    }
+
+    public BTree newTree(int maxNumber, String treeName) {//make a new tree
+        if (treeName == null)
+            return null;
+        String rootPath = System.getProperty("user.dir");
+        logger.debug(rootPath);
+        File treePath = new File(rootPath + "/data/" + treeName);
+        logger.debug(treePath);
+        if (treePath.exists() || !treePath.mkdirs()) {
+            logger.error("tree folder exist or can't make the tree folder!");
+            return null;
+        }
+        this.filePath = treePath + "/";
+        logger.debug(this.filePath);
+        this.b = new BTree(maxNumber, this, treeName, newFile(FileType.DATA));
+        this.dumpTree(b);
+        return this.b;
     }
 }
 
