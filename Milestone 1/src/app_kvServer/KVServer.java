@@ -91,10 +91,11 @@ public class KVServer extends Thread implements IKVServer {
 	@Override
     public String getKV(String key) throws Exception{
 		String result = bTree.get(key);
-		if (result != null){
-			return result;
-		} else{
+		// We should be removing the check for length == 0 once bug in Btree returns null properly
+		if (result == null || result.length() == 0){
 			throw new RuntimeException(String.format("No such key %s exists", key));
+		} else {
+			return result;
 		}
 	}
 

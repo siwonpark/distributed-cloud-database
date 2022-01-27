@@ -115,15 +115,15 @@ public class KVClient implements IKVClient, ClientSocketListener {
      * @param tokens The command line arguments
      */
     private void handlePut(String[] tokens) {
-        if(tokens.length == 2 || tokens.length == 3) {
+        if(tokens.length == 3) {
             if(kvStore != null && kvStore.isRunning()){
                 String key = tokens[1];
-                String value = tokens.length == 3? tokens[2]  : null;
+                String value = tokens[2];
                 try {
                     KVMessage response = kvStore.put(key, value);
                     printResponseToUser(response);
                 } catch (Exception e){
-                    String errMsg = tokens.length == 3?
+                    String errMsg = value.equals(DELETE_STRING) ?
                             String.format("Unable to put value %s into key %s! ", value, key) + e :
                             String.format("Unable to delete entry corresponding to key %s! ", key) + e;
                     printError(errMsg);
@@ -171,7 +171,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                 serverAddress = tokens[1];
                 serverPort = Integer.parseInt(tokens[2]);
                 newConnection(serverAddress, serverPort);
-                System.out.println(String.format("Connected to %s port %s!", serverAddress, serverPort));
+                System.out.printf("Connected to %s port %s!%n", serverAddress, serverPort);
             } catch(NumberFormatException nfe) {
                 printError("No valid address. Port must be a number!");
                 logger.info("Unable to parse argument <port>", nfe);

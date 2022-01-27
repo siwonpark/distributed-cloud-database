@@ -7,6 +7,8 @@ public class PrintUtils {
 
 
     public static final String PROMPT = "KVClient> ";
+    // Handout and piazza specifies the String "null" to delete
+    public static final String DELETE_STRING = "null";
 
     /**
      * Prints the help string of the KVClient
