@@ -91,10 +91,10 @@ public class KVServer extends Thread implements IKVServer {
 	@Override
     public String getKV(String key) throws Exception{
 		String result = bTree.get(key);
-		if (result != null){
-			return result;
-		} else{
+		if (result == null){
 			throw new RuntimeException(String.format("No such key %s exists", key));
+		} else {
+			return result;
 		}
 	}
 
