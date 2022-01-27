@@ -7,6 +7,8 @@ import junit.framework.TestCase;
 import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
 
+import java.util.Arrays;
+
 import static shared.PrintUtils.DELETE_STRING;
 
 
@@ -150,6 +152,65 @@ public class InteractionTest extends TestCase {
 		}
 
 		assertTrue(ex == null && response.getStatus() == StatusType.GET_ERROR);
+	}
+
+	@Test
+	/**
+	 * Test the operation where the key supplied is too long
+	 */
+	public void testKeyTooLong() {
+		char[] k = getFilledCharArrayOfLength(25);
+		String key = new String(k);
+		String value = "value";
+		KVMessage response = null;
+		Exception ex = null;
+
+		try {
+			response = kvClient.put(key, value);
+		} catch (Exception e) {
+			ex = e;
+		}
+		String expectedErrorMsg = "Key of length 25 exceeds";
+		assertTrue(ex == null &&
+				response.getStatus() == StatusType.FAILED &&
+				response.getKey().startsWith(expectedErrorMsg));
+	}
+
+	@Test
+	/**
+	 * Test the operation where the value supplied is too long
+	 */
+	public void testValueTooLong() {
+		String key = "key";
+		char[] v = getFilledCharArrayOfLength(121 * 1000);
+		String value = "value";
+		String longValue = new String(v);
+		KVMessage putResponse = null;
+		KVMessage getResponse = null;
+
+		Exception ex = null;
+
+		try {
+			kvClient.put(key, value);
+			putResponse = kvClient.put(key, longValue);
+			getResponse = kvClient.get(key);
+		} catch (Exception e) {
+			ex = e;
+		}
+		String expectedErrorMsg = "Value of length 121000 exceeds";
+		assertTrue(ex == null &&
+				putResponse.getStatus() == StatusType.FAILED &&
+				putResponse.getKey().startsWith(expectedErrorMsg));
+
+		assertTrue(getResponse.getStatus() == StatusType.GET_SUCCESS &&
+				getResponse.getValue().equals(value));
+
+	}
+
+	private char[] getFilledCharArrayOfLength(int n){
+		char[] a = new char[n];
+		Arrays.fill(a, 'c');
+		return a;
 	}
 	
 
