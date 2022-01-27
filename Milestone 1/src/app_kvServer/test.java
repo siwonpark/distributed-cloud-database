@@ -112,7 +112,6 @@ public class test {
         b.put("1", null);
         String s = b.get("1");
         System.out.println(s==null);
-        System.out.println(s.equals(""));
         b.put("3", "c");
         System.out.println(b.get("3"));
         b.put("4", "abc");
@@ -133,7 +132,7 @@ public class test {
     public static void main(String[] args) {
         logger.setLevel(Level.INFO);
         BasicConfigurator.configure();
-        FileOp.deleteTree("main1");
-
+        newTreeExample("A");
+        loadTreeExample("A");
     }
 }

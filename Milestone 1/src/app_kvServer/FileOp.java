@@ -141,7 +141,11 @@ public class FileOp {
         while (true) {
             b = input.read();
             if (b == 0) {
-                return sb.toString();
+                if(sb.length() == 0){
+                    return null;
+                }else{
+                    return sb.toString();
+                }
             }
             if (b == -1)
                 return null;
