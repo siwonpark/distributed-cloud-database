@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import static shared.PrintUtils.DELETE_STRING;
+
 
 /**
  * Represents a connection end point for a particular client that is 
@@ -116,7 +118,7 @@ public class ClientConnection implements Runnable {
 			case PUT:
 				boolean isInStorage = server.inStorage(key);
 
-				if (value == null) {
+				if (value == null || value.equals(DELETE_STRING)) {
 					if (!isInStorage) {
 						logger.error("Trying to delete key that does not exist: Key " + message.getKey());
 						responseStatus = StatusType.DELETE_ERROR;

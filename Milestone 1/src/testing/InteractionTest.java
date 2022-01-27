@@ -7,6 +7,8 @@ import junit.framework.TestCase;
 import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
 
+import static shared.PrintUtils.DELETE_STRING;
+
 
 public class InteractionTest extends TestCase {
 
@@ -121,6 +123,27 @@ public class InteractionTest extends TestCase {
 		Exception ex = null;
 
 		try {
+			response = kvClient.get(key);
+		} catch (Exception e) {
+			ex = e;
+		}
+
+		assertTrue(ex == null && response.getStatus() == StatusType.GET_ERROR);
+	}
+
+	@Test
+	/**
+	 * Test the operation where we run a get on a value that was just deleted
+	 */
+	public void testGetDeletedValue() {
+		String key = "key";
+		String value = "value";
+		KVMessage response = null;
+		Exception ex = null;
+
+		try {
+			kvClient.put(key, value);
+			kvClient.put(key, DELETE_STRING);
 			response = kvClient.get(key);
 		} catch (Exception e) {
 			ex = e;
