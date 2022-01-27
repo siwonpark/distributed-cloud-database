@@ -2,6 +2,7 @@ package testing;
 
 import java.io.IOException;
 
+import app_kvServer.FileOp;
 import org.apache.log4j.Level;
 
 import app_kvServer.KVServer;
@@ -14,6 +15,7 @@ public class AllTests {
 
 	static {
 		try {
+			FileOp.deleteDirectory("data");
 			new LogSetup("logs/testing/test.log", Level.ERROR);
 			new KVServer(50000, 0, null).start();
 		} catch (IOException e) {
