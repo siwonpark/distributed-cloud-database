@@ -22,6 +22,27 @@ public class FileOp {
     String filePath;
     BTree b;
 
+    public static boolean SeqenceOrderAndChainTest(BTree b) {
+        String lef = b.getLeft();
+        DataNode tmp_lef = (DataNode) b.f.loadFile(lef);
+        while (tmp_lef.right != null) {
+            for (int i = 0; i < tmp_lef.number - 1; i++) {
+                if (tmp_lef.keys[i].compareTo(tmp_lef.keys[i + 1]) >= 0) {
+                    return false;
+                }
+            }
+            DataNode tmp = tmp_lef;
+            tmp_lef = (DataNode) b.f.loadFile(tmp_lef.right);
+
+            if (!tmp_lef.left.equals(tmp.name)) {
+                return false;
+            }
+            if (tmp.keys[tmp.number - 1].compareTo(tmp_lef.keys[0]) >= 0) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public static int char2int(char c) {
         if ((int) c >= 97) {
@@ -141,9 +162,9 @@ public class FileOp {
         while (true) {
             b = input.read();
             if (b == 0) {
-                if(sb.length() == 0){
+                if (sb.length() == 0) {
                     return null;
-                }else{
+                } else {
                     return sb.toString();
                 }
             }
@@ -292,9 +313,7 @@ public class FileOp {
     }
 
     public static boolean deleteDirectory(String dir) {
-        if (!dir.endsWith(File.separator)) {
-            dir = dir + File.separator;
-        }
+
         File dirFile = new File(dir);
         if (!dirFile.exists() || !dirFile.isDirectory()) {
             logger.error("this tree doesn't exist!");

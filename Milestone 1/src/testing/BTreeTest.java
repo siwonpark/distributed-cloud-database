@@ -2,11 +2,22 @@ package testing;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.junit.Ignore;
 import org.junit.Test;
 import junit.framework.TestCase;
+import app_kvServer.BTree;
+import app_kvServer.FileOp;
 
 import java.util.Random;
+
+class Data {
+    public final String key;
+    public String value;
+
+    public Data(String key, String value) {
+        this.key = key;
+        this.value = value;
+    }
+}
 
 public class BTreeTest extends TestCase {
     static final Random random = new Random();
@@ -19,19 +30,7 @@ public class BTreeTest extends TestCase {
         return buffer.toString();
     }
 
-    static void SeqenceOrderAndChainTest(BTree b) {
-        String lef = b.getLeft();
-        DataNode tmp_lef = (DataNode) b.f.loadFile(lef);
-        while (tmp_lef.right != null) {
-            for (int i = 0; i < tmp_lef.number - 1; i++) {
-                assertTrue(tmp_lef.keys[i].compareTo(tmp_lef.keys[i + 1]) < 0);
-            }
-            DataNode tmp = tmp_lef;
-            tmp_lef = (DataNode) b.f.loadFile(tmp_lef.right);
-            assertEquals(tmp_lef.left, tmp.name);
-            assertTrue(tmp.keys[tmp.number - 1].compareTo(tmp_lef.keys[0]) < 0);
-        }
-    }
+
 
     public void testSimplePutGet() {
         Exception ex = null;
@@ -93,23 +92,23 @@ public class BTreeTest extends TestCase {
             for (int i = 0; i < test_length; i++) {
                 b.put(lis[i].key, lis[i].value);
             }
-            SeqenceOrderAndChainTest(b);
+            FileOp.SeqenceOrderAndChainTest(b);
             for (int i = 0; i < test_length; i++) {
                 String s = b.get(lis[i].key);
                 assertEquals(lis[i].value, s);
             }
-            SeqenceOrderAndChainTest(b);
+            FileOp.SeqenceOrderAndChainTest(b);
             //update all the values
             for (int i = 0; i < test_length; i++) {
                 lis[i].value = getRandomString(20);
                 b.put(lis[i].key, lis[i].value);
             }
-            SeqenceOrderAndChainTest(b);
+            FileOp.SeqenceOrderAndChainTest(b);
             for (int i = 0; i < test_length; i++) {
                 String s = b.get(lis[i].key);
                 assertEquals(lis[i].value, s);
             }
-            SeqenceOrderAndChainTest(b);
+            FileOp.SeqenceOrderAndChainTest(b);
         } catch (Exception e) {
             ex = e;
         }
