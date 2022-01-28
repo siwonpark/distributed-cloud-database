@@ -49,6 +49,7 @@ public class BTreeTest extends TestCase {
             assertEquals("abc", b.get("3"));
             b.put("3", "cba");
             assertEquals("cba", b.get("3"));
+            assertTrue(FileOp.SeqenceOrderAndChainTest(b));
         } catch (Exception e) {
             ex = e;
         }
@@ -83,7 +84,7 @@ public class BTreeTest extends TestCase {
                     this.value = value;
                 }
             }
-            int test_length = 500;
+            int test_length = 100;
             Data[] lis = new Data[test_length];
             for (int i = 0; i < test_length; i++) {
                 lis[i] = new Data(getRandomString(10), getRandomString(20));
@@ -92,23 +93,23 @@ public class BTreeTest extends TestCase {
             for (int i = 0; i < test_length; i++) {
                 b.put(lis[i].key, lis[i].value);
             }
-            FileOp.SeqenceOrderAndChainTest(b);
+            assertTrue(FileOp.SeqenceOrderAndChainTest(b));
             for (int i = 0; i < test_length; i++) {
                 String s = b.get(lis[i].key);
                 assertEquals(lis[i].value, s);
             }
-            FileOp.SeqenceOrderAndChainTest(b);
+            assertTrue(FileOp.SeqenceOrderAndChainTest(b));
             //update all the values
             for (int i = 0; i < test_length; i++) {
                 lis[i].value = getRandomString(20);
                 b.put(lis[i].key, lis[i].value);
             }
-            FileOp.SeqenceOrderAndChainTest(b);
+            assertTrue(FileOp.SeqenceOrderAndChainTest(b));
             for (int i = 0; i < test_length; i++) {
                 String s = b.get(lis[i].key);
                 assertEquals(lis[i].value, s);
             }
-            FileOp.SeqenceOrderAndChainTest(b);
+            assertTrue(FileOp.SeqenceOrderAndChainTest(b));
         } catch (Exception e) {
             ex = e;
         }
