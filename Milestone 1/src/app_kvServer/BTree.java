@@ -12,7 +12,6 @@ public class BTree {
     static Logger logger = Logger.getRootLogger();
     FileOp f;
 
-
     public BTree(int maxNumber, FileOp f, String treeName, String root) {
         this.treeName = treeName;
         this.maxNumber = maxNumber;
@@ -20,11 +19,16 @@ public class BTree {
         this.root = root;
     }
 
+    /**
+     * @return the leftmost node's name
+     */
     public String getLeft() {
         return f.loadFile(this.root).refreshLeft();
     }
 
-
+    /**
+     * print the node and all the children for debugging
+     */
     private void printNode(String node, int depth) {
         Node tmp_node = f.loadFile(node);
         if (BTree.logger.getLevel() == Level.DEBUG) {
@@ -44,17 +48,28 @@ public class BTree {
         }
     }
 
+    /**
+     * print the tree for debugging
+     */
     public void printTree() {
         BTree.logger.debug("\nPrint BTree");
         this.printNode(this.root, 0);
         BTree.logger.debug("END of BTree\n");
     }
 
+    /**
+     * get a value from the B+ tree.
+     *
+     * @return if not find, would be null.
+     */
     public String get(String key) {
         BTree.logger.debug("BTree: get successfully. ");
         return f.loadFile(this.root).get(key);
     }
 
+    /**
+     * Insert or update the value, recursive entry the correct child node, also deal with splitting due to insertion and save changes to disk
+     */
     public void put(String key, String value) {
         if (key == null)
             return;
@@ -74,7 +89,8 @@ public class BTree {
             f.dumpTree(this);
         }
         BTree.logger.debug("BTree: put successfully. ");
-        this.printTree();
+        if (logger.getLevel() == Level.DEBUG)
+            this.printTree();
     }
 }
 
@@ -96,12 +112,28 @@ abstract class Node {
         this.type = type;
     }
 
+    /**
+     * get the value with key
+     *
+     * @return if the tree didn't find the value, would return null
+     */
     abstract String get(String key);
 
+    /**
+     * Insert or update the value, recursive entry the correct child node, also deal with splitting due to insertion and save changes to disk
+     *
+     * @return if the splitting happens, would return a node to be added to the parent node. Otherwise, would return null
+     */
     abstract String put(String key, String value);
 
     abstract String refreshLeft();
 
+    /**
+     * binary search for the key in a list
+     *
+     * @param key the key need to be found
+     * @return the position, if can't be find, would be null
+     */
     int findKey(String key) {
         if (this.number == 0)
             return -1;
@@ -123,6 +155,13 @@ abstract class Node {
         return -1;
     }
 
+    /**
+     * find the correct inserting place for a key,
+     * for the tree, the children of the node's key should not be bigger than the node's key.
+     *
+     * @param key the key need to be inserted
+     * @return the correct position
+     */
     int findInsertPos(String key) {
         int left = 0;
         int right = this.number;
@@ -154,7 +193,15 @@ abstract class Node {
         return 0;
     }
 
-    //this function is just for code reuse, so there are no load or dump
+    /**
+     * this function is just for code reuse
+     *
+     * @param lis       if data node calls the function, it would be values list.
+     *                  if index node calls the function, it would be children list.
+     * @param insertPos The position where the child node needs to be inserted
+     * @param key       the child node's key
+     * @param value     the child node's value
+     */
     void insertDirectly(String[] lis, int insertPos, String key, String value) {
         //insert the key and value/node, I think for loop is better than arraycopy which need more buffer and time
         BTree.logger.debug("insertPos: " + insertPos);
@@ -167,7 +214,18 @@ abstract class Node {
         this.number++;
     }
 
-    //this function is just for code reuse, so there are no load or dump
+    /**
+     * this function is just for code reuse
+     *
+     * @param rigNode   The new node on the right side when node split
+     * @param lefLis    if data node calls the function, it would be values of new node on the left side.
+     *                  if index node calls the function, it would be children of new node on the left side.
+     * @param rigLis    if data node calls the function, it would be values of new node on the right side.
+     *                  if index node calls the function, it would be children of new node on the right side.
+     * @param insertPos The position where the child node needs to be inserted and it is this node that causes the split
+     * @param key       the child node's key
+     * @param value     the child node's value
+     */
     void splitInsert(Node rigNode, String[] lefLis, String[] rigLis, int insertPos, String key, String value) {
         BTree.logger.debug("insertPos: " + insertPos);
         int middle = (this.number + 1) / 2;
@@ -208,14 +266,29 @@ abstract class Node {
     }
 }
 
+/**
+ * the index node, For indexing, without any values
+ */
 class IndexNode extends Node {
     String[] children;
 
+    /**
+     * @param file      the FileOp handle
+     * @param name      the name of this node, corresponds to the name of the file on the disk
+     * @param type      INDEX
+     * @param maxNumber The maximum number of children of a node in the B+ tree
+     *                  For the file B+ tree, later this should be replaced with the maximum size of the index file
+     */
     public IndexNode(FileOp file, String name, FileType type, int maxNumber) {
         super(file, name, type, maxNumber);
         this.children = new String[maxNumber];
     }
 
+    /**
+     * get the value with key
+     *
+     * @return if the tree didn't find the value, would return null
+     */
     @Override
     String get(String key) {
         int pos = this.findInsertPos(key);
@@ -226,6 +299,11 @@ class IndexNode extends Node {
         }
     }
 
+    /**
+     * Insert or update the value, recursive entry the correct child node, also deal with splitting due to insertion and save changes to disk
+     *
+     * @return if the splitting happens, would return a node to be added to the parent node. Otherwise, would return null
+     */
     @Override
     String put(String key, String value) {
         int putPos = this.findInsertPos(key);
@@ -266,18 +344,34 @@ class IndexNode extends Node {
         }
     }
 
+    /**
+     * find the leftmost node
+     *
+     * @return leftmost node
+     */
     @Override
     String refreshLeft() {
         return f.loadFile(this.children[0]).refreshLeft();
     }
 }
 
+/**
+ * the data node, For data storage, could be large, have all the values
+ * all the data nodes form a link list, can improve the efficiency of continuous reading
+ */
 class DataNode extends Node {
     //these leaf nodes form a chain
     String left;
     String right;
     String[] values;
 
+    /**
+     * @param file      the FileOp handle
+     * @param name      the name of this node, corresponds to the name of the file on the disk
+     * @param type      DATA
+     * @param maxNumber The maximum number of value of a node in the B+ tree
+     *                  For the file B+ tree, later this should be replaced with the maximum size of the data file
+     */
     public DataNode(FileOp file, String name, FileType type, int maxNumber) {
         super(file, name, type, maxNumber);
         this.values = new String[this.maxNumber];
@@ -285,6 +379,11 @@ class DataNode extends Node {
         this.right = null;
     }
 
+    /**
+     * get the value with key in the data node
+     *
+     * @return if tree didn't find the value, would return null
+     */
     @Override
     String get(String key) {
         int pos = this.findKey(key);
@@ -295,6 +394,11 @@ class DataNode extends Node {
         }
     }
 
+    /**
+     * Insert into this data node or update the value, deal with splitting due to insertion and save changes to disk
+     *
+     * @return if the splitting happens, would return a node to be added to the parent node. Otherwise, would return null
+     */
     @Override
     String put(String key, String value) {
 
@@ -331,6 +435,11 @@ class DataNode extends Node {
         }
     }
 
+    /**
+     * find the leftmost node
+     *
+     * @return This node is the leftmost node, return this
+     */
     @Override
     String refreshLeft() {
         if (this.number <= 0)

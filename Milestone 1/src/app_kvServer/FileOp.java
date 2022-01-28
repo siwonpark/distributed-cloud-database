@@ -22,6 +22,9 @@ public class FileOp {
     String filePath;
     BTree b;
 
+    /**
+     * Check if the data in the data node is ordered
+     */
     public static boolean SeqenceOrderAndChainTest(BTree b) {
         String lef = b.getLeft();
         DataNode tmp_lef = (DataNode) b.f.loadFile(lef);
@@ -44,6 +47,9 @@ public class FileOp {
         return true;
     }
 
+    /**
+     * Conversion of filename character to trie tree node position
+     */
     public static int char2int(char c) {
         if ((int) c >= 97) {
             return (int) c - 61;
@@ -54,6 +60,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * Conversion of filename trie tree node position to character
+     */
     public static char int2char(int n) {
         if (n < 10) {
             return (char) (n + 48);
@@ -64,6 +73,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * Determine if a file exists by trie tree
+     */
     public boolean isFileExists(String name) {
         ArrayList<TrieNode> lis = this.FileNameRootList;
         for (int i = 0; ; i++) {
@@ -80,6 +92,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * Add a filename into trie tree
+     */
     public boolean addFileName(String name, FileType type) {
         ArrayList<TrieNode> lis = this.FileNameRootList;
         for (int i = 0; ; i++) {
@@ -123,6 +138,10 @@ public class FileOp {
 //            }
 //        }
 //    }
+
+    /**
+     * Generate a random file name
+     */
     public String genFileName() {
         StringBuilder buffer = new StringBuilder(fileNameLength);
         for (int i = 0; i < fileNameLength; i++) {
@@ -131,6 +150,12 @@ public class FileOp {
         return buffer.toString();
     }
 
+    /**
+     * Create a new index/data file on disk
+     *
+     * @param type INDEX or DATA
+     * @return the file name
+     */
     public String newFile(FileType type) {
         String name;
         do {
@@ -156,6 +181,9 @@ public class FileOp {
         return name;
     }
 
+    /**
+     * Read a line from a file
+     */
     private static String readLine(InputStream input) throws IOException {
         StringBuilder sb = new StringBuilder();
         int b;
@@ -175,12 +203,18 @@ public class FileOp {
 
     }
 
+    /**
+     * Write a line into a file
+     */
     private static void writeLine(OutputStream output, String s) throws IOException {
         if (s != null)
             output.write(s.getBytes(StandardCharsets.US_ASCII));
         output.write(0);
     }
 
+    /**
+     * create a node in memory from a disk file, TODO: find the node in cache first, or add the node to the cache
+     */
     public Node loadFile(String name) {
         logger.debug("load file " + name);
         try {
@@ -224,6 +258,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * update the node's disk file. TODO: update the cache
+     */
     public boolean dumpFile(Node node) {
         logger.debug("dump file " + node.name);
 //        if(logger.getLevel()== Level.DEBUG){
@@ -267,6 +304,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * Load the tree information from the file and rebuild an instance of BTree
+     */
     public BTree loadTree(String treeName) {
         String rootPath = System.getProperty("user.dir");
         logger.debug(rootPath);
@@ -294,6 +334,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * write the information of tree to disk. Automatically executed when the tree information is changed
+     */
     public boolean dumpTree(BTree b) {
         String rootPath = System.getProperty("user.dir");
         File treeInfoPath = new File(rootPath + "/data/" + b.treeName);
@@ -312,6 +355,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * delete a directory
+     */
     public static boolean deleteDirectory(String dir) {
 
         File dirFile = new File(dir);
@@ -342,6 +388,9 @@ public class FileOp {
         }
     }
 
+    /**
+     * Delete all information of a BTree from disk
+     */
     public static boolean deleteTree(String treeName) {
         String rootPath = System.getProperty("user.dir");
         logger.debug(rootPath);
@@ -367,7 +416,9 @@ public class FileOp {
     }
 }
 
-
+/**
+ * a node in the trie tree
+ */
 class TrieNode {
     ArrayList<TrieNode> children = new ArrayList<>();
     boolean occupied = false;
