@@ -3,6 +3,7 @@ package shared.messages;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 /**
  * Represents a simple text message, which is intended to be received and sent 
@@ -15,6 +16,7 @@ public class Message implements Serializable, KVMessage {
 	private String key;
 	private String value;
 	private StatusType status;
+	private HashMap<String, String[]> serverMetadata;
 
 	private byte[] msgBytes;
 	private static final char START_OF_TEXT = 0x02;
@@ -156,5 +158,10 @@ public class Message implements Serializable, KVMessage {
 	@Override
 	public StatusType getStatus() {
 		return this.status;
+	}
+
+	@Override
+	public HashMap<String, String[]> getMetadata() {
+		return this.serverMetadata;
 	}
 }
