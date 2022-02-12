@@ -20,6 +20,11 @@
   <property name="servermanifest.file" value="SERVER_MANIFEST.MF"/>
   <property name="servermain.class" value="app_kvServer.KVServer"/>
 
+  <!-- Configuration for ecs application -->
+  <property name="ecsjar.file"      value="m2-ecs.jar"/>
+  <property name="ecsmanifest.file" value="ECS_MANIFEST.MF"/>
+  <property name="ecsmain.class" value="app_kvECS.ECSClient"/>
+
   <!-- path to libraries-->
   <path id="external.jars">
     <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -98,6 +103,24 @@
 
     <jar destfile="${serverjar.file}" basedir="${build.dir}"
         manifest="${servermanifest.file}">
+      <fileset dir="${build.dir}" includes="**/*.class" />
+      <zipgroupfileset dir="${lib.dir}" includes="**/*.jar" />
+    </jar>
+  </target>
+
+  <!-- build ecs jar -->
+  <target name="build-ecs-jar" depends="build">
+    <delete file="${ecsjar.file}" />
+    <delete file="${ecsmanifest.file}" />
+
+    <manifest file="${ecsmanifest.file}" >
+      <attribute name="built-by" value="${user.name}" />
+      <attribute name="Main-Class" value="${ecsmain.class}" />
+      <attribute name="Class-Path" value="${project.classpath}"/>
+    </manifest>
+
+    <jar destfile="${ecsjar.file}" basedir="${build.dir}"
+        manifest="${ecsmanifest.file}">
       <fileset dir="${build.dir}" includes="**/*.class" />
       <zipgroupfileset dir="${lib.dir}" includes="**/*.jar" />
     </jar>
