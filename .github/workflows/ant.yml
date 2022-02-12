@@ -22,4 +22,4 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
     - name: Build with Ant
-      run: cd 'm2' && ant test | tee /dev/stderr | grep -q "FAILED"
+      run: cd 'm2' && ant test | tee /dev/stderr | grep "FAILED"; test $? -gt 0
