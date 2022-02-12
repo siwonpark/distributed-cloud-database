@@ -1,5 +1,7 @@
 package shared.messages;
 
+import java.util.HashMap;
+
 public interface KVMessage {
 	
 	public enum StatusType {
@@ -13,7 +15,12 @@ public interface KVMessage {
 		DELETE_SUCCESS, /* Delete - request successful */
 		DELETE_ERROR, 	/* Delete - request successful */
 		FAILED, 		/* Request failed for some general reason e.g. improper message format */
-		HEARTBEAT		/* Heartbeat - for client to make sure server is alive */
+		// TODO: We should remove this and use Zookeeper for server failure detection
+		HEARTBEAT,		/* Heartbeat - for client to make sure server is alive */
+
+		SERVER_STOPPED, /* Server is stopped, no requests are processed */
+		SERVER_WRITE_LOCK, /* Server locked for write, only get possible */
+		SERVER_NOT_RESPONSIBLE /* Request not successful, server not responsible for key */
 	}
 
 	/**
@@ -33,6 +40,12 @@ public interface KVMessage {
 	 * response types and error types associated to the message.
 	 */
 	public StatusType getStatus();
+
+	/**
+	 * @return the server metadata that is associated with this message,
+	 * Null if no server data is associated
+	 */
+	public HashMap<String, String[]> getServerMetadata();
 	
 }
 

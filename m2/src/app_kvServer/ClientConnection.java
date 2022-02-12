@@ -1,12 +1,11 @@
 package app_kvServer;
 
 import org.apache.log4j.Logger;
+import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
 import shared.messages.Message;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 
 import static shared.PrintUtils.DELETE_STRING;
@@ -30,8 +29,8 @@ public class ClientConnection implements Runnable {
 	private static final int MAX_VALUE_BYTES = 1000 * 120; // 1kByte
 
 	private Socket clientSocket;
-	private InputStream input;
-	private OutputStream output;
+	private ObjectInputStream input;
+	private ObjectOutputStream output;
 	private KVServer server;
 	
 	/**
@@ -50,8 +49,8 @@ public class ClientConnection implements Runnable {
 	 */
 	public void run() {
 		try {
-			output = clientSocket.getOutputStream();
-			input = clientSocket.getInputStream();
+			output = new ObjectOutputStream(clientSocket.getOutputStream());
+			input = new ObjectInputStream(clientSocket.getInputStream());
 
 			while(isOpen) {
 				try {
@@ -174,8 +173,7 @@ public class ClientConnection implements Runnable {
 	 * @throws IOException some I/O error regarding the output stream
 	 */
 	private void sendMessage(Message message) throws IOException{
-		byte[] msgBytes = message.getMsgBytes();
-		output.write(msgBytes, 0, msgBytes.length);
+		output.writeObject(message);
 		output.flush();
 		logger.debug("Send message: " + message.getMessageString());
 	}
@@ -187,91 +185,16 @@ public class ClientConnection implements Runnable {
 	 * @throws IOException
 	 */
 	private Message receiveMessage() throws IOException {
-		/* read the status byte, always the first byte in the message */
-		byte statusByte = (byte) input.read();
-
-		if (statusByte == -1) {
-			throw new IOException("Connection Lost!");
+		Message msg;
+		try {
+			msg = (Message) input.readObject();
+			logger.info(msg);
+		} catch (ClassNotFoundException e){
+			msg = new Message("Message was not able to be read properly", null,
+					KVMessage.StatusType.FAILED);
 		}
-
-		byte[] keyBytes = readText();
-		byte[] valueBytes = null;
-
-		int numRemainingBytes = input.available();
-
-		if (numRemainingBytes > 0) {
-			valueBytes = readText();
-		}
-
-		/* build final String */
-		Message msg = new Message(keyBytes, valueBytes, statusByte);
-		logger.debug("Received message: " + msg.getMessageString());
+		logger.debug("Receive Message: " + msg.getMessageString());
 		return msg;
 	}
 
-	/**
-	 * Helper function for receiveMessage() to do the actual byte processing of the input stream.
-	 * @return
-	 * @throws IOException
-	 */
-	private byte[] readText() throws IOException {
-		int index = 0;
-		byte[] textBytes = null, tmp = null;
-		byte[] bufferBytes = new byte[BUFFER_SIZE];
-		boolean reading = true;
-
-		/* load start of message */
-		byte read = (byte) input.read();
-		if (read != 2) {
-			return null;
-		}
-
-		while (reading && read != 3 /* 3 is the end of text control character */) {
-			/* if buffer filled, copy to msg array */
-			if (index == BUFFER_SIZE) {
-				if (textBytes == null) {
-					tmp = new byte[BUFFER_SIZE];
-					System.arraycopy(bufferBytes, 0, tmp, 0, BUFFER_SIZE);
-				} else {
-					tmp = new byte[textBytes.length + BUFFER_SIZE];
-					System.arraycopy(textBytes, 0, tmp, 0, textBytes.length);
-					System.arraycopy(bufferBytes, 0, tmp, textBytes.length, BUFFER_SIZE);
-				}
-
-				textBytes = tmp;
-
-				/* reset buffer after msgBytes is populated */
-				bufferBytes = new byte[BUFFER_SIZE];
-				index = 0;
-			}
-
-			/* only read valid characters, i.e. letters and numbers */
-			if((read > 31 && read < 127)) {
-				bufferBytes[index] = read;
-				index++;
-			}
-
-			/* stop reading is DROP_SIZE is reached */
-			if (textBytes != null && textBytes.length + index >= DROP_SIZE) {
-				reading = false;
-			}
-
-			/* read next char from stream */
-			read = (byte) input.read();
-		}
-
-		/* commit what's left in the buffer */
-		if (textBytes == null){
-			tmp = new byte[index];
-			System.arraycopy(bufferBytes, 0, tmp, 0, index);
-		} else {
-			tmp = new byte[textBytes.length + index];
-			System.arraycopy(textBytes, 0, tmp, 0, textBytes.length);
-			System.arraycopy(bufferBytes, 0, tmp, textBytes.length, index);
-		}
-
-		textBytes = tmp;
-
-		return textBytes;
-	}
 }
