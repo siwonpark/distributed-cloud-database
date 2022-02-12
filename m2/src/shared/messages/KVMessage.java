@@ -45,7 +45,7 @@ public interface KVMessage {
 	 * @return the server metadata that is associated with this message,
 	 * Null if no server data is associated
 	 */
-	public HashMap<String, String[]> getMetadata();
+	public HashMap<String, String[]> getServerMetadata();
 	
 }
 

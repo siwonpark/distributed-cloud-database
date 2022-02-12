@@ -16,6 +16,11 @@ public class Message implements Serializable, KVMessage {
 	private String key;
 	private String value;
 	private StatusType status;
+
+	/**
+	 * The server metadata.
+	 * A map corresponding to Server_Hash -> [Keyhash_range_start, Keyhash_range_end]
+	 */
 	private HashMap<String, String[]> serverMetadata;
 
 	/**
@@ -29,6 +34,20 @@ public class Message implements Serializable, KVMessage {
 	public Message(String key, String value, StatusType status) {
 		this.key = key;
 		this.value = value;
+		this.status = status;
+	}
+
+	/**
+	 * Instantiate a message class with server metadata
+	 * Note that this message instantiation should only be used
+	 * When the server is not responsible. I.e. with statusType
+	 * SERVER_NOT_RESPONSIBLE
+	 * @param metadata The server metadata
+	 * @param status == StatusType.SERVER_NOT_RESPONSIBLE
+	 */
+	public Message(HashMap<String, String[]> metadata, StatusType status){
+		assert(status == StatusType.SERVER_NOT_RESPONSIBLE);
+		this.serverMetadata = metadata;
 		this.status = status;
 	}
 
@@ -63,7 +82,7 @@ public class Message implements Serializable, KVMessage {
 	}
 
 	@Override
-	public HashMap<String, String[]> getMetadata() {
+	public HashMap<String, String[]> getServerMetadata() {
 		return this.serverMetadata;
 	}
 }
