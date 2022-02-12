@@ -55,6 +55,7 @@ public class CommModule implements ICommModule {
             msg = new Message("Message was not able to be read properly", null,
                     KVMessage.StatusType.FAILED);
         }
+        logger.debug("Receive message: " + msg.getMessageString());
         return msg;
     };
 

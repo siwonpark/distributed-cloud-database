@@ -174,7 +174,7 @@ public class ClientConnection implements Runnable {
 	 */
 	private void sendMessage(Message message) throws IOException{
 		output.writeObject(message);
-		logger.info("Send message: " + message.getMessageString());
+		logger.debug("Send message: " + message.getMessageString());
 	}
 
 	/**
@@ -192,6 +192,7 @@ public class ClientConnection implements Runnable {
 			msg = new Message("Message was not able to be read properly", null,
 					KVMessage.StatusType.FAILED);
 		}
+		logger.debug("Receive Message: " + msg.getMessageString());
 		return msg;
 	}
 
