@@ -46,7 +46,9 @@ public class Message implements Serializable, KVMessage {
 	 * @param status == StatusType.SERVER_NOT_RESPONSIBLE
 	 */
 	public Message(HashMap<String, String[]> metadata, StatusType status){
-		assert(status == StatusType.SERVER_NOT_RESPONSIBLE);
+		if(status != StatusType.SERVER_NOT_RESPONSIBLE){
+			throw new IllegalArgumentException("Status Type must be SERVER_NOT_RESPONSIBLE");
+		}
 		this.serverMetadata = metadata;
 		this.status = status;
 	}

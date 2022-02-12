@@ -46,7 +46,7 @@ public class ConnectionTest extends TestCase {
 	
 	public void testIllegalPort() {
 		Exception ex = null;
-		KVStore kvClient = new KVStore("localhost", PORT+323);
+		KVStore kvClient = new KVStore("localhost", 1238019283);
 		
 		try {
 			kvClient.connect();

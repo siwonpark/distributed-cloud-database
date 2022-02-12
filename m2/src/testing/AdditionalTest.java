@@ -45,20 +45,18 @@ public class AdditionalTest extends TestCase {
 	/**
 	 * Test that instantiating a message with metadata while providing
 	 * an incorrect status code will throw an exception
-	 * */
+	 */
 	public void testMessageMetadataStatusCode() {
 		HashMap<String, String[]> metadata = new HashMap();
 		metadata.put("qowiej", new String[]{"weqwe", "jqowiej"});
 		metadata.put("qowiej", new String[]{"qwwj", "jqwriej"});
-		Error ex = null;
-
+		Exception ex = null;
 		try{
-
-			Message message = new Message(metadata, StatusType.PUT);
-		} catch(AssertionError e) {
+			Message msg = new Message(metadata, StatusType.PUT);
+			System.out.println(msg.getMessageString());
+		} catch(IllegalArgumentException e) {
 			ex = e;
 		}
-		assertTrue(ex instanceof AssertionError);
+		assertTrue(ex instanceof IllegalArgumentException);
 	}
-
 }
