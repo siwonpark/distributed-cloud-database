@@ -174,6 +174,7 @@ public class ClientConnection implements Runnable {
 	 */
 	private void sendMessage(Message message) throws IOException{
 		output.writeObject(message);
+		output.flush();
 		logger.debug("Send message: " + message.getMessageString());
 	}
 

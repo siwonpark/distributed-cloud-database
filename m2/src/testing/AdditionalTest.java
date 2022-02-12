@@ -4,7 +4,6 @@ import org.junit.Test;
 import shared.messages.Message;
 import shared.messages.KVMessage.StatusType;
 
-import java.nio.channels.AsynchronousServerSocketChannel;
 import java.util.HashMap;
 
 import junit.framework.TestCase;

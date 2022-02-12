@@ -62,6 +62,7 @@ public class CommModule implements ICommModule {
     @Override
     public void sendMessage(Message message) throws IOException{
         output.writeObject(message);
+        output.flush();
         logger.debug("Send message: " + message.getMessageString());
     };
 }
