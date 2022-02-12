@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static shared.PrintUtils.DELETE_STRING;
+import static testing.AllTests.PORT;
 
 
 public class LoadTest extends TestCase {
@@ -20,7 +21,7 @@ public class LoadTest extends TestCase {
     private KVStore kvClient;
 
     public void setUp() {
-        kvClient = new KVStore("localhost", 50000);
+        kvClient = new KVStore("localhost", PORT);
         try {
             kvClient.connect();
         } catch (Exception e) {

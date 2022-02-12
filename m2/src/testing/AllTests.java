@@ -12,13 +12,14 @@ import logger.LogSetup;
 
 
 public class AllTests {
+	public static final int PORT = 50000;
 
 	static {
 		try {
 			/* Refresh data directory when running tests */
 			FileOp.deleteDirectory(System.getProperty("user.dir") + "/data");
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-			new KVServer(50000, 0, null).start();
+			new KVServer(PORT, 0, null).start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

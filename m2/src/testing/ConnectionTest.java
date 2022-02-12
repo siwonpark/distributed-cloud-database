@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 import shared.messages.KVMessage;
 
 import static shared.PrintUtils.DELETE_STRING;
+import static testing.AllTests.PORT;
 
 
 public class ConnectionTest extends TestCase {
@@ -18,7 +19,7 @@ public class ConnectionTest extends TestCase {
 		
 		Exception ex = null;
 		
-		KVStore kvClient = new KVStore("localhost", 50000);
+		KVStore kvClient = new KVStore("localhost", PORT);
 		try {
 			kvClient.connect();
 		} catch (Exception e) {
@@ -31,7 +32,7 @@ public class ConnectionTest extends TestCase {
 	
 	public void testUnknownHost() {
 		Exception ex = null;
-		KVStore kvClient = new KVStore("unknown", 50000);
+		KVStore kvClient = new KVStore("unknown", PORT);
 		
 		try {
 			kvClient.connect();
@@ -45,7 +46,7 @@ public class ConnectionTest extends TestCase {
 	
 	public void testIllegalPort() {
 		Exception ex = null;
-		KVStore kvClient = new KVStore("localhost", 123456789);
+		KVStore kvClient = new KVStore("localhost", PORT+323);
 		
 		try {
 			kvClient.connect();
@@ -67,7 +68,7 @@ public class ConnectionTest extends TestCase {
 
 		try{
 			for(int i = 0; i < NUM_CLIENTS; i++){
-				KVStore kvStore = new KVStore("localhost", 50000);
+				KVStore kvStore = new KVStore("localhost", PORT);
 				kvStore.connect();
 				clients.add(kvStore);
 			}
