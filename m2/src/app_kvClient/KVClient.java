@@ -225,7 +225,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
 
     public static void main(String[] args){
         try {
-            new LogSetup("logs/client.log", Level.OFF);
+            new LogSetup("logs/client.log", Level.INFO);
             KVClient app = new KVClient();
             app.run();
         } catch (IOException e) {

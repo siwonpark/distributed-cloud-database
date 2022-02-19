@@ -7,6 +7,7 @@ public class PrintUtils {
 
 
     public static final String PROMPT = "KVClient> ";
+    public static final String ECS_PROMPT = "ECSClient> ";
     // Handout and piazza specifies the String "null" to delete
     public static final String DELETE_STRING = "null";
 
@@ -32,8 +33,52 @@ public class PrintUtils {
         sb.append("\t\t Changes the logLevel \n");
         sb.append("\t\t\t ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF \n");
 
+        sb.append("help");
+        sb.append("\t\t\t Prints this help message");
+
         sb.append("quit");
         sb.append("\t\t\t Exits the program");
+        System.out.println(sb.toString());
+    }
+
+    /**
+     * Print the help string for the ECSClient
+     */
+    public static void printECSClientHelp(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("ECSClient HELP (Usage):\n");
+        sb.append("::::::::::::::::::::::::::::::::");
+        sb.append("::::::::::::::::::::::::::::::::\n");
+        sb.append("start");
+        sb.append("\t\t\t Start the storage service\n");
+        sb.append("stop");
+        sb.append("\t\t\t Stop the storage service; all participating KVServers " +
+                "are stopped for processing clients, but the processes remain running.\n");
+
+        sb.append("shutDown");
+        sb.append("\t\t\t" +
+                "Stops all server instances and exits the remote processes.\n");
+
+        sb.append("addNode");
+        sb.append("\t\t\t" +
+                "Create a new KVServer and add it to the storage service at an arbitrary position. \n");
+
+        sb.append("addNodes <numberOfNodes>");
+        sb.append("\t\t\t Randomly choose <numberOfNodes> servers from the available machines " +
+                "and start the KVServer by issuing an SSH call to the respective machine. " +
+                "This call launches the storage server.\n");
+
+        sb.append("removeNode <indexOfServer>");
+        sb.append("\t\t\tRemove a server from the storage service at position <indexOfServer>.\n");
+
+        sb.append("logLevel");
+        sb.append("\t\t\t Changes the logLevel (ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF)q \n");
+
+        sb.append("help");
+        sb.append("\t\t\t Prints this help message\n");
+
+        sb.append("quit");
+        sb.append("\t\t\t Exits the program (and shuts down ECS)");
         System.out.println(sb.toString());
     }
 
