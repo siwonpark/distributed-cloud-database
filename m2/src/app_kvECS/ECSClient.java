@@ -17,8 +17,7 @@ import org.apache.log4j.Logger;
 import shared.PrintUtils;
 
 import static app_kvECS.ECSClientCommandHandler.*;
-import static shared.PrintUtils.printError;
-import static shared.PrintUtils.printHelp;
+import static shared.PrintUtils.*;
 
 public class ECSClient implements IECSClient {
 
@@ -131,10 +130,10 @@ public class ECSClient implements IECSClient {
         } else if(tokens[0].equals("logLevel")) {
             handleLogLevel(tokens);
         } else if(tokens[0].equals("help")) {
-            printHelp();
+            printECSClientHelp();
         } else {
             printError("Unknown command");
-            printHelp();
+            printECSClientHelp();
         }
     }
 
