@@ -160,9 +160,6 @@ public class ECSClient implements IECSClient {
                 ECSClient app = new ECSClient(ecsConfigFile);
                 app.run();
             }
-
-            KVClient app = new KVClient();
-            app.run();
         } catch (IOException e) {
             System.out.println("Error! Unable to initialize logger!");
             e.printStackTrace();
