@@ -150,8 +150,7 @@ public class ECSClient implements IECSClient {
                 System.out.println("Error! Invalid number of arguments!");
                 System.out.println("Usage: java -jar ECS.jar <ecs-config-file>!");
             } else{
-                String ecsConfig = args[0];
-                File ecsConfigFile = new File(ecsConfig);
+                File ecsConfigFile = new File(args[0]);
                 if (!ecsConfigFile.exists() || !ecsConfigFile.isFile()){
                     System.out.println("ECS Configuration file path is invalid!");
                     System.exit(1);
