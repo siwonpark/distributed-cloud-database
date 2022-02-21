@@ -34,6 +34,7 @@ public class AllTests {
 		clientSuite.addTestSuite(CLITest.class);
 		clientSuite.addTestSuite(LoadTest.class);
 		clientSuite.addTestSuite(BTreeTest.class);
+		clientSuite.addTestSuite(ECSTest.class);
 		return clientSuite;
 	}
 	
