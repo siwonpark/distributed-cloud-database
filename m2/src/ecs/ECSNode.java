@@ -4,13 +4,13 @@ public class ECSNode implements IECSNode {
     private String nodeName;
     private String nodeHost;
     private int nodePort;
-    private String[] nodeHashRange;
+    private String startHash;
+    private String endHash;
 
-    public ECSNode(String nodeName, String nodeHost, int nodePort, String[] nodeHashRange) {
+    public ECSNode(String nodeName, String nodeHost, int nodePort) {
         this.nodeName = nodeName;
         this.nodeHost = nodeHost;
         this.nodePort = nodePort;
-        this.nodeHashRange = nodeHashRange;
     }
 
     @Override
@@ -30,6 +30,24 @@ public class ECSNode implements IECSNode {
 
     @Override
     public String[] getNodeHashRange() {
-        return nodeHashRange;
+        // TODO: Check if hashes exist on object?
+        return new String[] {startHash, endHash};
+    }
+
+    public void setStartHash(String startHash) {
+        this.startHash = startHash;
+    }
+
+    public void setEndHash(String endHash) {
+        this.endHash = endHash;
+    }
+
+    public boolean isReponsibleForKey(String key) {
+        if (startHash.compareTo(endHash) < 0) {
+            return key.compareTo(startHash) > 0 && key.compareTo(endHash) < 0;
+        } else {
+            // start is greater than end, the node is responsible for an area across the start of the ring
+            return key.compareTo(startHash) > 0 || key.compareTo(endHash) < 0;
+        }
     }
 }
