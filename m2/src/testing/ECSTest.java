@@ -23,6 +23,11 @@ public class ECSTest extends TestCase {
 
             ECSNode node = ecs.hashRing.get(currHash);
             assertEquals(currHash, node.getNodeHashRange()[1]);
+            System.out.println(currHash);
+
+            if (currHash != ecs.hashRing.firstKey()) {
+                assertTrue(node.getNodeHashRange()[0].compareTo(node.getNodeHashRange()[1]) < 0);
+            }
 
             currHash = node.getNodeHashRange()[0];
         }
