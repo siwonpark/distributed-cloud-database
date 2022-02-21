@@ -113,6 +113,61 @@ public class KVServer extends Thread implements IKVServer {
 		// TODO Auto-generated method stub
 	}
 
+	/**
+	 * Starts the KVServer, all client and ECS requests are processed
+	 */
+	public void startServer(){
+		//TODO: Implement
+	}
+
+	/**
+	 * Stop the KVServer, all clients requests are rejected,
+	 * Only ECS requests are processed
+	 */
+	public void stopServer(){
+		//TODO: Implement
+	}
+
+	/**
+	 * Exit the KVServer application
+	 */
+	public void shutDown(){
+		isRunning = false;
+	}
+
+	/**
+	 * Lock this KVServer for write operations
+	 */
+	public void lockWrite(){
+		//TODO: Implement
+	}
+
+	/**
+	 * Unlock this KVServer for write operations
+	 */
+	public void unLockWrite(){
+		//TODO: Implement
+	}
+
+	/**
+	 * Transfer a subset (range) of the KVServer’s data to another KVServer
+	 * (reallocation before removing this server or adding a new KVServer to the ring);
+	 * send a notification to the ECS, if data transfer is completed.
+	 * @param range The subset of this Server's data to transfer to the new server
+	 * @param server The new server to move data to
+	 */
+	public void moveData(String[] range, String server){
+		//TODO: Implement
+	}
+
+	/**
+	 * Update the metadata repository of this KVServer
+	 */
+	public void update(/*metadata*/){
+		//TODO: Implement
+
+	}
+
 	@Override
     public void run(){
 		isRunning = initializeServer();
