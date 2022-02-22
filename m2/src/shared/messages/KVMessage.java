@@ -1,6 +1,8 @@
 package shared.messages;
 
-import java.util.HashMap;
+import ecs.ECSNode;
+
+import java.util.TreeMap;
 
 public interface KVMessage {
 	
@@ -15,8 +17,7 @@ public interface KVMessage {
 		DELETE_SUCCESS, /* Delete - request successful */
 		DELETE_ERROR, 	/* Delete - request successful */
 		FAILED, 		/* Request failed for some general reason e.g. improper message format */
-		// TODO: We should remove this and use Zookeeper for server failure detection
-		HEARTBEAT,		/* Heartbeat - for client to make sure server is alive */
+		HEARTBEAT,		/* Heartbeat - for KVClient to make sure KVServer is alive */
 
 		SERVER_STOPPED, /* Server is stopped, no requests are processed */
 		SERVER_WRITE_LOCK, /* Server locked for write, only get possible */
@@ -45,7 +46,7 @@ public interface KVMessage {
 	 * @return the server metadata that is associated with this message,
 	 * Null if no server data is associated
 	 */
-	public HashMap<String, String[]> getServerMetadata();
+	public TreeMap<String, ECSNode> getServerMetadata();
 	
 }
 

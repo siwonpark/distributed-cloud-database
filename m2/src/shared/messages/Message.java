@@ -1,9 +1,10 @@
 package shared.messages;
 
+import ecs.ECSNode;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.TreeMap;
 
 /**
  * Represents a simple text message, which is intended to be received and sent 
@@ -21,7 +22,7 @@ public class Message implements Serializable, KVMessage {
 	 * The server metadata.
 	 * A map corresponding to Server_Hash -> [Keyhash_range_start, Keyhash_range_end]
 	 */
-	private HashMap<String, String[]> serverMetadata;
+	private TreeMap<String, ECSNode> serverMetadata;
 
 	/**
      * Constructs a Message object with a given String that
@@ -45,7 +46,7 @@ public class Message implements Serializable, KVMessage {
 	 * @param metadata The server metadata
 	 * @param status == StatusType.SERVER_NOT_RESPONSIBLE
 	 */
-	public Message(HashMap<String, String[]> metadata, StatusType status){
+	public Message(TreeMap<String, ECSNode> metadata, StatusType status){
 		if(status != StatusType.SERVER_NOT_RESPONSIBLE){
 			throw new IllegalArgumentException("Status Type must be SERVER_NOT_RESPONSIBLE");
 		}
@@ -84,7 +85,7 @@ public class Message implements Serializable, KVMessage {
 	}
 
 	@Override
-	public HashMap<String, String[]> getServerMetadata() {
+	public TreeMap<String, ECSNode> getServerMetadata() {
 		return this.serverMetadata;
 	}
 }
