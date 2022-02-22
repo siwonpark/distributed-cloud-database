@@ -6,7 +6,7 @@ import ecs.ECSNode;
 import org.apache.log4j.Logger;
 import shared.messages.KVMessage;
 import shared.messages.Message;
-import testing.HashUtils;
+import shared.HashUtils;
 
 import java.io.IOException;
 import java.util.HashSet;
