@@ -3,15 +3,16 @@ package app_kvServer;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.ZooKeeper;
 
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
 import static shared.PrintUtils.printPossibleLogLevels;
-import static shared.LogUtils.setLevel;
 
 public class KVServer extends Thread implements IKVServer {
 
@@ -23,6 +24,14 @@ public class KVServer extends Thread implements IKVServer {
 	private BTree bTree;
 	private String strategy;
 	private boolean isRunning;
+
+	private String name;
+	private String zkHost;
+	private int zkPort;
+	private ZooKeeper zookeeper;
+	private boolean lockWrite;
+	private ServerState state;
+
 
 	/**
 	 * Start KV Server at given port
@@ -49,19 +58,16 @@ public class KVServer extends Thread implements IKVServer {
 	
 	@Override
 	public int getPort(){
-		// TODO Auto-generated method stub
 		return serverSocket.getLocalPort();
 	}
 
 	@Override
     public String getHostname(){
-		// TODO Auto-generated method stub
 		return serverSocket.getInetAddress().getHostName();
 	}
 
 	@Override
     public CacheStrategy getCacheStrategy(){
-		// TODO Auto-generated method stub
 		return IKVServer.CacheStrategy.None;
 	}
 
@@ -111,6 +117,61 @@ public class KVServer extends Thread implements IKVServer {
 	@Override
     public void clearStorage(){
 		// TODO Auto-generated method stub
+	}
+
+	/**
+	 * Starts the KVServer, all client and ECS requests are processed
+	 */
+	public void startServer(){
+		this.state = ServerState.RUNNING;
+	}
+
+	/**
+	 * Stop the KVServer, all clients requests are rejected,
+	 * Only ECS requests are processed
+	 */
+	public void stopServer(){
+		this.state = ServerState.ECS_REQUESTS_ONLY;
+	}
+
+	/**
+	 * Exit the KVServer application
+	 */
+	public void shutDown(){
+		isRunning = false;
+	}
+
+	/**
+	 * Lock this KVServer for write operations
+	 */
+	public void lockWrite(){
+		this.lockWrite = true;
+	}
+
+	/**
+	 * Unlock this KVServer for write operations
+	 */
+	public void unlockWrite(){
+		this.lockWrite = false;
+	}
+
+	/**
+	 * Transfer a subset (range) of the KVServer’s data to another KVServer
+	 * (reallocation before removing this server or adding a new KVServer to the ring);
+	 * send a notification to the ECS, if data transfer is completed.
+	 * @param range The subset of this Server's data to transfer to the new server
+	 * @param server The new server to move data to
+	 */
+	public void moveData(String[] range, String server){
+		//TODO: Implement
+	}
+
+	/**
+	 * Update the metadata repository of this KVServer
+	 */
+	public void update(/*metadata*/){
+		//TODO: Implement
+
 	}
 
 	@Override
