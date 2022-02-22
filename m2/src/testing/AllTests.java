@@ -2,7 +2,6 @@ package testing;
 
 import java.io.IOException;
 
-import app_kvServer.FileOp;
 import org.apache.log4j.Level;
 
 import app_kvServer.KVServer;
@@ -17,9 +16,8 @@ public class AllTests {
 	static {
 		try {
 			/* Refresh data directory when running tests */
-			FileOp.deleteDirectory(System.getProperty("user.dir") + "/data");
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-			new KVServer(PORT, 0, null).start();
+			new KVServer(PORT, 1000, "LRU").start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -33,7 +31,6 @@ public class AllTests {
 		clientSuite.addTestSuite(AdditionalTest.class);
 		clientSuite.addTestSuite(CLITest.class);
 		clientSuite.addTestSuite(LoadTest.class);
-		clientSuite.addTestSuite(BTreeTest.class);
 		clientSuite.addTestSuite(ECSTest.class);
 		return clientSuite;
 	}
