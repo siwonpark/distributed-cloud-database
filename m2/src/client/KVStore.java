@@ -2,20 +2,26 @@ package client;
 
 import app_kvClient.ClientSocketListener;
 import app_kvClient.ClientSocketListener.SocketStatus;
+import ecs.ECSNode;
+import org.apache.log4j.Logger;
 import shared.messages.KVMessage;
+import shared.messages.Message;
+import testing.HashUtils;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
-import org.apache.log4j.Logger;
-import shared.messages.Message;
+import static shared.messages.KVMessage.StatusType.SERVER_NOT_RESPONSIBLE;
 
 public class KVStore implements KVCommInterface {
 	private Logger logger = Logger.getRootLogger();
 	private boolean running = false;
 	private CommModule commModule;
 	private Set<ClientSocketListener> listeners;
+	private TreeMap<String, ECSNode> serverMetadata;
 
 
 	/**
@@ -62,9 +68,7 @@ public class KVStore implements KVCommInterface {
 		logger.info(String.format("Putting value %s into key %s", key, value));
 		Message msg = new Message(key, value, KVMessage.StatusType.PUT);
 		try {
-			commModule.sendMessage(msg);
-			Message response = commModule.receiveMessage();
-			return response;
+			return retryMessageUntilSuccess(msg);
 		} catch (IOException e) {
 			for(ClientSocketListener listener : listeners) {
 				listener.handleStatus(SocketStatus.CONNECTION_LOST);
@@ -78,9 +82,7 @@ public class KVStore implements KVCommInterface {
 		logger.info(String.format("Getting key %s", key));
 		Message msg = new Message(key, null, KVMessage.StatusType.GET);
 		try {
-			commModule.sendMessage(msg);
-			Message response = commModule.receiveMessage();
-			return response; // Pass back to client to display on command line
+			return retryMessageUntilSuccess(msg); // Pass back to client to display on command line
 		} catch (IOException e){
 			// Inform listeners that connection was lost
 			for(ClientSocketListener listener : listeners) {
@@ -88,6 +90,81 @@ public class KVStore implements KVCommInterface {
 			}
 			throw e;
 		}
+	}
+
+	/**
+	 * Try sending msg to a server
+	 * If cached serverMetadata exists, this method will connect
+	 * To the server responsible for the key in msg, based on the
+	 * currently cached metadata
+	 *
+	 * If the server responds with SERVER_NOT_RESPONSIBLE,
+	 * This method will update the metadata, and retry the message
+	 * (based on the new metadata), until the server responds with something
+	 * Other than SERVER_NOT_RESPONSIBLE
+	 *
+	 * @param msg The msg to send
+	 * @return The successful server response
+	 * @throws IOException
+	 */
+	private Message retryMessageUntilSuccess(Message msg) throws IOException {
+		Message response = sendMessageToCorrectServer(msg);
+		while (response.getStatus() == SERVER_NOT_RESPONSIBLE){
+			// update metadata
+			this.serverMetadata = response.getServerMetadata();
+			response = sendMessageToCorrectServer(msg);
+		}
+		return response;
+	}
+
+	/**
+	 * Send a message to a server
+	 * If there is cached metadata, try to connect
+	 * To the correct host first, before sending
+	 * @param msg The message to send
+	 * @return The server response
+	 * @throws IOException
+	 */
+	private Message sendMessageToCorrectServer(Message msg) throws IOException {
+		connectToCorrectServer(msg);
+		commModule.sendMessage(msg);
+		Message response = commModule.receiveMessage();
+		return response;
+	}
+
+	/**
+	 * Parse msg to find the specified key, then find the server
+	 * responsible for that key. Connect the CommModule to this server.
+	 */
+	private void connectToCorrectServer(Message msg) throws IOException {
+		// If there is no previous metadata stored,
+		// We just naively send the message to the server that the
+		// User initialized, so we can return early from here
+		if(serverMetadata == null){
+			return;
+		}
+		ECSNode responsibleServer = findCorrectServerForKey(msg.getKey());
+		if(responsibleServer == null){
+			logger.error("Could not find a responsible server in the server metadata");
+			return;
+		}
+		String host = responsibleServer.getNodeHost();
+		int port = responsibleServer.getNodePort();
+		commModule.disconnect();
+		commModule = new CommModule(host, port);
+		commModule.connect();
+	}
+
+	private ECSNode findCorrectServerForKey(String key){
+		String keyHash = HashUtils.computeHash(key);
+		for(Map.Entry<String,ECSNode> entry : serverMetadata.entrySet()){
+			String serverHash = entry.getKey();
+			ECSNode ecsNode = entry.getValue();
+			if (ecsNode.isReponsibleForKey(keyHash)){
+				return ecsNode;
+			}
+		}
+		return null;
 	}
 
 	/**

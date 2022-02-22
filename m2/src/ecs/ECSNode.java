@@ -42,12 +42,12 @@ public class ECSNode implements IECSNode {
         this.endHash = endHash;
     }
 
-    public boolean isReponsibleForKey(String key) {
+    public boolean isReponsibleForKey(String keyHash) {
         if (startHash.compareTo(endHash) < 0) {
-            return key.compareTo(startHash) > 0 && key.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) > 0 && keyHash.compareTo(endHash) < 0;
         } else {
             // start is greater than end, the node is responsible for an area across the start of the ring
-            return key.compareTo(startHash) > 0 || key.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) > 0 || keyHash.compareTo(endHash) < 0;
         }
     }
 }
