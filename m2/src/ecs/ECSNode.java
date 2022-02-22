@@ -42,7 +42,7 @@ public class ECSNode implements IECSNode {
         this.endHash = endHash;
     }
 
-    public boolean isReponsibleForKey(String key) {
+    public boolean isResponsibleForKey(String key) {
         if (startHash.compareTo(endHash) < 0) {
             return key.compareTo(startHash) > 0 && key.compareTo(endHash) < 0;
         } else {
