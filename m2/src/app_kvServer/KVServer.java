@@ -151,7 +151,7 @@ public class KVServer extends Thread implements IKVServer {
 	/**
 	 * Unlock this KVServer for write operations
 	 */
-	public void unLockWrite(){
+	public void unlockWrite(){
 		this.lockWrite = false;
 	}
 
