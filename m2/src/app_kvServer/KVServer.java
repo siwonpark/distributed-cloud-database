@@ -3,15 +3,16 @@ package app_kvServer;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.ZooKeeper;
 
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
 import static shared.PrintUtils.printPossibleLogLevels;
-import static shared.LogUtils.setLevel;
 
 public class KVServer extends Thread implements IKVServer {
 
@@ -23,6 +24,14 @@ public class KVServer extends Thread implements IKVServer {
 	private BTree bTree;
 	private String strategy;
 	private boolean isRunning;
+
+	private String name;
+	private String zkHost;
+	private int zkPort;
+	private ZooKeeper zookeeper;
+	private boolean lockWrite;
+	private ServerState state;
+
 
 	/**
 	 * Start KV Server at given port
@@ -49,19 +58,16 @@ public class KVServer extends Thread implements IKVServer {
 	
 	@Override
 	public int getPort(){
-		// TODO Auto-generated method stub
 		return serverSocket.getLocalPort();
 	}
 
 	@Override
     public String getHostname(){
-		// TODO Auto-generated method stub
 		return serverSocket.getInetAddress().getHostName();
 	}
 
 	@Override
     public CacheStrategy getCacheStrategy(){
-		// TODO Auto-generated method stub
 		return IKVServer.CacheStrategy.None;
 	}
 
@@ -117,7 +123,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Starts the KVServer, all client and ECS requests are processed
 	 */
 	public void startServer(){
-		//TODO: Implement
+		this.state = ServerState.RUNNING;
 	}
 
 	/**
@@ -125,7 +131,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Only ECS requests are processed
 	 */
 	public void stopServer(){
-		//TODO: Implement
+		this.state = ServerState.ECS_REQUESTS_ONLY;
 	}
 
 	/**
@@ -139,14 +145,14 @@ public class KVServer extends Thread implements IKVServer {
 	 * Lock this KVServer for write operations
 	 */
 	public void lockWrite(){
-		//TODO: Implement
+		this.lockWrite = true;
 	}
 
 	/**
 	 * Unlock this KVServer for write operations
 	 */
 	public void unLockWrite(){
-		//TODO: Implement
+		this.lockWrite = false;
 	}
 
 	/**
