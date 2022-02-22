@@ -5,9 +5,9 @@ import java.util.Map;
 
 public class DataBase {
     private BTree b = null;
-    private final static DataBase instance = new DataBase(true);
+    private static DataBase instance = null;
 
-    DBConfig config = DBConfig.getInstance();
+    static DBConfig config;
     LinkedHashMap<String, Node> cache;
 
     private DataBase(boolean recoverFromDisk) {
@@ -30,6 +30,14 @@ public class DataBase {
         }
     }
 
+    public static DataBase initInstance(int cacheSize, String strategy, boolean recoverFromDisk) {
+        if (DataBase.instance == null) {
+            DataBase.config = DBConfig.initInstance(cacheSize, strategy);
+            DataBase.instance = new DataBase(recoverFromDisk);
+        }
+        return DataBase.instance;
+    }
+
     public static DataBase getInstance() {
         return instance;
     }
@@ -47,27 +55,27 @@ public class DataBase {
             assert true;
         } else if (config.cacheType == DBConfig.CacheType.LFU) {
             ((LFUCache) cache).dumpCache();
-        }else{
+        } else {
             for (Map.Entry<String, Node> entry : cache.entrySet()) {
                 FileOp.dumpFile(entry.getValue(), false);
             }
         }
     }
 
-    public void clearCache(){
+    public void clearCache() {
         dumpCache();
         if (config.cacheType == DBConfig.CacheType.None) {
             assert true;
         } else if (config.cacheType == DBConfig.CacheType.LFU) {
-            ((LFUCache)cache).myClear();
-        }else{
+            ((LFUCache) cache).myClear();
+        } else {
             for (Map.Entry<String, Node> entry : cache.entrySet()) {
                 cache.clear();
             }
         }
     }
 
-    public void deleteHistory(){
+    public void deleteHistory() {
         clearCache();
         FileOp.deleteTree();
     }
