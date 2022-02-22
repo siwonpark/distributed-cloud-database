@@ -1,6 +1,6 @@
 package ecs;
 
-import testing.HashUtils;
+import shared.HashUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
