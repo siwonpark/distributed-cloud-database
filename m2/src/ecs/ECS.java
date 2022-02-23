@@ -1,27 +1,21 @@
 package ecs;
 
-import org.apache.log4j.Logger;
+import shared.HashUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.TreeMap;
 
 public class ECS {
     // TODO: Set up logger on client with name ecs.log
     //private static Logger logger = Logger.getRootLogger();
     // TODO: Set hashRing to private after testing
     public TreeMap<String, ECSNode> hashRing = new TreeMap<>();
-    private MessageDigest md5;
 
     public ECS(String configFileName) {
-        try {
-            md5 = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            // Shouldn't get here as MD5 exists
-        }
-
         ArrayList<ECSNode> nodes = getNodesFromConfig(configFileName);
         addNodesToHashRing(nodes);
     }
@@ -83,7 +77,7 @@ public class ECS {
     private void addNodesToHashRing(ArrayList<ECSNode> nodes) {
         // compute position in ring
         for (ECSNode node: nodes) {
-            String hash = computeHash(node.getNodeHost() + ":" + node.getNodePort());
+            String hash = HashUtils.computeHash(node.getNodeHost() + ":" + node.getNodePort());
             hashRing.put(hash, node);
         }
 
@@ -102,13 +96,6 @@ public class ECS {
 
         // connect first node to last
         hashRing.firstEntry().getValue().setStartHash(prevHash);
-    }
-
-    private String computeHash(String input) {
-        // reset to make sure md5 instance is cleared
-        md5.reset();
-        byte[] hash = md5.digest(input.getBytes());
-        return Base64.getEncoder().encodeToString(hash);
     }
 
     public static void main(String[] args) {

@@ -139,6 +139,10 @@ public class PrintUtils {
                 break;
             case PUT_UPDATE:
                 printSuccess(String.format("Updated key \"%s\" with value \"%s\".", key, value));
+            case SERVER_WRITE_LOCK:
+                printError("The server is currently not accepting write requests");
+            case SERVER_STOPPED:
+                printError("Client requests are currently not being processed by the server");
             default:
                 break;
         }
