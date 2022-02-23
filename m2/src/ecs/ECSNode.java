@@ -44,12 +44,12 @@ public class ECSNode implements IECSNode, Serializable {
         this.endHash = endHash;
     }
 
-    public boolean isResponsibleForKey(String key) {
+    public boolean isResponsibleForKey(String keyHash) {
         if (startHash.compareTo(endHash) < 0) {
-            return key.compareTo(startHash) > 0 && key.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) > 0 && keyHash.compareTo(endHash) < 0;
         } else {
             // start is greater than end, the node is responsible for an area across the start of the ring
-            return key.compareTo(startHash) > 0 || key.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) > 0 || keyHash.compareTo(endHash) < 0;
         }
     }
 }
