@@ -1,0 +1,38 @@
+2022-02-22 19:30:11,808 [myid:] - INFO  [main:QuorumPeerConfig@136] - Reading configuration from: /Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../conf/zoo.cfg
+2022-02-22 19:30:11,811 [myid:] - INFO  [main:DatadirCleanupManager@78] - autopurge.snapRetainCount set to 3
+2022-02-22 19:30:11,811 [myid:] - INFO  [main:DatadirCleanupManager@79] - autopurge.purgeInterval set to 0
+2022-02-22 19:30:11,811 [myid:] - INFO  [main:DatadirCleanupManager@101] - Purge task is not scheduled.
+2022-02-22 19:30:11,812 [myid:] - WARN  [main:QuorumPeerMain@116] - Either no config or no quorum defined in config, running  in standalone mode
+2022-02-22 19:30:11,822 [myid:] - INFO  [main:QuorumPeerConfig@136] - Reading configuration from: /Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../conf/zoo.cfg
+2022-02-22 19:30:11,823 [myid:] - INFO  [main:ZooKeeperServerMain@98] - Starting server
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:zookeeper.version=3.4.11-37e277162d567b55a07d1755f0b31c32e93c01a0, built on 11/01/2017 18:06 GMT
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:host.name=192.168.0.22
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:java.version=11.0.14.1
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:java.vendor=Amazon.com Inc.
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:java.home=/Users/siwon/Library/Java/JavaVirtualMachines/corretto-11.0.14.1/Contents/Home
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:java.class.path=/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../build/classes:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../build/lib/*.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../lib/slf4j-log4j12-1.6.1.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../lib/slf4j-api-1.6.1.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../lib/netty-3.10.5.Final.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../lib/log4j-1.2.16.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../lib/jline-0.9.94.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../lib/audience-annotations-0.5.0.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../zookeeper-3.4.11.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../src/java/lib/*.jar:/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin/../conf:
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:java.library.path=/Users/siwon/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:java.io.tmpdir=/var/folders/zx/wx486m3s369bqj3zt4ndgfwh0000gn/T/
+2022-02-22 19:30:11,829 [myid:] - INFO  [main:Environment@100] - Server environment:java.compiler=<NA>
+2022-02-22 19:30:11,830 [myid:] - INFO  [main:Environment@100] - Server environment:os.name=Mac OS X
+2022-02-22 19:30:11,830 [myid:] - INFO  [main:Environment@100] - Server environment:os.arch=x86_64
+2022-02-22 19:30:11,830 [myid:] - INFO  [main:Environment@100] - Server environment:os.version=12.2.1
+2022-02-22 19:30:11,830 [myid:] - INFO  [main:Environment@100] - Server environment:user.name=siwon
+2022-02-22 19:30:11,831 [myid:] - INFO  [main:Environment@100] - Server environment:user.home=/Users/siwon
+2022-02-22 19:30:11,831 [myid:] - INFO  [main:Environment@100] - Server environment:user.dir=/Users/siwon/Desktop/ECE419-Project/m2/zookeeper-3.4.11/bin
+2022-02-22 19:30:11,835 [myid:] - INFO  [main:ZooKeeperServer@825] - tickTime set to 2000
+2022-02-22 19:30:11,835 [myid:] - INFO  [main:ZooKeeperServer@834] - minSessionTimeout set to -1
+2022-02-22 19:30:11,835 [myid:] - INFO  [main:ZooKeeperServer@843] - maxSessionTimeout set to -1
+2022-02-22 19:30:11,847 [myid:] - INFO  [main:ServerCnxnFactory@117] - Using org.apache.zookeeper.server.NIOServerCnxnFactory as server connection factory
+2022-02-22 19:30:11,858 [myid:] - INFO  [main:NIOServerCnxnFactory@89] - binding to port 0.0.0.0/0.0.0.0:2181
+2022-02-22 19:30:12,765 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxnFactory@215] - Accepted socket connection from /127.0.0.1:53293
+2022-02-22 19:30:12,771 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@931] - Client attempting to renew session 0x10000f14d280000 at /127.0.0.1:53293
+2022-02-22 19:30:12,775 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@683] - Established session 0x10000f14d280000 with negotiated timeout 30000 for client /127.0.0.1:53293
+2022-02-22 19:30:22,905 [myid:] - WARN  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@376] - Unable to read additional data from client sessionid 0x10000f14d280000, likely client has closed socket
+2022-02-22 19:30:22,906 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@1040] - Closed socket connection for client /127.0.0.1:53293 which had sessionid 0x10000f14d280000
+2022-02-22 19:30:35,766 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxnFactory@215] - Accepted socket connection from /0:0:0:0:0:0:0:1:53297
+2022-02-22 19:30:35,772 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:ZooKeeperServer@938] - Client attempting to establish new session at /0:0:0:0:0:0:0:1:53297
+2022-02-22 19:30:35,772 [myid:] - INFO  [SyncThread:0:FileTxnLog@209] - Creating new log file: log.1e
+2022-02-22 19:30:35,788 [myid:] - INFO  [SyncThread:0:ZooKeeperServer@683] - Established session 0x100010ca3db0000 with negotiated timeout 30000 for client /0:0:0:0:0:0:0:1:53297
+2022-02-22 19:30:39,102 [myid:] - WARN  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@376] - Unable to read additional data from client sessionid 0x100010ca3db0000, likely client has closed socket
+2022-02-22 19:30:39,102 [myid:] - INFO  [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:2181:NIOServerCnxn@1040] - Closed socket connection for client /0:0:0:0:0:0:0:1:53297 which had sessionid 0x100010ca3db0000
