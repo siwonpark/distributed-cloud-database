@@ -33,6 +33,7 @@ public class DataBase {
         }
     }
 
+
     public static DataBase initInstance(int cacheSize, String strategy, boolean recoverFromDisk) {
         if (DataBase.instance == null) {
             DataBase.config = DBConfig.initInstance(cacheSize, strategy);
@@ -53,6 +54,10 @@ public class DataBase {
         return b.get(key);
     }
 
+
+    /**
+     * write the cache to disk.
+     */
     public void dumpCache() {
         if (config.cacheType == DBConfig.CacheType.None) {
             assert true;
@@ -65,6 +70,9 @@ public class DataBase {
         }
     }
 
+    /**
+     * clear all the data in memory after write them to disk.
+     */
     public void clearCache() {
         dumpCache();
         if (config.cacheType == DBConfig.CacheType.None) {
@@ -72,15 +80,17 @@ public class DataBase {
         } else if (config.cacheType == DBConfig.CacheType.LFU) {
             ((LFUCache) cache).myClear();
         } else {
-            for (Map.Entry<String, Node> entry : cache.entrySet()) {
-                cache.clear();
-            }
+            cache.clear();
         }
     }
 
+    /**
+     * delete all the data in memory and disk, after deleteHistory the database is empty.
+     */
     public void deleteHistory() {
         clearCache();
         FileOp.deleteTree();
+        b = FileOp.newTree();
     }
 
     /**
@@ -111,8 +121,32 @@ public class DataBase {
         return ans;
     }
 
-
+    /**
+     * batch delete all the null values in the DataBase
+     * */
     public void batchDeleteNull() {
+        DataNode node = (DataNode) FileOp.loadFile(b.getLeft());
+        ArrayList<ArrayList<String>> data = new ArrayList<>();
+        int null_num = 0;
+        while (node != null) {
+            for (int i = 0; i < node.number; i++) {
+                if (node.values[i] != null) {
+                    ArrayList<String> tmp = new ArrayList<>();
+                    tmp.add(node.keys[i]);
+                    tmp.add(node.values[i]);
+                    data.add(tmp);
+                } else {
+                    null_num += 1;
+                }
+            }
+            node = (DataNode) FileOp.loadFile(node.right);
+        }
 
+        if ((float) null_num / (float) data.size() > 0.5) {//rebuild the tree if necessary
+            this.deleteHistory();
+            for (ArrayList<String> i : data) {
+                this.put(i.get(0), i.get(1));
+            }
+        }
     }
 }

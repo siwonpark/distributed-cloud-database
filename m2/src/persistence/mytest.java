@@ -3,6 +3,7 @@ package persistence;
 
 import org.apache.log4j.Level;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
@@ -144,9 +145,7 @@ public class mytest {
     public static void main(String[] args) {
         logger.setLevel(Level.DEBUG);
         BasicConfigurator.configure();
-        DataBase db = DataBase.initInstance(100,"LRU",false);
+        DataBase db = DataBase.initInstance(100, "LRU", false);
         simpleTest(db);
-        db.getData("000","zzz");
-
     }
 }
