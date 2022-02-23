@@ -4,13 +4,13 @@ import app_kvClient.ClientSocketListener;
 import app_kvClient.ClientSocketListener.SocketStatus;
 import ecs.ECSNode;
 import org.apache.log4j.Logger;
+import shared.MetadataUtils;
+import shared.communication.CommModule;
 import shared.messages.KVMessage;
 import shared.messages.Message;
-import shared.HashUtils;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -143,7 +143,7 @@ public class KVStore implements KVCommInterface {
 		if(serverMetadata == null){
 			return;
 		}
-		ECSNode responsibleServer = findCorrectServerForKey(msg.getKey());
+		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(msg.getKey(), serverMetadata);
 		if(responsibleServer == null){
 			logger.error("Could not find a responsible server in the server metadata");
 			return;
@@ -155,17 +155,6 @@ public class KVStore implements KVCommInterface {
 		commModule.connect();
 	}
 
-	private ECSNode findCorrectServerForKey(String key){
-		String keyHash = HashUtils.computeHash(key);
-		for(Map.Entry<String,ECSNode> entry : serverMetadata.entrySet()){
-			String serverHash = entry.getKey();
-			ECSNode ecsNode = entry.getValue();
-			if (ecsNode.isResponsibleForKey(keyHash)){
-				return ecsNode;
-			}
-		}
-		return null;
-	}
 
 	/**
 	 * Is KVStore running?
