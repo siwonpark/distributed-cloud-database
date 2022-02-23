@@ -34,9 +34,9 @@ public class DataBase {
     }
 
 
-    public static DataBase initInstance(int cacheSize, String strategy, boolean recoverFromDisk) {
+    public static DataBase initInstance(int cacheSize, String strategy, String dbName, boolean recoverFromDisk) {
         if (DataBase.instance == null) {
-            DataBase.config = DBConfig.initInstance(cacheSize, strategy);
+            DataBase.config = DBConfig.initInstance(cacheSize, strategy, dbName);
             DataBase.instance = new DataBase(recoverFromDisk);
         }
         return DataBase.instance;

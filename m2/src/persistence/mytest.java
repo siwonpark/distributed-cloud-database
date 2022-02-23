@@ -145,7 +145,7 @@ public class mytest {
     public static void main(String[] args) {
         logger.setLevel(Level.DEBUG);
         BasicConfigurator.configure();
-        DataBase db = DataBase.initInstance(100, "LRU", false);
+        DataBase db = DataBase.initInstance(100, "LRU", "a database name", false);
         simpleTest(db);
     }
 }

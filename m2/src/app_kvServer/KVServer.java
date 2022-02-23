@@ -49,7 +49,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, false);
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, "a database some",false);//we should get a name from outside the KVSever.
 	}
 	
 	@Override

@@ -15,7 +15,7 @@ public class DBConfig {
 
     String filePath;
 
-    public DBConfig(int cacheSize, String strategy) {
+    public DBConfig(int cacheSize, String strategy, String dbName) {
 
         this.cacheSize = cacheSize;
         switch (strategy) {
@@ -33,12 +33,12 @@ public class DBConfig {
                 break;
         }
         String rootPath = System.getProperty("user.dir");
-        this.filePath = rootPath + "/data/";
+        this.filePath = rootPath + "/data/" + dbName +"/";
     }
 
-    public static DBConfig initInstance(int cacheSize, String strategy) {
+    public static DBConfig initInstance(int cacheSize, String strategy, String dbName) {
         if (DBConfig.instance == null) {
-            DBConfig.instance = new DBConfig(cacheSize, strategy);
+            DBConfig.instance = new DBConfig(cacheSize, strategy, dbName);
         }
         return DBConfig.instance;
     }
