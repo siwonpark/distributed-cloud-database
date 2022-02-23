@@ -233,6 +233,10 @@ public class KVServer extends Thread implements IKVServer {
 	 * @return True if server is responsible, false otherwise
 	 */
 	public boolean isResponsibleForKey(String key){
+		if (this.metadata == null){
+			// TODO: Remove this once updates to metadata thru ECS is implemented
+			return true;
+		}
 		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, metadata);
 		assert responsibleServer != null;
 		return responsibleServer.getNodePort() == port &&

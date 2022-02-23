@@ -115,12 +115,12 @@ public class ClientConnection implements Runnable {
 		switch(message.getStatus()) {
 			case GET:
 				try {
-//					if (!server.responsibleForKey(message.getKey())){
-//						responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
-//						Message response = new Message(server.getMetadata(), responseStatus);
-//						sendMessage(response);
-//						return;
-//					}
+					if (!server.isResponsibleForKey(message.getKey())){
+						responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
+						Message response = new Message(server.getMetadata(), responseStatus);
+						sendMessage(response);
+						return;
+					}
 					value = server.getKV(message.getKey());
 					responseStatus = StatusType.GET_SUCCESS;
 				} catch (Exception e) {
@@ -129,9 +129,15 @@ public class ClientConnection implements Runnable {
 				}
 				break;
 			case PUT:
-				if (server.isWriteLocked()){
+				if (server.isWriteLocked()) {
 					responseStatus = StatusType.SERVER_WRITE_LOCK;
 					break;
+				}
+				if (!server.isResponsibleForKey(message.getKey())){
+					responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
+					Message response = new Message(server.getMetadata(), responseStatus);
+					sendMessage(response);
+					return;
 				}
 				boolean isInStorage = server.inStorage(key);
 
