@@ -1,12 +1,12 @@
 package testing;
 
-import org.junit.Test;
-import shared.messages.Message;
-import shared.messages.KVMessage.StatusType;
-
-import java.util.HashMap;
-
+import ecs.ECSNode;
 import junit.framework.TestCase;
+import org.junit.Test;
+import shared.messages.KVMessage.StatusType;
+import shared.messages.Message;
+
+import java.util.TreeMap;
 
 public class AdditionalTest extends TestCase {
 
@@ -29,9 +29,9 @@ public class AdditionalTest extends TestCase {
 	 * For the server metadata case
 	 * */
 	public void testMessageGettersServerMetadata() {
-		HashMap<String, String[]> metadata = new HashMap();
-		metadata.put("qowiej", new String[]{"weqwe", "jqowiej"});
-		metadata.put("qowiej", new String[]{"qwwj", "jqwriej"});
+		TreeMap<String, ECSNode> metadata = new TreeMap<>();
+		metadata.put("qowiej", new ECSNode("1", "localhost", 5000));
+		metadata.put("qowiej", new ECSNode("2", "localhost", 5001));
 
 		Message message = new Message(metadata, StatusType.SERVER_NOT_RESPONSIBLE);
 
@@ -47,9 +47,9 @@ public class AdditionalTest extends TestCase {
 	 * an incorrect status code will throw an exception
 	 */
 	public void testMessageMetadataStatusCode() {
-		HashMap<String, String[]> metadata = new HashMap();
-		metadata.put("qowiej", new String[]{"weqwe", "jqowiej"});
-		metadata.put("qowiej", new String[]{"qwwj", "jqwriej"});
+		TreeMap<String, ECSNode> metadata = new TreeMap<>();
+		metadata.put("qowiej", new ECSNode("1", "localhost", 5000));
+		metadata.put("qowiej", new ECSNode("2", "localhost", 5001));
 		Exception ex = null;
 		try{
 			Message msg = new Message(metadata, StatusType.PUT);

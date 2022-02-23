@@ -8,6 +8,13 @@ public interface IKVServer {
         FIFO
     };
 
+    public enum ServerState {
+        RUNNING,
+        ECS_REQUESTS_ONLY
+
+
+    };
+
     /**
      * Get the port number of the server
      * @return  port number
