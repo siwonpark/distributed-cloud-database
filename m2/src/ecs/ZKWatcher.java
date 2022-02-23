@@ -9,27 +9,51 @@ import shared.ZKData;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
     private Logger logger = Logger.getRootLogger();
-    private String ROOT_PATH = "/ecs";
+    static String ROOT_PATH = "/ecs";
+    static String ZK_HOST = "localhost";
+    static int ZK_PORT = 2181;
+    public CountDownLatch connectedSignal = new CountDownLatch(1);
+    public CountDownLatch createdSignal;
 
-    public ZooKeeper connect() throws IOException {
-        zooKeeper = new ZooKeeper("localhost:2181", 1000, this);
-
+    public ZooKeeper connect() {
         try {
-            create(ROOT_PATH, null);
-        } catch (Exception e) {
-            logger.error("Root znode was unable to be created");
+            zooKeeper = new ZooKeeper(ZK_HOST + ":" + ZK_PORT, 1000, this);
+        } catch (IOException e) {
+            logger.error("Failed to connect to ZooKeeper server at localhost:2181");
         }
         return zooKeeper;
     }
 
-    public void create(String path, ZKData data) throws InterruptedException, KeeperException, IOException {
-        byte[] dataBytes = serializeData(data);
+    public byte[] serializeData(ZKData data) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos);
+        out.writeObject(data);
+        out.flush();
+        return bos.toByteArray();
+    }
 
-        zooKeeper.create(path, dataBytes, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+    public void create(String path, ZKData data) {
+        try {
+            byte[] dataBytes = serializeData(data);
+            zooKeeper.create(path, dataBytes, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        } catch (Exception e) {
+            logger.error("Failed to create z-node");
+        }
+    }
+
+    public List<String> getChildren(String path) {
+        try {
+            return zooKeeper.getChildren(path, true);
+        } catch (Exception e) {
+            logger.error("Failed to get z-node children");
+            return null;
+        }
     }
 
     @Override
@@ -52,21 +76,23 @@ public class ZKWatcher implements Watcher {
         if (KeeperState.SyncConnected == keeperState) {
             // Successfully connected to ZK server
             if (EventType.None == eventType) {
+                connectedSignal.countDown();
                 logger.info("Successfully connected to ZK server!");
             }
-            //Create node
+            // Create node
             else if (EventType.NodeCreated == eventType) {
+                createdSignal.countDown();
                 logger.info("Node creation");
             }
-            //Update node
+            // Update node
             else if (EventType.NodeDataChanged == eventType) {
                 logger.info("Node data update");
             }
-            //Update child nodes
+            // Update child nodes
             else if (EventType.NodeChildrenChanged == eventType) {
                 logger.info("Child node change");
             }
-            //Delete node
+            // Delete node
             else if (EventType.NodeDeleted == eventType) {
                 logger.info("node " + path + " Deleted");
             }
@@ -82,28 +108,4 @@ public class ZKWatcher implements Watcher {
     public void close() throws InterruptedException {
         zooKeeper.close();
     }
-
-    public byte[] serializeData(ZKData data) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(bos);
-        out.writeObject(data);
-        out.flush();
-        return bos.toByteArray();
-    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
