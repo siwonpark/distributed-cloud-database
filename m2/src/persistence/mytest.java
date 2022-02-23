@@ -35,7 +35,7 @@ public class mytest {
     static boolean testChain(BTree b) {
         String lef = b.getLeft();
         DataNode tmp_lef = (DataNode) FileOp.loadFile(lef);
-        while (tmp_lef.right != null) {
+        while (tmp_lef != null && tmp_lef.right != null) {
             for (int i = 0; i < tmp_lef.number - 1; i++) {
                 if (tmp_lef.keys[i].compareTo(tmp_lef.keys[i + 1]) >= 0) {
                     logger.error("The sequences is disordered!");
@@ -67,7 +67,7 @@ public class mytest {
             logger.debug("test: put " + lis[i].key + " " + lis[i].value);
             b.put(lis[i].key, lis[i].value);
         }
-        if(!testChain(b)){
+        if (!testChain(b)) {
             return false;
         }
         for (int i = 0; i < test_length; i++) {
@@ -77,7 +77,7 @@ public class mytest {
                 logger.error("The value is not correct!");
             }
         }
-        if(!testChain(b)){
+        if (!testChain(b)) {
             return false;
         }
         for (int i = 0; i < test_length; i++) {
@@ -85,7 +85,7 @@ public class mytest {
             logger.debug("test: put " + lis[i].key + " " + lis[i].value);
             b.put(lis[i].key, lis[i].value);
         }
-        if(!testChain(b)){
+        if (!testChain(b)) {
             return false;
         }
 //        long time2 = System.nanoTime();
@@ -96,40 +96,29 @@ public class mytest {
                 logger.error("The value is not correct!");
             }
         }
-        if(!testChain(b)){
+        if (!testChain(b)) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
 
-    static void newTreeExample() {
-        BTree b = FileOp.newTree();
-        //do something else with b
-    }
-
-    static void loadTreeExample() {
-        BTree b = FileOp.loadTree();
-        //do something else with b
-        simpleTest(b);
-    }
-
-    static void simpleTest(BTree b) {
-        System.out.println(b.get("3"));
-        b.put("1", "a");
-        b.put("2", "b");
-        b.put("1", null);
-        String s = b.get("1");
+    static void simpleTest(DataBase db) {
+        System.out.println(db.get("3"));
+        db.put("1", "a");
+        db.put("2", "b");
+        db.put("1", null);
+        String s = db.get("1");
         System.out.println(s == null);
-        b.put("3", "c");
-        System.out.println(b.get("3"));
-        b.put("4", "abc");
-        System.out.println(b.get("4"));
-        b.put("4", "cba");
-        System.out.println(b.get("4"));
+        db.put("3", "c");
+        System.out.println(db.get("3"));
+        db.put("4", "abc");
+        System.out.println(db.get("4"));
+        db.put("4", "cba");
+        System.out.println(db.get("4"));
     }
 
-    static  void simpleRecoverTest(BTree b){
+    static void simpleRecoverTest(BTree b) {
         System.out.println(b.get("3"));
         b.put("1", "a");
         b.put("2", "b");
@@ -154,10 +143,10 @@ public class mytest {
 
     public static void main(String[] args) {
         logger.setLevel(Level.DEBUG);
-        FileOp.deleteTree();
         BasicConfigurator.configure();
-        repeatPutAndGetTest(FileOp.newTree(), 500);
-        FileOp.deleteTree();
-        simpleTest(FileOp.newTree());
+        DataBase db = DataBase.initInstance(100,"LRU",false);
+        simpleTest(db);
+        db.getData("000","zzz");
+
     }
 }

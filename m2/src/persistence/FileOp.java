@@ -17,7 +17,6 @@ public class FileOp {
     final static Random random = new Random();
     final static int charNum = 26 + 26 + 10;
     final static DBConfig config = DBConfig.getInstance();
-    static LinkedHashMap<String, Node> cache = DataBase.getInstance().cache;
 
     private FileOp() {
     }
@@ -125,8 +124,8 @@ public class FileOp {
      */
     public static Node loadFile(String name) {
         logger.trace("load file " + name);
-        if (cache.containsKey(name)) {
-            return cache.get(name);
+        if (DataBase.getInstance().cache.containsKey(name)) {
+            return DataBase.getInstance().cache.get(name);
         } else {
             try {
                 InputStream input = new FileInputStream(config.filePath + name);
@@ -143,7 +142,7 @@ public class FileOp {
                     node.size = input.available();
                     input.close();
 
-                    cache.put(node.name, node);
+                    DataBase.getInstance().cache.put(node.name, node);
 
                     return node;
                 } else {
@@ -162,7 +161,7 @@ public class FileOp {
                     node.size = input.available();
                     input.close();
 
-                    cache.put(node.name, node);
+                    DataBase.getInstance().cache.put(node.name, node);
 
                     return node;
                 }
@@ -185,7 +184,7 @@ public class FileOp {
     public static boolean dumpFile(Node node, boolean cacheIt) {
         logger.trace("dump file " + node.name);
         if (cacheIt) {
-            cache.put(node.name, node);
+            DataBase.getInstance().cache.put(node.name, node);
             return true;
         } else {
             try {

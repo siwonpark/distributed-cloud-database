@@ -1,14 +1,17 @@
 package persistence;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import shared.HashUtils;
 
 public class DataBase {
     private BTree b = null;
     private static DataBase instance = null;
 
     static DBConfig config;
-    LinkedHashMap<String, Node> cache;
+    LinkedHashMap<String, Node> cache = null;
 
     private DataBase(boolean recoverFromDisk) {
         if (recoverFromDisk) {
@@ -79,6 +82,35 @@ public class DataBase {
         clearCache();
         FileOp.deleteTree();
     }
+
+    /**
+     * don't need to dumpCache before using getData.
+     * can't import Pair, use ArrayList instead.
+     *
+     * @return we can use it like this:
+     * for (ArrayList<String> i : data) {
+     * System.out.printf("The key is %s, the value is %s\n", i.get(0), i.get(1));
+     * }
+     */
+    public ArrayList<ArrayList<String>> getData(String start, String end) {
+        ArrayList<ArrayList<String>> ans = new ArrayList<>();
+        DataNode node = (DataNode) FileOp.loadFile(b.getLeft());
+        while (node != null) {
+            for (int i = 0; i < node.number; i++) {
+                String hash = HashUtils.computeHash(node.keys[i]);
+                assert hash != null;
+                if (hash.compareTo(start) >= 0 && hash.compareTo(end) <= 0 && node.values[i] != null) {
+                    ArrayList<String> tmp = new ArrayList<>();
+                    tmp.add(node.keys[i]);
+                    tmp.add(node.values[i]);
+                    ans.add(tmp);
+                }
+            }
+            node = (DataNode) FileOp.loadFile(node.right);
+        }
+        return ans;
+    }
+
 
     public void batchDeleteNull() {
 

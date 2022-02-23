@@ -1,5 +1,7 @@
 package app_kvServer;
 
+import persistence.DataBase;
+
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -21,7 +23,6 @@ public class KVServer extends Thread implements IKVServer {
 	private static int MAX_NUMBER = 2000;
 	private int port;
 	private int cacheSize;
-	private BTree bTree;
 	private String strategy;
 	private boolean isRunning;
 
@@ -31,7 +32,7 @@ public class KVServer extends Thread implements IKVServer {
 	private ZooKeeper zookeeper;
 	private boolean lockWrite;
 	private ServerState state;
-
+	private DataBase db;
 
 	/**
 	 * Start KV Server at given port
@@ -48,12 +49,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
-
-		FileOp f = new FileOp();
-        this.bTree = f.loadTree("A");
-        if (this.bTree == null) {//A haven't been build
-			this.bTree = f.newTree(MAX_NUMBER, "A");
-        }
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, false);
 	}
 	
 	@Override
@@ -74,14 +70,14 @@ public class KVServer extends Thread implements IKVServer {
 	@Override
     public int getCacheSize(){
 		// TODO Auto-generated method stub
-		return -1;
+		return this.cacheSize;
 	}
 
 	@Override
     public boolean inStorage(String key){
 		// TODO Auto-generated method stub
 		try{
-			String value = bTree.get(key);
+			String value = db.get(key);
 			return value != null;
 		} catch (Exception e){
 			return false;
@@ -91,12 +87,13 @@ public class KVServer extends Thread implements IKVServer {
 	@Override
     public boolean inCache(String key){
 		// TODO Auto-generated method stub
+		// the unit of cache is node rather than key. and the cache visit is in the database level.
 		return false;
 	}
 
 	@Override
     public String getKV(String key) throws Exception{
-		String result = bTree.get(key);
+		String result = db.get(key);
 		if (result == null){
 			throw new RuntimeException(String.format("No such key %s exists", key));
 		} else {
@@ -106,17 +103,19 @@ public class KVServer extends Thread implements IKVServer {
 
 	@Override
     public void putKV(String key, String value) throws Exception{
-		bTree.put(key, value);
+		db.put(key, value);
 	}
 
 	@Override
     public void clearCache(){
 		// TODO Auto-generated method stub
+		db.clearCache();
 	}
 
 	@Override
     public void clearStorage(){
 		// TODO Auto-generated method stub
+		db.deleteHistory();
 	}
 
 	/**
