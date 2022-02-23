@@ -1,12 +1,16 @@
 package ecs;
 
-import org.apache.log4j.Logger;
+import logger.LogSetup;
+import org.apache.log4j.Level;
+import org.apache.zookeeper.KeeperException;
+import shared.ZKData;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.security.MessageDigest;
 
 public class ECS {
     // TODO: Set up logger on client with name ecs.log
@@ -55,7 +59,6 @@ public class ECS {
 
         try {
             String rootPath = System.getProperty("user.dir");
-            System.out.println(rootPath);
             File config = new File(rootPath + "/src/ecs/" + configFileName);
             Scanner s = new Scanner(config);
 
@@ -111,7 +114,22 @@ public class ECS {
         return Base64.getEncoder().encodeToString(hash);
     }
 
-    public static void main(String[] args) {
+    /**
+     * TODO: Remove in future PR, the ECS server should be just initialized in the ECS client.
+     * @param args
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws KeeperException
+     */
+    public static void main(String[] args) throws IOException, InterruptedException, KeeperException {
+        new LogSetup("logs/ecs.log", Level.INFO);
         ECS ecs = new ECS("ecs.config");
+        ZKWatcher watcher = new ZKWatcher();
+        watcher.connect();
+        ZKData data = new ZKData(ecs.hashRing, ZKData.OperationType.CREATE);
+
+        for (ECSNode node: ecs.hashRing.values()) {
+           watcher.create("/ecs/" + node.getNodeName(), data);
+        }
     }
 }

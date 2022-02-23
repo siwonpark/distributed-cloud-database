@@ -1,6 +1,8 @@
 package ecs;
 
-public class ECSNode implements IECSNode {
+import java.io.Serializable;
+
+public class ECSNode implements IECSNode, Serializable {
     private String nodeName;
     private String nodeHost;
     private int nodePort;
