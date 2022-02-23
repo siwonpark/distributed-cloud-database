@@ -1,14 +1,19 @@
 package app_kvServer;
 
+import ecs.ECSNode;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.ZooKeeper;
+import shared.MetadataUtils;
+import shared.communication.CommModule;
 
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Objects;
+import java.util.TreeMap;
 
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
@@ -31,6 +36,10 @@ public class KVServer extends Thread implements IKVServer {
 	private ZooKeeper zookeeper;
 	private boolean lockWrite;
 	private ServerState state;
+	// Used for server->server communication when moving data
+	private CommModule commModule;
+	private TreeMap<String, ECSNode> metadata;
+	private String hostName;
 
 
 	/**
@@ -43,11 +52,15 @@ public class KVServer extends Thread implements IKVServer {
 	 *           currently not contained in the cache. Options are "FIFO", "LRU",
 	 *           and "LFU".
 	 */
-	public KVServer(int port, int cacheSize, String strategy) {
-		// TODO Auto-generated method stub
+	public KVServer(int port, String hostname, int cacheSize, String strategy) {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
+		// TODO: We need to change this once we have a way to
+		// Change the server state from ECS in the tests
+		this.state = ServerState.RUNNING;
+		this.lockWrite = false;
+		this.hostName = hostname;
 
 		FileOp f = new FileOp();
         this.bTree = f.loadTree("A");
@@ -63,7 +76,8 @@ public class KVServer extends Thread implements IKVServer {
 
 	@Override
     public String getHostname(){
-		return serverSocket.getInetAddress().getHostName();
+		return this.hostName == null ? serverSocket.getInetAddress().getHostName():
+				this.hostName;
 	}
 
 	@Override
@@ -131,7 +145,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Only ECS requests are processed
 	 */
 	public void stopServer(){
-		this.state = ServerState.ECS_REQUESTS_ONLY;
+		this.state = ServerState.STOPPED;
 	}
 
 	/**
@@ -159,25 +173,79 @@ public class KVServer extends Thread implements IKVServer {
 	 * Transfer a subset (range) of the KVServer’s data to another KVServer
 	 * (reallocation before removing this server or adding a new KVServer to the ring);
 	 * send a notification to the ECS, if data transfer is completed.
+	 *
 	 * @param range The subset of this Server's data to transfer to the new server
 	 * @param server The new server to move data to
 	 */
-	public void moveData(String[] range, String server){
+	public void moveData(String[] range, String server) throws IOException, RuntimeException {
 		//TODO: Implement
+		ECSNode destServer
+				= MetadataUtils.getServerNode(server, metadata);
+		String host = destServer.getNodeHost();
+		int port = destServer.getNodePort();
+		commModule = new CommModule(host, port);
+		commModule.connect();
+
+		/*
+		 * TODO:
+		 * Spawn a thread to handle data transfer
+		 * The thread should:
+		 * Get all the keys from database
+		 * Filter out the keys not in the transfer hash range
+		 * Send the new keys to the destination server
+		 *
+		 */
+
+
+
 	}
 
 	/**
 	 * Update the metadata repository of this KVServer
 	 */
-	public void update(/*metadata*/){
-		//TODO: Implement
+	public void update(TreeMap<String, ECSNode> metadata){
+		this.metadata = metadata;
+	}
 
+	public TreeMap<String, ECSNode> getMetadata(){
+		return this.metadata;
+	}
+
+	/**
+	 * Is the server write locked?
+	 * @return True if the server is write locked, false otherwise
+	 */
+	public boolean isWriteLocked(){
+		return this.lockWrite;
+	}
+
+	/**
+	 * Get the state of this server
+	 * @return The state of the server
+	 */
+	public ServerState getServerState(){
+		return this.state;
+	}
+
+	/**
+	 * Is this server responsible for key
+	 * @param key The key to query
+	 * @return True if server is responsible, false otherwise
+	 */
+	public boolean isResponsibleForKey(String key){
+		if (this.metadata == null){
+			// TODO: Remove this once updates to metadata thru ECS is implemented
+			return true;
+		}
+		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, metadata);
+		assert responsibleServer != null;
+		return responsibleServer.getNodePort() == port &&
+				Objects.equals(responsibleServer.getNodeHost(), getHostname());
 	}
 
 	@Override
     public void run(){
 		isRunning = initializeServer();
-
 		if (serverSocket != null) {
 			while (isRunning) {
 				try {
@@ -235,15 +303,16 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public static void main(String[] args) {
 		try {
-			if(args.length < 1 || args.length > 2) {
+			if(args.length < 2 || args.length > 3) {
 				System.out.println("Error! Invalid number of arguments!");
-				System.out.println("Usage: Server <port> [<logLevel>]!");
+				System.out.println("Usage: Server <port> <host> [<logLevel>]!");
 			} else {
 				new LogSetup("logs/server.log", Level.ALL);
 				int port = Integer.parseInt(args[0]);
+				String host = args[1];
 
-				if (args.length == 2) {
-					String level = setLevel(args[1]);
+				if (args.length == 3) {
+					String level = setLevel(args[2]);
 					if (level.equals(LogSetup.UNKNOWN_LEVEL)) {
 						printError("Not a valid log level!");
 						printPossibleLogLevels();
@@ -251,7 +320,7 @@ public class KVServer extends Thread implements IKVServer {
 					}
 				}
 
-				new KVServer(port, 0, null).start();
+				new KVServer(port, host, 0, null).start();
 			}
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");

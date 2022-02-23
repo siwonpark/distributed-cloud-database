@@ -19,7 +19,7 @@ public class AllTests {
 			/* Refresh data directory when running tests */
 			FileOp.deleteDirectory(System.getProperty("user.dir") + "/data");
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-			new KVServer(PORT, 0, null).start();
+			new KVServer(PORT, "127.0.0.1", 0, null).start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

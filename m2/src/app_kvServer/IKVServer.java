@@ -9,10 +9,8 @@ public interface IKVServer {
     };
 
     public enum ServerState {
-        RUNNING,
-        ECS_REQUESTS_ONLY
-
-
+        RUNNING, // Server is accepting client requests
+        STOPPED // Default state upon initialization, server is only listening to ECS requests
     };
 
     /**
