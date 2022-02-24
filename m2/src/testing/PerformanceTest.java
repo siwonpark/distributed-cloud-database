@@ -13,6 +13,7 @@ import static testing.AllTests.PORT;
 
 public class PerformanceTest extends TestCase {
     private KVStore kvClient;
+    static final Random random = new Random();
 
     public void setUp() {
         kvClient = new KVStore("localhost", PORT);
@@ -24,6 +25,15 @@ public class PerformanceTest extends TestCase {
 
     public void tearDown() {
         kvClient.disconnect();
+    }
+
+    static String getRandomString(int length) {
+
+        StringBuilder buffer = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            buffer.append((char) (97 + random.nextInt(122 - 97 + 1)));
+        }
+        return buffer.toString();
     }
 
     @Test
@@ -42,8 +52,8 @@ public class PerformanceTest extends TestCase {
 
         for (KVMessage.StatusType status: ratio) {
             if (status == KVMessage.StatusType.PUT) {
-                String randomKey = BTreeTest.getRandomString(10);
-                String randomValue = BTreeTest.getRandomString(20);
+                String randomKey = getRandomString(10);
+                String randomValue = getRandomString(20);
                 long startTime = System.nanoTime();
                 kvClient.put(randomKey, randomValue);
                 long duration = System.nanoTime() - startTime;
