@@ -59,17 +59,17 @@ public class PrintUtils {
         sb.append("\t\t\t" +
                 "Stops all server instances and exits the remote processes.\n");
 
-        sb.append("addNode");
+        sb.append("addNode <cacheStrategy> <cacheSize>");
         sb.append("\t\t\t" +
                 "Create a new KVServer and add it to the storage service at an arbitrary position. \n");
 
-        sb.append("addNodes <numberOfNodes>");
+        sb.append("addNodes <numberOfNodes> <cacheStrategy> <cacheSize>");
         sb.append("\t\t\t Randomly choose <numberOfNodes> servers from the available machines " +
                 "and start the KVServer by issuing an SSH call to the respective machine. " +
                 "This call launches the storage server.\n");
 
-        sb.append("removeNode <indexOfServer>");
-        sb.append("\t\t\tRemove a server from the storage service at position <indexOfServer>.\n");
+        sb.append("removeNode <nodeName>");
+        sb.append("\t\t\tRemove a server with nodeName from the storage service.\n");
 
         sb.append("logLevel");
         sb.append("\t\t\t Changes the logLevel (ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF)q \n");
@@ -78,7 +78,7 @@ public class PrintUtils {
         sb.append("\t\t\t Prints this help message\n");
 
         sb.append("quit");
-        sb.append("\t\t\t Exits the program (and shuts down ECS)");
+        sb.append("\t\t\t Exits the program (and shutdown)");
         System.out.println(sb.toString());
     }
 
