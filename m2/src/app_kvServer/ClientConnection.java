@@ -92,7 +92,28 @@ public class ClientConnection implements Runnable {
 		String key = message.getKey();
 		String value = message.getValue();
 
-		if (key.length() > MAX_KEY_BYTES) {
+		if(message.getStatus() == StatusType.DATA_MIGRATION){
+			// If this is a data migration message
+			// We always want to store the key
+			// Regardless of whether the server is write-locked
+			try {
+				server.putKV(key, value);
+				responseStatus = StatusType.PUT_SUCCESS;
+			} catch (Exception e) {
+				responseStatus = StatusType.PUT_ERROR;
+				logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
+			}
+			Message response = new Message(key, value, responseStatus);
+			sendMessage(response);
+			return;
+		}else if (server.getServerState() == IKVServer.ServerState.STOPPED){
+			// Server is not accepting requests from client
+			responseStatus = StatusType.SERVER_STOPPED;
+			Message response = new Message(key, value, responseStatus);
+			sendMessage(response);
+			return;
+		}
+		else if (key.length() > MAX_KEY_BYTES) {
 			String errorMsg = String.format("Key of length %s exceeds max key length (%s Bytes)",
 					key.length(), MAX_KEY_BYTES);
 			sendFailure(errorMsg);
@@ -104,9 +125,16 @@ public class ClientConnection implements Runnable {
 			return;
 		}
 
+
 		switch(message.getStatus()) {
 			case GET:
 				try {
+					if (!server.isResponsibleForKey(message.getKey())){
+						responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
+						Message response = new Message(server.getMetadata(), responseStatus);
+						sendMessage(response);
+						return;
+					}
 					value = server.getKV(message.getKey());
 					responseStatus = StatusType.GET_SUCCESS;
 				} catch (Exception e) {
@@ -115,6 +143,16 @@ public class ClientConnection implements Runnable {
 				}
 				break;
 			case PUT:
+				if (server.isWriteLocked()) {
+					responseStatus = StatusType.SERVER_WRITE_LOCK;
+					break;
+				}
+				if (!server.isResponsibleForKey(message.getKey())){
+					responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
+					Message response = new Message(server.getMetadata(), responseStatus);
+					sendMessage(response);
+					return;
+				}
 				boolean isInStorage = server.inStorage(key);
 
 				if (value == null || value.equals(DELETE_STRING)) {

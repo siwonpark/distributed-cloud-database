@@ -2,7 +2,6 @@ package testing;
 
 import java.io.IOException;
 
-import app_kvServer.FileOp;
 import org.apache.log4j.Level;
 
 import app_kvServer.KVServer;
@@ -13,13 +12,16 @@ import logger.LogSetup;
 
 public class AllTests {
 	public static final int PORT = 50000;
+	public static final String CACHE_STRATEGY = "FIFO";
+	public static final int CACHE_SIZE = 5;
 
 	static {
 		try {
 			/* Refresh data directory when running tests */
-			FileOp.deleteDirectory(System.getProperty("user.dir") + "/data");
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-			new KVServer(PORT, 0, null).start();
+
+			new KVServer(PORT, "127.0.0.1", CACHE_SIZE, CACHE_STRATEGY).start();
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -33,7 +35,6 @@ public class AllTests {
 		clientSuite.addTestSuite(AdditionalTest.class);
 		clientSuite.addTestSuite(CLITest.class);
 		clientSuite.addTestSuite(LoadTest.class);
-		clientSuite.addTestSuite(BTreeTest.class);
 		clientSuite.addTestSuite(ECSTest.class);
 		return clientSuite;
 	}
