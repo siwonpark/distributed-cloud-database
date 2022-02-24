@@ -17,6 +17,10 @@ public class ECS {
         addNodesToHashRing(nodes);
     }
 
+    public ECS(ArrayList<ECSNode> nodes) {
+        addNodesToHashRing(nodes);
+    }
+
     public void addNodes(int numberOfNodes) {
 
     }
@@ -95,7 +99,7 @@ public class ECS {
      * Get all the managed nodes of the ECS Server right now
      * @return
      */
-    public Map<String, ECSNode> getNodes(){
+    public TreeMap<String, ECSNode> getNodes(){
         return this.hashRing;
     }
 
