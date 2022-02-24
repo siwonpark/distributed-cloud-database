@@ -92,7 +92,16 @@ public class ClientConnection implements Runnable {
 		String key = message.getKey();
 		String value = message.getValue();
 
-		if (server.getServerState() == IKVServer.ServerState.STOPPED){
+		if(message.getStatus() == StatusType.DATA_MIGRATION){
+			// If this is a data migration message
+			// We always want to store the key
+			try {
+				server.putKV(key, value);
+			} catch (Exception e) {
+				logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
+			}
+			return;
+		}else if (server.getServerState() == IKVServer.ServerState.STOPPED){
 			// Server is not accepting requests from client
 			responseStatus = StatusType.SERVER_STOPPED;
 			Message response = new Message(key, value, responseStatus);
