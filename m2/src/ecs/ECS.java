@@ -4,10 +4,7 @@ import shared.HashUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.util.*;
 
 public class ECS {
     // TODO: Set up logger on client with name ecs.log
@@ -24,25 +21,45 @@ public class ECS {
 
     }
 
-    public void start() {
-
+    public boolean start() {
+        return false;
     }
 
-    public void stop() {
-
+    public boolean stop() {
+        return false;
     }
 
-    public void shutDown() {
-
+    public boolean shutDown() {
+        return false;
     }
 
-    public void addNode() {
-
+    public IECSNode addNode(String cacheStrategy, int cacheSize) {
+        return null;
     }
 
-    public void removeNode(int indexOfServer) {
-
+    public boolean removeNode(String nodeName) {
+        return false;
     }
+
+    /**
+     * Sets up `count` servers with the ECS (in this case Zookeeper)
+     * @return  array of strings, containing unique names of servers
+     */
+    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize){
+        //TODO
+        return null;
+    };
+
+    /**
+     * Wait for all nodes to report status or until timeout expires
+     * @param count     number of nodes to wait for
+     * @param timeout   the timeout in milliseconds
+     * @return  true if all nodes reported successfully, false otherwise
+     */
+    public boolean awaitNodes(int count, int timeout) throws Exception{
+        //TODO
+        return false;
+    };
 
     private ArrayList<ECSNode> getNodesFromConfig(String configFileName) {
         ArrayList<ECSNode> nodes = new ArrayList<>();
@@ -72,6 +89,14 @@ public class ECS {
         }
 
         return nodes;
+    }
+
+    /**
+     * Get all the managed nodes of the ECS Server right now
+     * @return
+     */
+    public Map<String, ECSNode> getNodes(){
+        return this.hashRing;
     }
 
     private void addNodesToHashRing(ArrayList<ECSNode> nodes) {
