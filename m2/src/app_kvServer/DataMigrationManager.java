@@ -75,6 +75,7 @@ public class DataMigrationManager implements Runnable {
                 }
             } catch (IOException e) {
                 logger.error("Could not connect to destination server to perform data migration");
+                migrationSuccess = false;
             } finally {
                 // We want to remove the keys that were migrated
                 db.batchDeleteNull();
