@@ -16,7 +16,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import shared.PrintUtils;
 
-import static app_kvECS.ECSClientCommandHandler.*;
+import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.*;
 
 public class ECSClient implements IECSClient {
@@ -204,6 +204,24 @@ public class ECSClient implements IECSClient {
     public IECSNode getNodeByKey(String Key) {
         // TODO: Implement if needed
         return null;
+    }
+
+    /**
+     * Handle adjustment of logging level
+     * @param tokens The command line arguments
+     */
+    public static void handleLogLevel(String[] tokens) {
+        if(tokens.length == 2) {
+            String level = setLevel(tokens[1]);
+            if(level.equals(LogSetup.UNKNOWN_LEVEL)) {
+                printError("Not a valid log level!");
+                printPossibleLogLevels();
+            } else {
+                System.out.println("Log level changed to level " + level);
+            }
+        } else {
+            printError("Invalid number of parameters! Use the help command to see usage instructions");
+        }
     }
 
     public static void main(String[] args) {
