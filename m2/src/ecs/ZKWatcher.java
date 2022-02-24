@@ -19,7 +19,7 @@ public class ZKWatcher implements Watcher {
     static String ZK_HOST = "localhost";
     static int ZK_PORT = 2181;
     public CountDownLatch connectedSignal = new CountDownLatch(1);
-    public CountDownLatch createdSignal;
+    public CountDownLatch awaitSignal;
 
     public ZooKeeper connect() {
         try {
@@ -44,15 +44,6 @@ public class ZKWatcher implements Watcher {
             zooKeeper.create(path, dataBytes, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         } catch (Exception e) {
             logger.error("Failed to create z-node");
-        }
-    }
-
-    public List<String> getChildren(String path) {
-        try {
-            return zooKeeper.getChildren(path, true);
-        } catch (Exception e) {
-            logger.error("Failed to get z-node children");
-            return null;
         }
     }
 
@@ -81,19 +72,23 @@ public class ZKWatcher implements Watcher {
             }
             // Create node
             else if (EventType.NodeCreated == eventType) {
-                createdSignal.countDown();
+                awaitSignal.countDown();
                 logger.info("Node creation");
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
+                awaitSignal.countDown();
+                watchNode(path);
                 logger.info("Node data update");
             }
             // Update child nodes
             else if (EventType.NodeChildrenChanged == eventType) {
+                awaitSignal.countDown();
                 logger.info("Child node change");
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {
+                awaitSignal.countDown();
                 logger.info("node " + path + " Deleted");
             }
         } else if (KeeperState.Disconnected == keeperState) {
@@ -102,6 +97,23 @@ public class ZKWatcher implements Watcher {
             logger.info("Permission check failed");
         } else if (KeeperState.Expired == keeperState) {
             logger.info("Session failure");
+        }
+    }
+
+    public void watchNode(String path) {
+        try {
+            zooKeeper.exists(path, this);
+        } catch (Exception e) {
+            logger.error("Failed to set watcher for znode");
+        }
+    }
+
+    public void setData(String nodeName, ZKData data) {
+        try {
+            byte[] dataBytes = serializeData(data);
+            zooKeeper.setData(ROOT_PATH + "/" + nodeName, dataBytes, -1);
+        } catch (Exception e) {
+            logger.error("Failed to set data for znode");
         }
     }
 

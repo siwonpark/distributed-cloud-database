@@ -6,13 +6,15 @@ public class ECSNode implements IECSNode, Serializable {
     private String nodeName;
     private String nodeHost;
     private int nodePort;
+    private String hash;
     private String startHash;
     private String endHash;
 
-    public ECSNode(String nodeName, String nodeHost, int nodePort) {
+    public ECSNode(String nodeName, String nodeHost, int nodePort, String hash) {
         this.nodeName = nodeName;
         this.nodeHost = nodeHost;
         this.nodePort = nodePort;
+        this.hash = hash;
     }
 
     @Override
@@ -42,6 +44,10 @@ public class ECSNode implements IECSNode, Serializable {
 
     public void setEndHash(String endHash) {
         this.endHash = endHash;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public boolean isResponsibleForKey(String keyHash) {

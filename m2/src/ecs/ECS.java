@@ -5,12 +5,15 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
 import shared.HashUtils;
+import shared.MetadataUtils;
+import shared.ZKData;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class ECS {
     // TODO: Set hashRing to private after testing
@@ -39,22 +42,20 @@ public class ECS {
         Collections.shuffle(availableNodes);
 
         for (int i = 0; i < numberOfNodes; i++) {
-            ECSNode node = availableNodes.remove(availableNodes.size() - 1);
-
-            // execute ssh call to bring up server
-            spawnKVServer(node);
-            newNodes.add(node);
+            addNode();
         }
-
-        addNodesToHashRing(newNodes);
-
-        //        // create z-node for server with metadata
-        //        ZKData data = new ZKData(null, ZKData.OperationType.CREATE);
-        //        zkWatcher.create(ZKWatcher.ROOT_PATH + "/" + node.getNodeName(), data);
     }
 
-    public boolean start() {
-        return false;
+    public boolean start(ECSNode node) {
+        ZKData data = new ZKData(null, ZKData.OperationType.START);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node " + node.getNodeName() + " failed to respond to START");
+            return false;
+        }
+
+        return true;
     }
 
     public boolean stop() {
@@ -72,35 +73,134 @@ public class ECS {
         }
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
 
-        zkWatcher.createdSignal = new CountDownLatch(1);
+        zkWatcher.watchNode(ZKWatcher.ROOT_PATH + "/" + node.getNodeName());
+
         spawnKVServer(node);
 
-        try {
-            zkWatcher.createdSignal.await();
-        } catch (InterruptedException e) {
-            logger.error("z-node creation failed");
+        // Wait for KVServer to create znode, if awaitNode is false, adding failed
+        if (!awaitNodes(1, 10000)) {
+            logger.error(
+                    "Node " + node.getNodeName() + " was not able to be added please try again.");
+            availableNodes.add(node);
+            return;
         }
+
+        // Update metadata in ECS
+        addNodeToHashRing(node);
+
+        initServer(node);
+        start(node);
+
+        // Move data if successor exists
+        ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
+        if (successor != node) {
+            boolean result =
+                    moveData(
+                            successor,
+                            node,
+                            node.getNodeHashRange()[0],
+                            node.getNodeHashRange()[1]);
+            if (!result) {
+                logger.error("Move data failed, rolling back changes");
+                availableNodes.add(node);
+                removeNodeFromHashRing(node);
+                return;
+            }
+        }
+
+        // Update metadata
+        broadcastMetadataAndWait();
+    }
+
+    public boolean initServer(ECSNode node) {
+        ZKData data = new ZKData(hashRing, ZKData.OperationType.INIT);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node " + node.getNodeName() + " failed to respond to INIT");
+            return false;
+        }
+
+        return true;
+    }
+
+    public void broadcastMetadataAndWait() {
+        for (Map.Entry<String, ECSNode> entry : hashRing.entrySet()) {
+            ZKData data = new ZKData(hashRing, ZKData.OperationType.METADATA);
+            zkWatcher.setData(entry.getValue().getNodeName(), data);
+        }
+
+        if (!awaitNodes(hashRing.size(), 10000)) {
+            logger.error("Did not receive acknowledgement from all nodes");
+        }
+    }
+
+    public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
+        // Block writes to both nodes
+        ZKData data = new ZKData(null, ZKData.OperationType.LOCK_WRITE);
+        zkWatcher.setData(fromNode.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node was not responsive to lock write, moveData stopped");
+            return false;
+        }
+
+        // Apply move command
+        data = new ZKData(null, ZKData.OperationType.MOVE_DATA);
+        data.setKeyStart(keyStart);
+        data.setKeyEnd(keyEnd);
+        data.setTargetNode(toNode);
+
+        zkWatcher.setData(fromNode.getNodeName(), data);
+
+        if (!awaitNodes(2, 10000)) {
+            logger.error("Nodes were not responsive, moveData stopped");
+            return false;
+        }
+
+        // Unlock writes
+        data = new ZKData(null, ZKData.OperationType.UNLOCK_WRITE);
+        zkWatcher.setData(fromNode.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node was not responsive to unlock write, but data already moved");
+        }
+
+        return true;
     }
 
     /**
      * Sets up `count` servers with the ECS (in this case Zookeeper)
-     * @return  array of strings, containing unique names of servers
+     *
+     * @return array of strings, containing unique names of servers
      */
-    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize){
-        //TODO
+    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize) {
+        // TODO
         return null;
-    };
+    }
 
     /**
      * Wait for all nodes to report status or until timeout expires
-     * @param count     number of nodes to wait for
-     * @param timeout   the timeout in milliseconds
-     * @return  true if all nodes reported successfully, false otherwise
+     *
+     * @param count number of nodes to wait for
+     * @param timeout the timeout in milliseconds
+     * @return true if all nodes reported successfully, false otherwise
      */
-    public boolean awaitNodes(int count, int timeout) throws Exception{
-        //TODO
-        return false;
-    };
+    public boolean awaitNodes(int count, int timeout) {
+        try {
+            zkWatcher.awaitSignal = new CountDownLatch(count);
+
+            boolean success = zkWatcher.awaitSignal.await(timeout, TimeUnit.MILLISECONDS);
+            if (!success) {
+                logger.error("awaitNodes timed out");
+            }
+
+            return success;
+        } catch (Exception e) {
+            logger.error("An exception occurred while awaitNodes");
+            return false;
+        }
+    }
 
     public boolean removeNode(String nodeName) {
         return false;
@@ -122,7 +222,8 @@ public class ECS {
                 String nodePort = serverInfo[2];
 
                 // Initialize ECS Node with config
-                ECSNode node = new ECSNode(nodeName, nodeHost, Integer.parseInt(nodePort));
+                String hash = HashUtils.computeHash(nodeHost + ":" + nodePort);
+                ECSNode node = new ECSNode(nodeName, nodeHost, Integer.parseInt(nodePort), hash);
                 nodes.add(node);
             }
 
@@ -136,20 +237,45 @@ public class ECS {
     }
 
     private void addNodeToHashRing(ECSNode node) {
+        // find successor and predecessor
+        ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
+        ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, node);
 
+        // Update range of node
+        node.setEndHash(node.getHash());
+        node.setStartHash(predecessor.getHash());
+
+        // Add node to hashRing
+        hashRing.put(node.getHash(), node);
+
+        // Update range of successor (might be itself)
+        successor.setStartHash(node.getHash());
+    }
+
+    private void removeNodeFromHashRing(ECSNode node) {
+        // find successor and predecessor
+        ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
+        ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, node);
+
+        // Update range of successor
+        successor.setStartHash(predecessor.getHash());
+
+        // Remove node from hashRing
+        hashRing.remove(node.getHash());
     }
 
     /**
      * Get all the managed nodes of the ECS Server right now
+     *
      * @return
      */
-    public Map<String, ECSNode> getNodes(){
+    public Map<String, ECSNode> getNodes() {
         return this.hashRing;
     }
 
     private void addNodesToHashRing(ArrayList<ECSNode> nodes) {
         // compute position in ring
-        for (ECSNode node: nodes) {
+        for (ECSNode node : nodes) {
             String hash = HashUtils.computeHash(node.getNodeHost() + ":" + node.getNodePort());
             hashRing.put(hash, node);
         }
@@ -178,7 +304,12 @@ public class ECS {
         String script =
                 String.format(
                         "ssh -n %s nohup java -jar %s/m2-server.jar %d %s %s %d &",
-                        node.getNodeHost(), rootPath, node.getNodePort(), node.getNodeName(), ZKWatcher.ZK_HOST, ZKWatcher.ZK_PORT);
+                        node.getNodeHost(),
+                        rootPath,
+                        node.getNodePort(),
+                        node.getNodeName(),
+                        ZKWatcher.ZK_HOST,
+                        ZKWatcher.ZK_PORT);
         try {
             run.exec(script);
         } catch (IOException e) {
