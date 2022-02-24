@@ -38,7 +38,7 @@ public class DataMigrationManager implements Runnable {
     public void run() {
         ECSNode destServer
                 = MetadataUtils.getServerNode(destServerName, metadata);
-        commModule = new CommModule(destServer.getNodeHost(), destServer.getNodePort(););
+        commModule = new CommModule(destServer.getNodeHost(), destServer.getNodePort());
         try {
             commModule.connect();
         } catch (IOException e) {
