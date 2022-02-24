@@ -17,7 +17,9 @@ public class AllTests {
 		try {
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-			new KVServer(PORT, 1000, "LRU").start();
+
+			new KVServer(PORT, "127.0.0.1", 0, null).start();
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -1,10 +1,12 @@
-package client;
+package shared.communication;
 
 import org.apache.log4j.Logger;
 import shared.messages.KVMessage;
 import shared.messages.Message;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class CommModule implements ICommModule {

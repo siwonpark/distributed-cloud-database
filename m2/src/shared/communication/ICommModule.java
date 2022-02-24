@@ -1,4 +1,4 @@
-package client;
+package shared.communication;
 
 import shared.messages.Message;
 
