@@ -53,11 +53,17 @@ public class ECS {
         //        zkWatcher.create(ZKWatcher.ROOT_PATH + "/" + node.getNodeName(), data);
     }
 
-    public void start() {}
+    public boolean start() {
+        return false;
+    }
 
-    public void stop() {}
+    public boolean stop() {
+        return false;
+    }
 
-    public void shutDown() {}
+    public boolean shutDown() {
+        return false;
+    }
 
     public void addNode() {
         if (availableNodes.size() == 0) {
@@ -74,12 +80,31 @@ public class ECS {
         } catch (InterruptedException e) {
             logger.error("z-node creation failed");
         }
-
-
-
     }
 
-    public void removeNode(int indexOfServer) {}
+    /**
+     * Sets up `count` servers with the ECS (in this case Zookeeper)
+     * @return  array of strings, containing unique names of servers
+     */
+    public Collection<IECSNode> setupNodes(int count, String cacheStrategy, int cacheSize){
+        //TODO
+        return null;
+    };
+
+    /**
+     * Wait for all nodes to report status or until timeout expires
+     * @param count     number of nodes to wait for
+     * @param timeout   the timeout in milliseconds
+     * @return  true if all nodes reported successfully, false otherwise
+     */
+    public boolean awaitNodes(int count, int timeout) throws Exception{
+        //TODO
+        return false;
+    };
+
+    public boolean removeNode(String nodeName) {
+        return false;
+    }
 
     private ArrayList<ECSNode> getNodesFromConfig(String configFileName) {
         ArrayList<ECSNode> nodes = new ArrayList<>();
@@ -114,9 +139,17 @@ public class ECS {
 
     }
 
+    /**
+     * Get all the managed nodes of the ECS Server right now
+     * @return
+     */
+    public Map<String, ECSNode> getNodes(){
+        return this.hashRing;
+    }
+
     private void addNodesToHashRing(ArrayList<ECSNode> nodes) {
         // compute position in ring
-        for (ECSNode node : nodes) {
+        for (ECSNode node: nodes) {
             String hash = HashUtils.computeHash(node.getNodeHost() + ":" + node.getNodePort());
             hashRing.put(hash, node);
         }
