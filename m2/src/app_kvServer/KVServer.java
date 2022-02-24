@@ -183,31 +183,16 @@ public class KVServer extends Thread implements IKVServer {
 	 * Transfer a subset (range) of the KVServer’s data to another KVServer
 	 * (reallocation before removing this server or adding a new KVServer to the ring);
 	 * send a notification to the ECS, if data transfer is completed.
+	 * Internally, this function creates a new thread to send the migration
+	 * data to the destination server. This is so that we don't block client reads
+	 * On the KVServer.
 	 *
 	 * @param range The subset of this Server's data to transfer to the new server
 	 * @param server The new server to move data to
 	 */
 	public void moveData(String[] range, String server) throws IOException, RuntimeException {
-		//TODO: Implement
-		ECSNode destServer
-				= MetadataUtils.getServerNode(server, metadata);
-		String host = destServer.getNodeHost();
-		int port = destServer.getNodePort();
-		commModule = new CommModule(host, port);
-		commModule.connect();
-
-		/*
-		 * TODO:
-		 * Spawn a thread to handle data transfer
-		 * The thread should:
-		 * Get all the keys from database
-		 * Filter out the keys not in the transfer hash range
-		 * Send the new keys to the destination server
-		 *
-		 */
-
-
-
+		DataMigrationManager migrationMgr = new DataMigrationManager(server, metadata, range, db);
+		new Thread(migrationMgr).start();
 	}
 
 	/**
