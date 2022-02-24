@@ -190,8 +190,8 @@ public class KVServer extends Thread implements IKVServer {
 	 * @param range The subset of this Server's data to transfer to the new server
 	 * @param server The new server to move data to
 	 */
-	public void moveData(String[] range, String server) throws IOException, RuntimeException {
-		DataMigrationManager migrationMgr = new DataMigrationManager(server, metadata, range, db);
+	public void moveData(String[] range, ECSNode server) throws IOException, RuntimeException {
+		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db);
 		new Thread(migrationMgr).start();
 	}
 

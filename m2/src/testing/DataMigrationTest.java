@@ -71,7 +71,7 @@ public class DataMigrationTest extends TestCase {
 
             String[] stringRange = range.toArray(new String[range.size()]);
             originServer.moveData(stringRange,
-                    String.format("127.0.0.1:%s", PORT+2));
+                    destServerNode);
 
             assertEquals(destServer.getKV("1"), "2");
             assertEquals(destServer.getKV("3"), "4");
