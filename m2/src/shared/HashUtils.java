@@ -22,4 +22,22 @@ public class HashUtils {
         }
     }
 
+    /**
+     * Check if hash is within the hash range defined by start, end
+     * And handle the case where start > end (i.e. the range crosses the start of the
+     * Hash ring)
+     * @param hash The hash to check
+     * @param start Hash range start
+     * @param end Hash range end
+     * @return True if contained within the hash range, false otherwise
+     */
+    public static boolean withinHashRange(String hash, String start, String end){
+        if (start.compareTo(end) < 0) {
+            return hash.compareTo(start) >= 0 && hash.compareTo(end) < 0;
+        } else {
+            // start is greater than end, the node is responsible for an area across the start of the ring
+            return hash.compareTo(start) >= 0 || hash.compareTo(end) < 0;
+        }
+    }
+
 }

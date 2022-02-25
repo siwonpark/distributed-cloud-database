@@ -18,19 +18,23 @@ public class DBConfig {
     public DBConfig(int cacheSize, String strategy, String dbName) {
 
         this.cacheSize = cacheSize;
-        switch (strategy) {
-            case "FIFO":
-                cacheType = CacheType.FIFO;
-                break;
-            case "LRU":
-                cacheType = CacheType.LRU;
-                break;
-            case "LFU":
-                cacheType = CacheType.LFU;
-                break;
-            default:
-                cacheType = CacheType.None;
-                break;
+        if(strategy == null){
+            cacheType = CacheType.None;
+        } else {
+            switch (strategy) {
+                case "FIFO":
+                    cacheType = CacheType.FIFO;
+                    break;
+                case "LRU":
+                    cacheType = CacheType.LRU;
+                    break;
+                case "LFU":
+                    cacheType = CacheType.LFU;
+                    break;
+                default:
+                    cacheType = CacheType.None;
+                    break;
+            }
         }
         String rootPath = System.getProperty("user.dir");
         this.filePath = rootPath + "/data/" + dbName +"/";

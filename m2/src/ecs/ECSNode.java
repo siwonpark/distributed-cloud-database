@@ -1,9 +1,14 @@
 package ecs;
 
-public class ECSNode implements IECSNode {
+import shared.HashUtils;
+
+import java.io.Serializable;
+
+public class ECSNode implements IECSNode, Serializable {
     private String nodeName;
     private String nodeHost;
     private int nodePort;
+    private String hash;
     private String startHash;
     private String endHash;
 
@@ -11,6 +16,7 @@ public class ECSNode implements IECSNode {
         this.nodeName = nodeName;
         this.nodeHost = nodeHost;
         this.nodePort = nodePort;
+        this.hash = HashUtils.computeHash(nodeHost + ":" + nodePort);
     }
 
     @Override
@@ -42,12 +48,16 @@ public class ECSNode implements IECSNode {
         this.endHash = endHash;
     }
 
+    public String getHash() {
+        return hash;
+    }
+
     public boolean isResponsibleForKey(String keyHash) {
         if (startHash.compareTo(endHash) < 0) {
-            return keyHash.compareTo(startHash) > 0 && keyHash.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) >= 0 && keyHash.compareTo(endHash) < 0;
         } else {
             // start is greater than end, the node is responsible for an area across the start of the ring
-            return keyHash.compareTo(startHash) > 0 || keyHash.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) >= 0 || keyHash.compareTo(endHash) < 0;
         }
     }
 }

@@ -70,9 +70,9 @@ public class KVServer extends Thread implements IKVServer {
 		this.lockWrite = false;
 		this.hostName = hostname;
 
+		String dbName = String.format("%s-%s", this.hostName, this.port);
 
-
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, "a database some",false);//we should get a name from outside the KVSever.
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, dbName,false);
 
 	}
 	
@@ -183,31 +183,16 @@ public class KVServer extends Thread implements IKVServer {
 	 * Transfer a subset (range) of the KVServer’s data to another KVServer
 	 * (reallocation before removing this server or adding a new KVServer to the ring);
 	 * send a notification to the ECS, if data transfer is completed.
+	 * Internally, this function creates a new thread to send the migration
+	 * data to the destination server. This is so that we don't block client reads
+	 * On the KVServer.
 	 *
 	 * @param range The subset of this Server's data to transfer to the new server
 	 * @param server The new server to move data to
 	 */
-	public void moveData(String[] range, String server) throws IOException, RuntimeException {
-		//TODO: Implement
-		ECSNode destServer
-				= MetadataUtils.getServerNode(server, metadata);
-		String host = destServer.getNodeHost();
-		int port = destServer.getNodePort();
-		commModule = new CommModule(host, port);
-		commModule.connect();
-
-		/*
-		 * TODO:
-		 * Spawn a thread to handle data transfer
-		 * The thread should:
-		 * Get all the keys from database
-		 * Filter out the keys not in the transfer hash range
-		 * Send the new keys to the destination server
-		 *
-		 */
-
-
-
+	public void moveData(String[] range, ECSNode server) throws IOException, RuntimeException {
+		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db);
+		new Thread(migrationMgr).start();
 	}
 
 	/**
@@ -313,13 +298,15 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public static void main(String[] args) {
 		try {
-			if(args.length < 2 || args.length > 3) {
+			if(args.length < 4 || args.length > 5) {
 				System.out.println("Error! Invalid number of arguments!");
-				System.out.println("Usage: Server <port> <host> [<logLevel>]!");
+				System.out.println("Usage: Server <port> <host> <cacheSize> <cacheStrategy> [<logLevel>]!");
 			} else {
 				new LogSetup("logs/server.log", Level.ALL);
 				int port = Integer.parseInt(args[0]);
 				String host = args[1];
+				int cacheSize = Integer.parseInt(args[2]);
+				String cacheStrategy = args[3];
 
 				if (args.length == 3) {
 					String level = setLevel(args[2]);
@@ -330,7 +317,7 @@ public class KVServer extends Thread implements IKVServer {
 					}
 				}
 
-				new KVServer(port, host, 0, null).start();
+				new KVServer(port, host, cacheSize, cacheStrategy).start();
 			}
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");

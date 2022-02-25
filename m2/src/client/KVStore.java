@@ -22,6 +22,8 @@ public class KVStore implements KVCommInterface {
 	private CommModule commModule;
 	private Set<ClientSocketListener> listeners;
 	private TreeMap<String, ECSNode> serverMetadata;
+	private String address;
+	private int port;
 
 
 	/**
@@ -30,6 +32,8 @@ public class KVStore implements KVCommInterface {
 	 * @param port the port of the KVServer
 	 */
 	public KVStore(String address, int port) {
+		this.address = address;
+		this.port = port;
 		commModule = new CommModule(address, port);
 		listeners = new HashSet<ClientSocketListener>();
 	}
@@ -152,7 +156,17 @@ public class KVStore implements KVCommInterface {
 		int port = responsibleServer.getNodePort();
 		commModule.disconnect();
 		commModule = new CommModule(host, port);
+		this.port = port;
+		this.address = host;
 		commModule.connect();
+	}
+
+	public int getPort(){
+		return this.port;
+	}
+
+	public String getHost(){
+		return this.address;
 	}
 
 

@@ -209,6 +209,11 @@ public class KVClient implements IKVClient, ClientSocketListener {
      */
     @Override
     public void handleStatus(SocketStatus status) {
+        if (kvStore != null){
+            serverPort = kvStore.getPort();
+            serverAddress = kvStore.getHost();
+        }
+
         if(status == SocketStatus.CONNECTED) {
         } else if (status == SocketStatus.DISCONNECTED) {
             System.out.print(PROMPT);
@@ -225,7 +230,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
 
     public static void main(String[] args){
         try {
-            new LogSetup("logs/client.log", Level.INFO);
+            new LogSetup("logs/client.log", Level.OFF);
             KVClient app = new KVClient();
             app.run();
         } catch (IOException e) {
