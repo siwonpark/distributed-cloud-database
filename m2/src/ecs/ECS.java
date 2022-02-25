@@ -136,7 +136,6 @@ public class ECS {
     }
 
     public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
-        // Block writes to both nodes
         ZKData data = new ZKData(null, ZKData.OperationType.LOCK_WRITE);
         zkWatcher.setData(fromNode.getNodeName(), data);
 
@@ -153,8 +152,8 @@ public class ECS {
 
         zkWatcher.setData(fromNode.getNodeName(), data);
 
-        if (!awaitNodes(2, 10000)) {
-            logger.error("Nodes were not responsive, moveData stopped");
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node was not responsive, moveData stopped");
             return false;
         }
 
