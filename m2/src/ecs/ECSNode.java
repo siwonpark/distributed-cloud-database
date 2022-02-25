@@ -1,9 +1,14 @@
 package ecs;
 
-public class ECSNode implements IECSNode {
+import shared.HashUtils;
+
+import java.io.Serializable;
+
+public class ECSNode implements IECSNode, Serializable {
     private String nodeName;
     private String nodeHost;
     private int nodePort;
+    private String hash;
     private String startHash;
     private String endHash;
 
@@ -11,6 +16,7 @@ public class ECSNode implements IECSNode {
         this.nodeName = nodeName;
         this.nodeHost = nodeHost;
         this.nodePort = nodePort;
+        this.hash = HashUtils.computeHash(nodeHost + ":" + nodePort);
     }
 
     @Override
@@ -40,6 +46,10 @@ public class ECSNode implements IECSNode {
 
     public void setEndHash(String endHash) {
         this.endHash = endHash;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public boolean isResponsibleForKey(String keyHash) {
