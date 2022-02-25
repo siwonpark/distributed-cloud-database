@@ -70,9 +70,9 @@ public class KVServer extends Thread implements IKVServer {
 		this.lockWrite = false;
 		this.hostName = hostname;
 
+		String dbName = String.format("%s-%s", this.hostName, this.port);
 
-
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, "a database some",false);//we should get a name from outside the KVSever.
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, dbName,true);
 
 	}
 	
@@ -298,13 +298,15 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public static void main(String[] args) {
 		try {
-			if(args.length < 2 || args.length > 3) {
+			if(args.length < 4 || args.length > 5) {
 				System.out.println("Error! Invalid number of arguments!");
-				System.out.println("Usage: Server <port> <host> [<logLevel>]!");
+				System.out.println("Usage: Server <port> <host> <cacheSize> <cacheStrategy> [<logLevel>]!");
 			} else {
 				new LogSetup("logs/server.log", Level.ALL);
 				int port = Integer.parseInt(args[0]);
 				String host = args[1];
+				int cacheSize = Integer.parseInt(args[2]);
+				String cacheStrategy = args[3];
 
 				if (args.length == 3) {
 					String level = setLevel(args[2]);
@@ -315,7 +317,7 @@ public class KVServer extends Thread implements IKVServer {
 					}
 				}
 
-				new KVServer(port, host, 0, null).start();
+				new KVServer(port, host, cacheSize, cacheStrategy).start();
 			}
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");
