@@ -272,30 +272,6 @@ public class ECS {
         return this.hashRing;
     }
 
-    private void addNodesToHashRing(ArrayList<ECSNode> nodes) {
-        // compute position in ring
-        for (ECSNode node : nodes) {
-            String hash = HashUtils.computeHash(node.getNodeHost() + ":" + node.getNodePort());
-            hashRing.put(hash, node);
-        }
-
-        // populate hash ranges
-        String prevHash = null;
-
-        for (Map.Entry<String, ECSNode> entry : hashRing.entrySet()) {
-            String hash = entry.getKey();
-            ECSNode node = entry.getValue();
-            if (prevHash != null) {
-                node.setStartHash(prevHash);
-            }
-            node.setEndHash(hash);
-            prevHash = hash;
-        }
-
-        // connect first node to last
-        hashRing.firstEntry().getValue().setStartHash(prevHash);
-    }
-
     private void spawnKVServer(ECSNode node) {
         Runtime run = Runtime.getRuntime();
         String rootPath = System.getProperty("user.dir");
