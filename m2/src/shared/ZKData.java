@@ -16,6 +16,7 @@ public class ZKData implements Serializable {
         INIT,
         START,
         STOP,
+        SHUT_DOWN,
         METADATA,
         LOCK_WRITE,
         UNLOCK_WRITE,

@@ -32,8 +32,6 @@ public class ECS {
     }
 
     public void addNodes(int numberOfNodes) {
-        ArrayList<ECSNode> newNodes = new ArrayList<>();
-
         if (numberOfNodes > availableNodes.size()) {
             logger.error("Not enough servers available");
             return;
@@ -58,12 +56,29 @@ public class ECS {
         return true;
     }
 
-    public boolean stop() {
-        return false;
+    public boolean stop(ECSNode node) {
+        ZKData data = new ZKData(null, ZKData.OperationType.STOP);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node " + node.getNodeName() + " failed to respond to STOP");
+            return false;
+        }
+
+        return true;
     }
 
-    public boolean shutDown() {
-        return false;
+    public boolean shutDown(ECSNode node) {
+        ZKData data = new ZKData(null, ZKData.OperationType.SHUT_DOWN);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        // KVServer should delete the path instead of sending AWK here
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Did not receive acknowledgement from all nodes");
+            return false;
+        }
+
+        return true;
     }
 
     public void addNode() {
@@ -201,8 +216,35 @@ public class ECS {
         }
     }
 
-    public boolean removeNode(String nodeName) {
-        return false;
+    public boolean removeNode(int indexOfNode) {
+        if (indexOfNode > hashRing.size() - 1) {
+            logger.error("Index Out of range");
+            return false;
+        }
+
+
+        ECSNode nodeToRemove = hashRing.values().toArray(new ECSNode[0])[indexOfNode];
+        removeNodeFromHashRing(nodeToRemove);
+
+        // Move data if successor exists
+        ECSNode successor = MetadataUtils.getSuccessor(hashRing, nodeToRemove);
+        if (successor != nodeToRemove) {
+            boolean result =
+                    moveData(
+                            nodeToRemove,
+                            successor,
+                            nodeToRemove.getNodeHashRange()[0],
+                            nodeToRemove.getNodeHashRange()[1]);
+            if (!result) {
+                logger.error("Move data failed, rolling back changes");
+                addNodeToHashRing(nodeToRemove);
+                return false;
+            }
+        }
+
+        shutDown(nodeToRemove);
+        broadcastMetadataAndWait();
+        return true;
     }
 
     private ArrayList<ECSNode> getNodesFromConfig(String configFileName) {
