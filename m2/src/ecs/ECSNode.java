@@ -44,10 +44,10 @@ public class ECSNode implements IECSNode {
 
     public boolean isResponsibleForKey(String keyHash) {
         if (startHash.compareTo(endHash) < 0) {
-            return keyHash.compareTo(startHash) > 0 && keyHash.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) >= 0 && keyHash.compareTo(endHash) < 0;
         } else {
             // start is greater than end, the node is responsible for an area across the start of the ring
-            return keyHash.compareTo(startHash) > 0 || keyHash.compareTo(endHash) < 0;
+            return keyHash.compareTo(startHash) >= 0 || keyHash.compareTo(endHash) < 0;
         }
     }
 }

@@ -109,7 +109,7 @@ public class DataBase {
             for (int i = 0; i < node.number; i++) {
                 String hash = HashUtils.computeHash(node.keys[i]);
                 assert hash != null;
-                if (hash.compareTo(start) >= 0 && hash.compareTo(end) <= 0 && node.values[i] != null) {
+                if (HashUtils.withinHashRange(hash, start, end) && node.values[i] != null) {
                     ArrayList<String> tmp = new ArrayList<>();
                     tmp.add(node.keys[i]);
                     tmp.add(node.values[i]);
