@@ -1,4 +1,4 @@
 logs/**
 logs/testing/**
 logs/testing/test.log
-zookeeper-3.4.11/bin/zookeeper.out
+zookeeper-3.4.11/*
