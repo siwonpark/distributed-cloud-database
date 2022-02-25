@@ -30,7 +30,7 @@ public class ECSClient implements IECSClient {
 
     public ECSClient(File configFile){
         // Establish a connection to ECS Backend
-        this.ecs = new ECS(configFile.getName());
+        this.ecs = new ECS(configFile.getPath());
     }
 
     @Override

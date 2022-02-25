@@ -22,13 +22,13 @@ public class ECS {
     private ArrayList<ECSNode> availableNodes;
     private ZKWatcher zkWatcher;
 
-    public ECS(String configFileName) {
+    public ECS(String configFilePath) {
         // Start ZK server
         startZKServer();
         startZKWatcher();
 
         // Initialize nodes/metadata from config
-        availableNodes = getNodesFromConfig(configFileName);
+        availableNodes = getNodesFromConfig(configFilePath);
     }
 
     public void addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
@@ -258,12 +258,11 @@ public class ECS {
         return true;
     }
 
-    private ArrayList<ECSNode> getNodesFromConfig(String configFileName) {
+    private ArrayList<ECSNode> getNodesFromConfig(String configFilePath) {
         ArrayList<ECSNode> nodes = new ArrayList<>();
 
         try {
-            String rootPath = System.getProperty("user.dir");
-            File config = new File(rootPath + "/src/ecs/" + configFileName);
+            File config = new File(configFilePath);
             Scanner s = new Scanner(config);
 
             while (s.hasNextLine()) {
@@ -321,7 +320,7 @@ public class ECS {
      *
      * @return
      */
-    public Map<String, ECSNode> getNodes() {
+    public TreeMap<String, ECSNode> getNodes() {
         return this.hashRing;
     }
 
