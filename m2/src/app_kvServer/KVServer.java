@@ -72,7 +72,7 @@ public class KVServer extends Thread implements IKVServer {
 
 		String dbName = String.format("%s-%s", this.hostName, this.port);
 
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, dbName,true);
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, dbName,false);
 
 	}
 	
