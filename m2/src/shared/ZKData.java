@@ -11,6 +11,8 @@ public class ZKData implements Serializable {
     private String keyStart;
     private String keyEnd;
     private ECSNode targetNode;
+    private String cacheStrategy;
+    private int cacheSize;
 
     public enum OperationType {
         INIT,
@@ -38,6 +40,26 @@ public class ZKData implements Serializable {
 
     public void setTargetNode(ECSNode targetNode) {
         this.targetNode = targetNode;
+    }
+
+    public ECSNode getTargetNode() {
+        return targetNode;
+    }
+
+    public void setCacheStrategy(String cacheStrategy) {
+        this.cacheStrategy = cacheStrategy;
+    }
+
+    public void setCacheSize(int cacheSize) {
+        this.cacheSize = cacheSize;
+    }
+
+    public String getCacheStrategy() {
+        return cacheStrategy;
+    }
+
+    public int getCacheSize() {
+        return cacheSize;
     }
 
     public String[] getMoveRange() {

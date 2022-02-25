@@ -35,17 +35,29 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean start() {
-        return ecs.start();
+        boolean success = true;
+        for (ECSNode node: ecs.hashRing.values()) {
+            success = ecs.start(node);
+        }
+        return success;
     }
 
     @Override
     public boolean stop() {
-        return ecs.stop();
+        boolean success = true;
+        for (ECSNode node: ecs.hashRing.values()) {
+            success = ecs.stop(node);
+        }
+        return success;
     }
 
     @Override
     public boolean shutdown() {
-        return ecs.shutDown();
+        boolean success = true;
+        for (ECSNode node: ecs.hashRing.values()) {
+            success = ecs.shutDown(node);
+        }
+        return success;
     }
 
     @Override
@@ -186,7 +198,7 @@ public class ECSClient implements IECSClient {
                     printSuccess("Nodes removed successfully");
                 } else{
                     printError("Unable to remove nodes");
-                };
+                }
             } else{
                 printError("Invalid Number of Parameters! Use help to see usage");
             }

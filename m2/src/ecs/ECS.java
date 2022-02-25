@@ -31,7 +31,7 @@ public class ECS {
         availableNodes = getNodesFromConfig(configFileName);
     }
 
-    public void addNodes(int numberOfNodes) {
+    public void addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
         if (numberOfNodes > availableNodes.size()) {
             logger.error("Not enough servers available");
             return;
@@ -40,7 +40,7 @@ public class ECS {
         Collections.shuffle(availableNodes);
 
         for (int i = 0; i < numberOfNodes; i++) {
-            addNode();
+            addNode(cacheStrategy, cacheSize);
         }
     }
 
@@ -81,10 +81,10 @@ public class ECS {
         return true;
     }
 
-    public void addNode() {
+    public ECSNode addNode(String cacheStrategy, int cacheSize) {
         if (availableNodes.size() == 0) {
             logger.error("No available nodes to provision!");
-            return;
+            return null;
         }
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
 
@@ -97,13 +97,13 @@ public class ECS {
             logger.error(
                     "Node " + node.getNodeName() + " was not able to be added please try again.");
             availableNodes.add(node);
-            return;
+            return null;
         }
 
         // Update metadata in ECS
         addNodeToHashRing(node);
 
-        initServer(node);
+        initServer(node, cacheStrategy, cacheSize);
         start(node);
 
         // Move data if successor exists
@@ -119,16 +119,20 @@ public class ECS {
                 logger.error("Move data failed, rolling back changes");
                 availableNodes.add(node);
                 removeNodeFromHashRing(node);
-                return;
+                return null;
             }
         }
 
         // Update metadata
         broadcastMetadataAndWait();
+
+        return node;
     }
 
-    public boolean initServer(ECSNode node) {
+    public boolean initServer(ECSNode node, String cacheStrategy, int cacheSize) {
         ZKData data = new ZKData(hashRing, ZKData.OperationType.INIT);
+        data.setCacheStrategy(cacheStrategy);
+        data.setCacheSize(cacheSize);
         zkWatcher.setData(node.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -216,14 +220,21 @@ public class ECS {
         }
     }
 
-    public boolean removeNode(int indexOfNode) {
-        if (indexOfNode > hashRing.size() - 1) {
-            logger.error("Index Out of range");
+    public boolean removeNode(String nodeName) {
+        // find node with name nodeName
+        ECSNode nodeToRemove = null;
+        for (ECSNode node : hashRing.values()) {
+            if (node.getNodeName().equals(nodeName)) {
+                nodeToRemove = node;
+                break;
+            }
+        }
+
+        if (nodeToRemove == null) {
+            logger.error("Node does not exist");
             return false;
         }
 
-
-        ECSNode nodeToRemove = hashRing.values().toArray(new ECSNode[0])[indexOfNode];
         removeNodeFromHashRing(nodeToRemove);
 
         // Move data if successor exists
@@ -373,6 +384,5 @@ public class ECS {
             throws IOException, InterruptedException, KeeperException {
         new LogSetup("logs/ecs.log", Level.INFO);
         ECS ecs = new ECS("ecs.config");
-        ecs.addNodes(2);
     }
 }
