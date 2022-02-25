@@ -273,8 +273,8 @@ public class ECS {
                 String nodePort = serverInfo[2];
 
                 // Initialize ECS Node with config
-                String hash = HashUtils.computeHash(nodeHost + ":" + nodePort);
-                ECSNode node = new ECSNode(nodeName, nodeHost, Integer.parseInt(nodePort), hash);
+                // String hash = HashUtils.computeHash(nodeHost + ":" + nodePort);
+                ECSNode node = new ECSNode(nodeName, nodeHost, Integer.parseInt(nodePort));
                 nodes.add(node);
             }
 

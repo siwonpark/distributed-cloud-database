@@ -1,5 +1,7 @@
 package ecs;
 
+import shared.HashUtils;
+
 import java.io.Serializable;
 
 public class ECSNode implements IECSNode, Serializable {
@@ -10,11 +12,11 @@ public class ECSNode implements IECSNode, Serializable {
     private String startHash;
     private String endHash;
 
-    public ECSNode(String nodeName, String nodeHost, int nodePort, String hash) {
+    public ECSNode(String nodeName, String nodeHost, int nodePort) {
         this.nodeName = nodeName;
         this.nodeHost = nodeHost;
         this.nodePort = nodePort;
-        this.hash = hash;
+        this.hash = HashUtils.computeHash(nodeHost + ":" + nodePort);
     }
 
     @Override
