@@ -65,4 +65,12 @@ public class ZKData implements Serializable {
     public String[] getMoveRange() {
         return new String[] {this.keyStart, this.keyEnd};
     }
+
+    public OperationType getOperationType(){
+        return this.status;
+    }
+
+    public TreeMap<String, ECSNode> getMetadata(){
+        return this.metadata;
+    }
 }
