@@ -8,7 +8,6 @@ import persistence.DataBase;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.zookeeper.ZooKeeper;
 import shared.MetadataUtils;
 import shared.communication.CommModule;
 
@@ -33,9 +32,7 @@ public class KVServer extends Thread implements IKVServer {
 	private String strategy;
 	private boolean isRunning;
 
-	private String zkHost;
-	private int zkPort;
-	private ZooKeeper zookeeper;
+	private ZKWatcher zkWatcher;
 	private boolean lockWrite;
 	private ServerState state;
 
@@ -59,7 +56,7 @@ public class KVServer extends Thread implements IKVServer {
 	 *           and "LFU".
 	 */
 	public KVServer(int port, String serverName, String zkHost,
-					int zkPort, String strategy, int cacheSize) {
+					int zkPort, String strategy, int cacheSize) throws InterruptedException {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
@@ -69,13 +66,19 @@ public class KVServer extends Thread implements IKVServer {
 		this.state = ServerState.RUNNING;
 		this.lockWrite = false;
 		this.serverName = serverName;
-		this.zkHost = zkHost;
-		this.zkPort = zkPort;
 
 		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,false);
-
+		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
+		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
+		initZkWatcher();
 	}
-	
+
+	private void initZkWatcher() throws InterruptedException {
+		this.zkWatcher.connect();
+		this.zkWatcher.connectedSignal.await();
+		this.zkWatcher.create();
+	}
+
 	@Override
 	public int getPort(){
 		return serverSocket.getLocalPort();
@@ -147,6 +150,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void startServer(){
 		this.state = ServerState.RUNNING;
+		zkWatcher.setData();
 	}
 
 	/**
@@ -162,6 +166,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void shutDown(){
 		isRunning = false;
+		zkWatcher.setData();
 	}
 
 	/**
@@ -169,6 +174,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void lockWrite(){
 		this.lockWrite = true;
+		zkWatcher.setData();
 	}
 
 	/**
@@ -176,6 +182,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void unlockWrite(){
 		this.lockWrite = false;
+		zkWatcher.setData();
 	}
 
 	/**
@@ -190,7 +197,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * @param server The new server to move data to
 	 */
 	public void moveData(String[] range, ECSNode server) {
-		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db);
+		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
 		new Thread(migrationMgr).start();
 	}
 
@@ -199,6 +206,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void update(TreeMap<String, ECSNode> metadata){
 		this.metadata = metadata;
+		zkWatcher.setData();
 	}
 
 	public TreeMap<String, ECSNode> getMetadata(){
@@ -318,7 +326,11 @@ public class KVServer extends Thread implements IKVServer {
 					}
 				}
 
-				new KVServer(port, serverName, zkHost, zkPort, cacheStrategy, cacheSize).start();
+				try {
+					new KVServer(port, serverName, zkHost, zkPort, cacheStrategy, cacheSize).start();
+				} catch (InterruptedException e) {
+					System.out.println("Unable to connect to zookeeper");
+				}
 			}
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");

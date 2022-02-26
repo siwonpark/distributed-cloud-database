@@ -3,7 +3,6 @@ package app_kvServer;
 import org.apache.log4j.Logger;
 import shared.ZKData;
 import shared.ZKData.OperationType;
-import shared.messages.KVMessage;
 
 public class ECSCommandHandler {
     private KVServer server;
@@ -20,6 +19,7 @@ public class ECSCommandHandler {
     public void handleCommand(ZKData data){
         OperationType op = data.getOperationType();
 
+        // ACKS to ECS are performed inside each individual call
         switch(op){
             case INIT:
                 server.update(data.getMetadata());
