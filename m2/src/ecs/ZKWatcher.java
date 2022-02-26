@@ -39,10 +39,9 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void create(String path, ZKData data) {
+    public void create(String path) {
         try {
-            byte[] dataBytes = serializeData(data);
-            zooKeeper.create(path, dataBytes, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            zooKeeper.create(path, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
         } catch (Exception e) {
             logger.error("Failed to create z-node");
         }
@@ -74,6 +73,7 @@ public class ZKWatcher implements Watcher {
             // Create node
             else if (EventType.NodeCreated == eventType) {
                 awaitSignal.countDown();
+                watchNode(path);
                 logger.info("Node creation");
             }
             // Update node

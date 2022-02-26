@@ -52,9 +52,11 @@ public class ZKWatcher implements Watcher {
                 zooKeeper.create(ROOT_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             }
 
+            zooKeeper.exists(path, this);
             return true;
         } catch (Exception e) {
             logger.error("Failed to create z-node");
+            logger.error(e.getMessage());
             return false;
         }
     }
@@ -71,8 +73,6 @@ public class ZKWatcher implements Watcher {
         // Event type
         EventType eventType = event.getType();
         // Affected path
-        String path = event.getPath();
-
         logger.info("Connection status:\t" + keeperState.toString());
         logger.info("Event type:\t" + eventType.toString());
 

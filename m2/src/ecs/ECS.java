@@ -31,17 +31,21 @@ public class ECS {
         availableNodes = getNodesFromConfig(configFilePath);
     }
 
-    public void addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
+    public ArrayList<IECSNode> addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
+        ArrayList<IECSNode> addedNodes = new ArrayList<>();
+
         if (numberOfNodes > availableNodes.size()) {
             logger.error("Not enough servers available");
-            return;
+            return addedNodes;
         }
         // shuffle availableNodes to make random
         Collections.shuffle(availableNodes);
 
         for (int i = 0; i < numberOfNodes; i++) {
-            addNode(cacheStrategy, cacheSize);
+            addedNodes.add(addNode(cacheStrategy, cacheSize));
         }
+
+        return addedNodes;
     }
 
     public boolean start(ECSNode node) {
@@ -103,8 +107,21 @@ public class ECS {
         // Update metadata in ECS
         addNodeToHashRing(node);
 
-        initServer(node);
-        start(node);
+        boolean success = initServer(node);
+        if (!success) {
+            logger.error("Failed to add, rolling back changes");
+            availableNodes.add(node);
+            removeNodeFromHashRing(node);
+            return null;
+        }
+
+        success = start(node);
+        if (!success) {
+            logger.error("Failed to start, rolling back changes");
+            availableNodes.add(node);
+            removeNodeFromHashRing(node);
+            return null;
+        }
 
         // Move data if successor exists
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
@@ -368,7 +385,7 @@ public class ECS {
         }
 
         // Create root z-node
-        zkWatcher.create(ZKWatcher.ROOT_PATH, null);
+        zkWatcher.create(ZKWatcher.ROOT_PATH);
     }
 
     /**
