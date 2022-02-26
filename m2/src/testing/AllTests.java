@@ -21,8 +21,8 @@ public class AllTests {
 			new LogSetup("logs/testing/test.log", Level.ERROR);
 
 
-			new KVServer(PORT, "127.0.0.1", "1", 2, CACHE_STRATEGY,
-					CACHE_SIZE).start();
+//			new KVServer(PORT, "127.0.0.1", "1", 2, CACHE_STRATEGY,
+//					CACHE_SIZE).start();
 
 		} catch (IOException e) {
 			e.printStackTrace();
