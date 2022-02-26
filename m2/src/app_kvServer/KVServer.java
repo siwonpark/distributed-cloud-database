@@ -8,7 +8,6 @@ import persistence.DataBase;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.zookeeper.ZooKeeper;
 import shared.MetadataUtils;
 import shared.communication.CommModule;
 
@@ -33,17 +32,14 @@ public class KVServer extends Thread implements IKVServer {
 	private String strategy;
 	private boolean isRunning;
 
-	private String name;
-	private String zkHost;
-	private int zkPort;
-	private ZooKeeper zookeeper;
+	private ZKWatcher zkWatcher;
 	private boolean lockWrite;
 	private ServerState state;
 
 	// Used for server->server communication when moving data
 	private CommModule commModule;
 	private TreeMap<String, ECSNode> metadata;
-	private String hostName;
+	private String serverName;
 
 
 	private DataBase db;
@@ -59,7 +55,8 @@ public class KVServer extends Thread implements IKVServer {
 	 *           currently not contained in the cache. Options are "FIFO", "LRU",
 	 *           and "LFU".
 	 */
-	public KVServer(int port, String hostname, int cacheSize, String strategy) {
+	public KVServer(int port, String serverName, String zkHost,
+					int zkPort, String strategy, int cacheSize) throws InterruptedException {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
@@ -68,14 +65,20 @@ public class KVServer extends Thread implements IKVServer {
 		// Change the server state from ECS in the tests
 		this.state = ServerState.RUNNING;
 		this.lockWrite = false;
-		this.hostName = hostname;
+		this.serverName = serverName;
 
-		String dbName = String.format("%s-%s", this.hostName, this.port);
-
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, dbName,false);
-
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,false);
+		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
+		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
+		initZkWatcher();
 	}
-	
+
+	private void initZkWatcher() throws InterruptedException {
+		this.zkWatcher.connect();
+		this.zkWatcher.connectedSignal.await();
+		this.zkWatcher.create();
+	}
+
 	@Override
 	public int getPort(){
 		return serverSocket.getLocalPort();
@@ -83,8 +86,7 @@ public class KVServer extends Thread implements IKVServer {
 
 	@Override
     public String getHostname(){
-		return this.hostName == null ? serverSocket.getInetAddress().getHostName():
-				this.hostName;
+		return serverSocket.getInetAddress().getHostName();
 	}
 
 	@Override
@@ -147,7 +149,9 @@ public class KVServer extends Thread implements IKVServer {
 	 * Starts the KVServer, all client and ECS requests are processed
 	 */
 	public void startServer(){
+		logger.info(String.format("Starting server %s", serverName));
 		this.state = ServerState.RUNNING;
+		zkWatcher.setData();
 	}
 
 	/**
@@ -155,6 +159,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Only ECS requests are processed
 	 */
 	public void stopServer(){
+		logger.info(String.format("Stopping server %s", serverName));
 		this.state = ServerState.STOPPED;
 	}
 
@@ -162,21 +167,27 @@ public class KVServer extends Thread implements IKVServer {
 	 * Exit the KVServer application
 	 */
 	public void shutDown(){
+		logger.info(String.format("Shutting down server %s", serverName));
 		isRunning = false;
+		zkWatcher.setData();
 	}
 
 	/**
 	 * Lock this KVServer for write operations
 	 */
 	public void lockWrite(){
+		logger.info(String.format("Locking writes for server %s", serverName));
 		this.lockWrite = true;
+		zkWatcher.setData();
 	}
 
 	/**
 	 * Unlock this KVServer for write operations
 	 */
 	public void unlockWrite(){
+		logger.info(String.format("Unlocking writes for server %s", serverName));
 		this.lockWrite = false;
+		zkWatcher.setData();
 	}
 
 	/**
@@ -190,8 +201,10 @@ public class KVServer extends Thread implements IKVServer {
 	 * @param range The subset of this Server's data to transfer to the new server
 	 * @param server The new server to move data to
 	 */
-	public void moveData(String[] range, ECSNode server) throws IOException, RuntimeException {
-		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db);
+	public void moveData(String[] range, ECSNode server) {
+		logger.info(String.format("Moving data from server %s to server %s",
+				serverName, server.getNodeName()));
+		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
 		new Thread(migrationMgr).start();
 	}
 
@@ -199,7 +212,9 @@ public class KVServer extends Thread implements IKVServer {
 	 * Update the metadata repository of this KVServer
 	 */
 	public void update(TreeMap<String, ECSNode> metadata){
+		logger.info(String.format("Upadting metadata for server %s", serverName));
 		this.metadata = metadata;
+		zkWatcher.setData();
 	}
 
 	public TreeMap<String, ECSNode> getMetadata(){
@@ -235,7 +250,7 @@ public class KVServer extends Thread implements IKVServer {
 		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, metadata);
 		assert responsibleServer != null;
 		return responsibleServer.getNodePort() == port &&
-				Objects.equals(responsibleServer.getNodeHost(), getHostname());
+				Objects.equals(responsibleServer.getNodeName(), this.serverName);
 	}
 
 	@Override
@@ -298,18 +313,20 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public static void main(String[] args) {
 		try {
-			if(args.length < 4 || args.length > 5) {
+			if(args.length < 6 || args.length > 7) {
 				System.out.println("Error! Invalid number of arguments!");
-				System.out.println("Usage: Server <port> <host> <cacheSize> <cacheStrategy> [<logLevel>]!");
+				System.out.println("Usage: Server <port> <serverName> <zkHost> <zkPort> <cacheStrategy> <cacheSize> [<logLevel>]!");
 			} else {
 				new LogSetup("logs/server.log", Level.ALL);
 				int port = Integer.parseInt(args[0]);
-				String host = args[1];
-				int cacheSize = Integer.parseInt(args[2]);
-				String cacheStrategy = args[3];
+				String serverName = args[1];
+				String zkHost = args[2];
+				int zkPort = Integer.parseInt(args[3]);
+				String cacheStrategy = args[4];
+				int cacheSize = Integer.parseInt(args[5]);
 
-				if (args.length == 3) {
-					String level = setLevel(args[2]);
+				if (args.length == 7) {
+					String level = setLevel(args[6]);
 					if (level.equals(LogSetup.UNKNOWN_LEVEL)) {
 						printError("Not a valid log level!");
 						printPossibleLogLevels();
@@ -317,7 +334,11 @@ public class KVServer extends Thread implements IKVServer {
 					}
 				}
 
-				new KVServer(port, host, cacheSize, cacheStrategy).start();
+				try {
+					new KVServer(port, serverName, zkHost, zkPort, cacheStrategy, cacheSize).start();
+				} catch (InterruptedException e) {
+					System.out.println("Unable to connect to zookeeper");
+				}
 			}
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");

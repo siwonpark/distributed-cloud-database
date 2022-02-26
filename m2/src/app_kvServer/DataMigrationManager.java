@@ -20,13 +20,15 @@ public class DataMigrationManager implements Runnable {
     private DataBase db;
     private String migrationHashRangeStart;
     private String migrationHashRangeEnd;
+    private ZKWatcher zkWatcher;
 
 
-    public DataMigrationManager(ECSNode destServer, String[] migrationHashRange, DataBase db){
+    public DataMigrationManager(ECSNode destServer, String[] migrationHashRange, DataBase db, ZKWatcher zkWatcher){
         this.destServer = destServer;
         this.migrationHashRangeStart = migrationHashRange[0];
         this.migrationHashRangeEnd = migrationHashRange[1];
         this.db = db;
+        this.zkWatcher = zkWatcher;
     }
 
     @Override
@@ -69,7 +71,7 @@ public class DataMigrationManager implements Runnable {
                 migrationSuccess = false;
             }
         }
-        // TODO: send ACK to ECS
+
         if (migrationSuccess){
             // Delete all the keys that were migrated, since migration was successful
             for (ArrayList<String> keyValue : dataToMigrate) {
@@ -78,8 +80,9 @@ public class DataMigrationManager implements Runnable {
             }
             // We want to remove the keys that were migrated
             db.batchDeleteNull();
-        } else{
-            // error msg? Idk
+            // Send ACK to Zookeeper
+            zkWatcher.setData();
         }
+        // If the migration failed, then we do not send ACK.
     }
 }
