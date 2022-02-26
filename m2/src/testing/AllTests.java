@@ -15,21 +15,21 @@ public class AllTests {
 	public static final String CACHE_STRATEGY = "FIFO";
 	public static final int CACHE_SIZE = 5;
 
-	static {
-		try {
-			/* Refresh data directory when running tests */
-			new LogSetup("logs/testing/test.log", Level.ERROR);
-
-
+//	static {
+//		try {
+//			/* Refresh data directory when running tests */
+//			new LogSetup("logs/testing/test.log", Level.ERROR);
+//
+//
 //			new KVServer(PORT, "127.0.0.1", "1", 2, CACHE_STRATEGY,
 //					CACHE_SIZE).start();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
+//
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 
 	public static Test suite() {
