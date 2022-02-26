@@ -92,7 +92,7 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void setData(String nodeName) {
+    public void setData() {
         try {
             zooKeeper.setData(ROOT_PATH + "/" + nodeName, new byte[0], -1);
         } catch (Exception e) {
