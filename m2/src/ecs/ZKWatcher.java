@@ -31,11 +31,12 @@ public class ZKWatcher implements Watcher {
     }
 
     public byte[] serializeData(ZKData data) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(bos);
-        out.writeObject(data);
-        out.flush();
-        return bos.toByteArray();
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(data);
+            out.flush();
+            return bos.toByteArray();
+        }
     }
 
     public void create(String path, ZKData data) {
