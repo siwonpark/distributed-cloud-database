@@ -20,7 +20,8 @@ public class AllTests {
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
 
-			new KVServer(PORT, "127.0.0.1", CACHE_SIZE, CACHE_STRATEGY).start();
+			new KVServer(PORT, "127.0.0.1", "1", 2, CACHE_STRATEGY,
+					CACHE_SIZE).start();
 
 		} catch (IOException e) {
 			e.printStackTrace();

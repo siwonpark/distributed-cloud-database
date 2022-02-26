@@ -33,7 +33,6 @@ public class KVServer extends Thread implements IKVServer {
 	private String strategy;
 	private boolean isRunning;
 
-	private String name;
 	private String zkHost;
 	private int zkPort;
 	private ZooKeeper zookeeper;
@@ -43,7 +42,7 @@ public class KVServer extends Thread implements IKVServer {
 	// Used for server->server communication when moving data
 	private CommModule commModule;
 	private TreeMap<String, ECSNode> metadata;
-	private String hostName;
+	private String serverName;
 
 
 	private DataBase db;
@@ -59,7 +58,8 @@ public class KVServer extends Thread implements IKVServer {
 	 *           currently not contained in the cache. Options are "FIFO", "LRU",
 	 *           and "LFU".
 	 */
-	public KVServer(int port, String hostname, int cacheSize, String strategy) {
+	public KVServer(int port, String serverName, String zkHost,
+					int zkPort, String strategy, int cacheSize) {
 		this.port = port;
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
@@ -68,11 +68,11 @@ public class KVServer extends Thread implements IKVServer {
 		// Change the server state from ECS in the tests
 		this.state = ServerState.RUNNING;
 		this.lockWrite = false;
-		this.hostName = hostname;
+		this.serverName = serverName;
+		this.zkHost = zkHost;
+		this.zkPort = zkPort;
 
-		String dbName = String.format("%s-%s", this.hostName, this.port);
-
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, dbName,false);
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,false);
 
 	}
 	
@@ -83,8 +83,7 @@ public class KVServer extends Thread implements IKVServer {
 
 	@Override
     public String getHostname(){
-		return this.hostName == null ? serverSocket.getInetAddress().getHostName():
-				this.hostName;
+		return serverSocket.getInetAddress().getHostName();
 	}
 
 	@Override
@@ -235,7 +234,7 @@ public class KVServer extends Thread implements IKVServer {
 		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, metadata);
 		assert responsibleServer != null;
 		return responsibleServer.getNodePort() == port &&
-				Objects.equals(responsibleServer.getNodeHost(), getHostname());
+				Objects.equals(responsibleServer.getNodeName(), this.serverName);
 	}
 
 	@Override
@@ -298,18 +297,20 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public static void main(String[] args) {
 		try {
-			if(args.length < 4 || args.length > 5) {
+			if(args.length < 6 || args.length > 7) {
 				System.out.println("Error! Invalid number of arguments!");
-				System.out.println("Usage: Server <port> <host> <cacheSize> <cacheStrategy> [<logLevel>]!");
+				System.out.println("Usage: Server <port> <serverName> <zkHost> <zkPort> <cacheStrategy> <cacheSize> [<logLevel>]!");
 			} else {
 				new LogSetup("logs/server.log", Level.ALL);
 				int port = Integer.parseInt(args[0]);
-				String host = args[1];
-				int cacheSize = Integer.parseInt(args[2]);
-				String cacheStrategy = args[3];
+				String serverName = args[1];
+				String zkHost = args[2];
+				int zkPort = Integer.parseInt(args[3]);
+				String cacheStrategy = args[4];
+				int cacheSize = Integer.parseInt(args[5]);
 
-				if (args.length == 3) {
-					String level = setLevel(args[2]);
+				if (args.length == 7) {
+					String level = setLevel(args[6]);
 					if (level.equals(LogSetup.UNKNOWN_LEVEL)) {
 						printError("Not a valid log level!");
 						printPossibleLogLevels();
@@ -317,7 +318,7 @@ public class KVServer extends Thread implements IKVServer {
 					}
 				}
 
-				new KVServer(port, host, cacheSize, cacheStrategy).start();
+				new KVServer(port, serverName, zkHost, zkPort, cacheStrategy, cacheSize).start();
 			}
 		} catch (IOException e) {
 			System.out.println("Error! Unable to initialize logger!");
