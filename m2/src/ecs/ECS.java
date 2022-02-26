@@ -90,7 +90,7 @@ public class ECS {
 
         zkWatcher.watchNode(ZKWatcher.ROOT_PATH + "/" + node.getNodeName());
 
-        spawnKVServer(node);
+        spawnKVServer(node, cacheStrategy, cacheSize);
 
         // Wait for KVServer to create znode, if awaitNode is false, adding failed
         if (!awaitNodes(1, 10000)) {
@@ -103,7 +103,7 @@ public class ECS {
         // Update metadata in ECS
         addNodeToHashRing(node);
 
-        initServer(node, cacheStrategy, cacheSize);
+        initServer(node);
         start(node);
 
         // Move data if successor exists
@@ -129,10 +129,8 @@ public class ECS {
         return node;
     }
 
-    public boolean initServer(ECSNode node, String cacheStrategy, int cacheSize) {
+    public boolean initServer(ECSNode node) {
         ZKData data = new ZKData(hashRing, ZKData.OperationType.INIT);
-        data.setCacheStrategy(cacheStrategy);
-        data.setCacheSize(cacheSize);
         zkWatcher.setData(node.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -324,19 +322,21 @@ public class ECS {
         return this.hashRing;
     }
 
-    private void spawnKVServer(ECSNode node) {
+    private void spawnKVServer(ECSNode node, String cacheStrategy, int cacheSize) {
         Runtime run = Runtime.getRuntime();
         String rootPath = System.getProperty("user.dir");
 
         String script =
                 String.format(
-                        "ssh -n %s nohup java -jar %s/m2-server.jar %d %s %s %d &",
+                        "ssh -n %s nohup java -jar %s/m2-server.jar %d %s %s %d %s %d &",
                         node.getNodeHost(),
                         rootPath,
                         node.getNodePort(),
                         node.getNodeName(),
                         ZKWatcher.ZK_HOST,
-                        ZKWatcher.ZK_PORT);
+                        ZKWatcher.ZK_PORT,
+                        cacheStrategy,
+                        cacheSize);
         try {
             run.exec(script);
         } catch (IOException e) {
