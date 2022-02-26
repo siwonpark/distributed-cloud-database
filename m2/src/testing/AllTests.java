@@ -34,11 +34,11 @@ public class AllTests {
 
 	public static Test suite() {
 		TestSuite clientSuite = new TestSuite("Basic Storage ServerTest-Suite");
-		clientSuite.addTestSuite(ConnectionTest.class);
-		clientSuite.addTestSuite(InteractionTest.class);
-		clientSuite.addTestSuite(AdditionalTest.class);
-		clientSuite.addTestSuite(CLITest.class);
-		clientSuite.addTestSuite(LoadTest.class);
+//		clientSuite.addTestSuite(ConnectionTest.class);
+//		clientSuite.addTestSuite(InteractionTest.class);
+//		clientSuite.addTestSuite(AdditionalTest.class);
+//		clientSuite.addTestSuite(CLITest.class);
+//		clientSuite.addTestSuite(LoadTest.class);
 		//Commenting out until we figure out how to test with zookeeper
 		//clientSuite.addTestSuite(ECSTest.class);
 		return clientSuite;
