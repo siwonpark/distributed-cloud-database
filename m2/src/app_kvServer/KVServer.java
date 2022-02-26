@@ -149,6 +149,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Starts the KVServer, all client and ECS requests are processed
 	 */
 	public void startServer(){
+		logger.info(String.format("Starting server %s", serverName));
 		this.state = ServerState.RUNNING;
 		zkWatcher.setData();
 	}
@@ -158,6 +159,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Only ECS requests are processed
 	 */
 	public void stopServer(){
+		logger.info(String.format("Stopping server %s", serverName));
 		this.state = ServerState.STOPPED;
 	}
 
@@ -165,6 +167,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Exit the KVServer application
 	 */
 	public void shutDown(){
+		logger.info(String.format("Shutting down server %s", serverName));
 		isRunning = false;
 		zkWatcher.setData();
 	}
@@ -173,6 +176,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Lock this KVServer for write operations
 	 */
 	public void lockWrite(){
+		logger.info(String.format("Locking writes for server %s", serverName));
 		this.lockWrite = true;
 		zkWatcher.setData();
 	}
@@ -181,6 +185,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Unlock this KVServer for write operations
 	 */
 	public void unlockWrite(){
+		logger.info(String.format("Unlocking writes for server %s", serverName));
 		this.lockWrite = false;
 		zkWatcher.setData();
 	}
@@ -197,6 +202,8 @@ public class KVServer extends Thread implements IKVServer {
 	 * @param server The new server to move data to
 	 */
 	public void moveData(String[] range, ECSNode server) {
+		logger.info(String.format("Moving data from server %s to server %s",
+				serverName, server.getNodeName()));
 		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
 		new Thread(migrationMgr).start();
 	}
@@ -205,6 +212,7 @@ public class KVServer extends Thread implements IKVServer {
 	 * Update the metadata repository of this KVServer
 	 */
 	public void update(TreeMap<String, ECSNode> metadata){
+		logger.info(String.format("Upadting metadata for server %s", serverName));
 		this.metadata = metadata;
 		zkWatcher.setData();
 	}
