@@ -168,7 +168,11 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void shutDown(){
 		logger.info(String.format("Shutting down server %s", serverName));
-		serverSocket.close();
+		try {
+			serverSocket.close();
+		} catch (Exception e){
+			logger.error("Could not close server socket")
+		}
 		isRunning = false;
 		zkWatcher.setData();
 	}
