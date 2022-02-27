@@ -31,17 +31,21 @@ public class ECS {
         availableNodes = getNodesFromConfig(configFilePath);
     }
 
-    public void addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
+    public ArrayList<IECSNode> addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
+        ArrayList<IECSNode> addedNodes = new ArrayList<>();
+
         if (numberOfNodes > availableNodes.size()) {
             logger.error("Not enough servers available");
-            return;
+            return addedNodes;
         }
         // shuffle availableNodes to make random
         Collections.shuffle(availableNodes);
 
         for (int i = 0; i < numberOfNodes; i++) {
-            addNode(cacheStrategy, cacheSize);
+            addedNodes.add(addNode(cacheStrategy, cacheSize));
         }
+
+        return addedNodes;
     }
 
     public boolean start(ECSNode node) {
@@ -90,7 +94,7 @@ public class ECS {
 
         zkWatcher.watchNode(ZKWatcher.ROOT_PATH + "/" + node.getNodeName());
 
-        spawnKVServer(node);
+        spawnKVServer(node, cacheStrategy, cacheSize);
 
         // Wait for KVServer to create znode, if awaitNode is false, adding failed
         if (!awaitNodes(1, 10000)) {
@@ -103,8 +107,21 @@ public class ECS {
         // Update metadata in ECS
         addNodeToHashRing(node);
 
-        initServer(node, cacheStrategy, cacheSize);
-        start(node);
+        boolean success = initServer(node);
+        if (!success) {
+            logger.error("Failed to add, rolling back changes");
+            availableNodes.add(node);
+            removeNodeFromHashRing(node);
+            return null;
+        }
+
+        success = start(node);
+        if (!success) {
+            logger.error("Failed to start, rolling back changes");
+            availableNodes.add(node);
+            removeNodeFromHashRing(node);
+            return null;
+        }
 
         // Move data if successor exists
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
@@ -129,10 +146,8 @@ public class ECS {
         return node;
     }
 
-    public boolean initServer(ECSNode node, String cacheStrategy, int cacheSize) {
+    public boolean initServer(ECSNode node) {
         ZKData data = new ZKData(hashRing, ZKData.OperationType.INIT);
-        data.setCacheStrategy(cacheStrategy);
-        data.setCacheSize(cacheSize);
         zkWatcher.setData(node.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -324,19 +339,21 @@ public class ECS {
         return this.hashRing;
     }
 
-    private void spawnKVServer(ECSNode node) {
+    private void spawnKVServer(ECSNode node, String cacheStrategy, int cacheSize) {
         Runtime run = Runtime.getRuntime();
         String rootPath = System.getProperty("user.dir");
 
         String script =
                 String.format(
-                        "ssh -n %s nohup java -jar %s/m2-server.jar %d %s %s %d &",
+                        "ssh -n %s nohup java -jar %s/m2-server.jar %d %s %s %d %s %d &",
                         node.getNodeHost(),
                         rootPath,
                         node.getNodePort(),
                         node.getNodeName(),
                         ZKWatcher.ZK_HOST,
-                        ZKWatcher.ZK_PORT);
+                        ZKWatcher.ZK_PORT,
+                        cacheStrategy,
+                        cacheSize);
         try {
             run.exec(script);
         } catch (IOException e) {
@@ -368,7 +385,7 @@ public class ECS {
         }
 
         // Create root z-node
-        zkWatcher.create(ZKWatcher.ROOT_PATH, null);
+        zkWatcher.create(ZKWatcher.ROOT_PATH);
     }
 
     /**

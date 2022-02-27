@@ -67,12 +67,7 @@ public class ECSClient implements IECSClient {
 
     @Override
     public Collection<IECSNode> addNodes(int count, String cacheStrategy, int cacheSize) {
-        ArrayList<IECSNode> addedNodes = new ArrayList<IECSNode>();
-        for (int i = 0; i < count; i++){
-            IECSNode addedNode = ecs.addNode(cacheStrategy, cacheSize);
-            addedNodes.add(addedNode);
-        }
-        return addedNodes;
+        return ecs.addNodes(count, cacheStrategy, cacheSize);
     }
 
     @Override
