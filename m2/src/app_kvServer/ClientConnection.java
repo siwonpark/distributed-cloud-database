@@ -71,7 +71,6 @@ public class ClientConnection implements Runnable {
 		} finally {
 			try {
 				stop();
-				server.removeConnection(this);
 			} catch (IOException ioe) {
 				logger.error("Error! Unable to tear down connection!", ioe);
 			}
