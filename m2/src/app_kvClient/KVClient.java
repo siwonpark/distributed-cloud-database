@@ -195,7 +195,9 @@ public class KVClient implements IKVClient, ClientSocketListener {
      */
     private void disconnect() {
         if(kvStore != null) {
-            heartbeat.stopProbing();
+            if (heartbeat != null){
+                heartbeat.stopProbing();
+            }
             kvStore.disconnect();
             kvStore = null;
         } else {
