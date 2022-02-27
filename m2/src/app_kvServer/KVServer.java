@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.TreeMap;
 
@@ -35,6 +36,7 @@ public class KVServer extends Thread implements IKVServer {
 	private ZKWatcher zkWatcher;
 	private boolean lockWrite;
 	private ServerState state;
+	private ArrayList<ClientConnection> clientConnections;
 
 	// Used for server->server communication when moving data
 	private CommModule commModule;
@@ -66,6 +68,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.state = ServerState.RUNNING;
 		this.lockWrite = false;
 		this.serverName = serverName;
+		this.clientConnections = new ArrayList<>();
 
 		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,false);
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
@@ -170,6 +173,9 @@ public class KVServer extends Thread implements IKVServer {
 		logger.info(String.format("Shutting down server %s", serverName));
 		try {
 			serverSocket.close();
+			for(ClientConnection connection: clientConnections){
+				connection.stop();
+			}
 		} catch (Exception e){
 			logger.error("Could not close server socket");
 		}
@@ -265,10 +271,10 @@ public class KVServer extends Thread implements IKVServer {
 		if (serverSocket != null) {
 			while (isRunning) {
 				try {
-					logger.info("KVSERVER RUN LOOP");
 					Socket client = serverSocket.accept();
 					ClientConnection connection =
 							new ClientConnection(client, this);
+					clientConnections.add(connection);
 					new Thread(connection).start();
 
 					logger.info("Connected to "
@@ -291,6 +297,10 @@ public class KVServer extends Thread implements IKVServer {
 	@Override
     public void close(){
 		// TODO Auto-generated method stub
+	}
+
+	public void removeConnection(ClientConnection connectionToRemove){
+		clientConnections.remove(connectionToRemove);
 	}
 
 	/**

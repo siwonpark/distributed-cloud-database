@@ -69,17 +69,23 @@ public class ClientConnection implements Runnable {
 			logger.error("Error! Connection could not be established!", ioe);
 			
 		} finally {
-			
 			try {
-				if (clientSocket != null) {
-					input.close();
-					output.close();
-					clientSocket.close();
-				}
+				stop();
+				server.removeConnection(this);
 			} catch (IOException ioe) {
 				logger.error("Error! Unable to tear down connection!", ioe);
 			}
 		}
+	}
+
+	public void stop() throws IOException{
+		if (clientSocket != null) {
+			input.close();
+			output.close();
+			clientSocket.close();
+			clientSocket = null;
+		}
+		server.removeConnection(this);
 	}
 
 	/**
