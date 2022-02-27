@@ -73,6 +73,7 @@ public class DataMigrationManager implements Runnable {
         }
 
         if (migrationSuccess){
+            logger.info("Successfully migrated keys" + dataToMigrate);
             // Delete all the keys that were migrated, since migration was successful
             for (ArrayList<String> keyValue : dataToMigrate) {
                 String key = keyValue.get(0);

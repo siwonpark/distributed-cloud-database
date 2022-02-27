@@ -217,7 +217,8 @@ public class KVServer extends Thread implements IKVServer {
 	 * Update the metadata repository of this KVServer
 	 */
 	public void update(TreeMap<String, ECSNode> metadata){
-		logger.info(String.format("Upadting metadata for server %s", serverName));
+		logger.info(String.format("Updating metadata for server %s", serverName));
+		logger.info(metadata.toString());
 		this.metadata = metadata;
 		zkWatcher.setData();
 	}

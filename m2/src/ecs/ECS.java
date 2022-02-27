@@ -345,7 +345,7 @@ public class ECS {
 
         String script =
                 String.format(
-                        "ssh -n %s nohup java -jar %s/m2-server.jar %d %s %s %d %s %d &",
+                        "ssh -n %s nohup java -jar %s/m2-server.jar %d %s %s %d %s %d INFO &",
                         node.getNodeHost(),
                         rootPath,
                         node.getNodePort(),

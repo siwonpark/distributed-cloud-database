@@ -23,20 +23,28 @@ public class ECSCommandHandler {
         switch(op){
             case INIT:
                 server.update(data.getMetadata());
+                break;
             case START:
                 server.startServer();
+                break;
             case STOP:
                 server.stopServer();
+                break;
             case SHUT_DOWN:
                 server.shutDown();
+                break;
             case METADATA:
                 server.update(data.getMetadata());
+                break;
             case LOCK_WRITE:
                 server.lockWrite();
+                break;
             case UNLOCK_WRITE:
                 server.unlockWrite();
+                break;
             case MOVE_DATA:
                 server.moveData(data.getMoveRange(), data.getTargetNode());
+                break;
             default:
                 String errorMsg = "Request contained a status unknown to the server: " + op;
                 logger.error(errorMsg);
