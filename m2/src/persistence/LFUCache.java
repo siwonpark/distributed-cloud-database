@@ -63,7 +63,7 @@ public class LFUCache extends LinkedHashMap<String, Node> {
 
     public void dumpCache() {
         for (Map.Entry<String, CacheUnit> entry : hashmap.entrySet()) {
-            FileOp.dumpFile(entry.getValue().value, false);
+            FileOp.dumpFile(entry.getValue().value);
         }
     }
 
