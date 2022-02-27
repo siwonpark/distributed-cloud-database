@@ -168,6 +168,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void shutDown(){
 		logger.info(String.format("Shutting down server %s", serverName));
+		serverSocket.close();
 		isRunning = false;
 		zkWatcher.setData();
 	}
@@ -259,6 +260,7 @@ public class KVServer extends Thread implements IKVServer {
 		if (serverSocket != null) {
 			while (isRunning) {
 				try {
+					logger.info("KVSERVER RUN LOOP");
 					Socket client = serverSocket.accept();
 					ClientConnection connection =
 							new ClientConnection(client, this);

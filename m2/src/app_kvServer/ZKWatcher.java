@@ -108,6 +108,7 @@ public class ZKWatcher implements Watcher {
             return deserializeData(data);
         } catch (Exception e) {
             logger.error("Failed to get data for znode");
+            logger.error(e.getMessage());
             return null;
         }
     }
