@@ -65,7 +65,7 @@ public class DataBase {
             ((LFUCache) cache).dumpCache();
         } else {
             for (Map.Entry<String, Node> entry : cache.entrySet()) {
-                FileOp.dumpFile(entry.getValue(), false);
+                FileOp.dumpFile(entry.getValue());
             }
         }
     }

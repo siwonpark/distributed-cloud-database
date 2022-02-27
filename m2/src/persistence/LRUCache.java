@@ -15,7 +15,7 @@ public class LRUCache extends LinkedHashMap<String, Node> {
     protected boolean removeEldestEntry(Map.Entry<String, Node> eldest) {
         boolean removeIt = size() > size;
         if(removeIt){
-            FileOp.dumpFile(eldest.getValue(), false);
+            FileOp.dumpFile(eldest.getValue());
         }
         return removeIt;
     }
