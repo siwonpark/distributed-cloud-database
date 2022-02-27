@@ -181,12 +181,10 @@ public class FileOp {
     /**
      * update the node's disk file.
      */
-    public static boolean dumpFile(Node node, boolean cacheIt) {
+    public static boolean dumpFile(Node node, boolean writeDisk) {
         logger.trace("dump file " + node.name);
-        if (cacheIt) {
-            DataBase.getInstance().cache.put(node.name, node);
-            return true;
-        } else {
+        DataBase.getInstance().cache.put(node.name, node);
+        if (writeDisk) {
             try {
                 OutputStream output = new FileOutputStream(config.filePath + node.name);
                 if (node.type == FileType.INDEX) {
@@ -211,8 +209,9 @@ public class FileOp {
             } catch (IOException e) {
                 return false;
             }
+        }else{
+            return true;
         }
-
     }
 
 
