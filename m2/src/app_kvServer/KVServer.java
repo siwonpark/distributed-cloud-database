@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.TreeMap;
 
@@ -41,7 +40,6 @@ public class KVServer extends Thread implements IKVServer {
 	private CommModule commModule;
 	private TreeMap<String, ECSNode> metadata;
 	private String serverName;
-	private ArrayList<Thread> clientConnections;
 
 
 	private DataBase db;
@@ -172,11 +170,8 @@ public class KVServer extends Thread implements IKVServer {
 		logger.info(String.format("Shutting down server %s", serverName));
 		try {
 			serverSocket.close();
-			for (Thread connection : clientConnections){
-				connection.stop();
-			}
 		} catch (Exception e){
-			logger.error("Could not all existing sockets");
+			logger.error("Could not close server socket");
 		}
 		isRunning = false;
 		zkWatcher.setData();
@@ -274,10 +269,8 @@ public class KVServer extends Thread implements IKVServer {
 					Socket client = serverSocket.accept();
 					ClientConnection connection =
 							new ClientConnection(client, this);
+					new Thread(connection).start();
 
-					Thread connectionThread = new Thread(connection);
-					clientConnections.add(connectionThread);
-					connectionThread.start();
 					logger.info("Connected to "
 							+ client.getInetAddress().getHostName()
 							+  " on port " + client.getPort());
