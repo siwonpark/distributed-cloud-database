@@ -171,7 +171,7 @@ public class KVServer extends Thread implements IKVServer {
 		try {
 			serverSocket.close();
 		} catch (Exception e){
-			logger.error("Could not close server socket")
+			logger.error("Could not close server socket");
 		}
 		isRunning = false;
 		zkWatcher.setData();
