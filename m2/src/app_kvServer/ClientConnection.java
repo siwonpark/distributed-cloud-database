@@ -78,12 +78,14 @@ public class ClientConnection implements Runnable {
 	}
 
 	public void stop() throws IOException{
+		logger.info("Stopping clientConnection");
 		if (clientSocket != null) {
 			input.close();
 			output.close();
 			clientSocket.close();
 			clientSocket = null;
 		}
+		isOpen = false;
 		server.removeConnection(this);
 	}
 
