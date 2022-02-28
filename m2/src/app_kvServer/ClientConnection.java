@@ -231,7 +231,6 @@ public class ClientConnection implements Runnable {
 		Message msg;
 		try {
 			msg = (Message) input.readObject();
-			logger.info(msg);
 		} catch (ClassNotFoundException e){
 			msg = new Message("Message was not able to be read properly", null,
 					KVMessage.StatusType.FAILED);

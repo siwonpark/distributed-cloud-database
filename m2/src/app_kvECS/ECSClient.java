@@ -53,8 +53,9 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean shutdown() {
+        ECSNode[] nodes = ecs.hashRing.values().toArray(new ECSNode[0]);
         boolean success = true;
-        for (ECSNode node: ecs.hashRing.values()) {
+        for (ECSNode node: nodes) {
             success = ecs.shutDown(node);
         }
         return success;

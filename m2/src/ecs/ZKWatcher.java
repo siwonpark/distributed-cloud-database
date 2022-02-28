@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.Watcher.Event.EventType;
+import org.apache.zookeeper.data.Stat;
 import shared.ZKData;
 
 import java.io.ByteArrayOutputStream;
@@ -41,7 +42,11 @@ public class ZKWatcher implements Watcher {
 
     public void create(String path) {
         try {
-            zooKeeper.create(path, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            Stat stat = zooKeeper.exists(path, false);
+
+            if (stat == null) {
+                zooKeeper.create(path, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            }
         } catch (Exception e) {
             logger.error("Failed to create z-node");
         }
@@ -49,7 +54,7 @@ public class ZKWatcher implements Watcher {
 
     @Override
     public void process(WatchedEvent event) {
-        logger.info("WATCHER NOTIFICATION!");
+        logger.info("Watcher triggered");
         if (event == null) {
             return;
         }
@@ -61,8 +66,8 @@ public class ZKWatcher implements Watcher {
         // Affected path
         String path = event.getPath();
 
-        logger.info("Connection status:\t" + keeperState.toString());
-        logger.info("Event type:\t" + eventType.toString());
+        logger.info("Connection status:" + keeperState.toString());
+        logger.info("Event type:" + eventType.toString());
 
         if (KeeperState.SyncConnected == keeperState) {
             // Successfully connected to ZK server
@@ -72,15 +77,13 @@ public class ZKWatcher implements Watcher {
             }
             // Create node
             else if (EventType.NodeCreated == eventType) {
+                logger.info("Node creation at znode " + path);
                 awaitSignal.countDown();
-                watchNode(path);
-                logger.info("Node creation");
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
+                logger.info("Received acknowledgement from znode " + path);
                 awaitSignal.countDown();
-                watchNode(path);
-                logger.info("Node data update");
             }
             // Update child nodes
             else if (EventType.NodeChildrenChanged == eventType) {
@@ -111,10 +114,23 @@ public class ZKWatcher implements Watcher {
 
     public void setData(String nodeName, ZKData data) {
         try {
+            String path = ROOT_PATH + "/" + nodeName;
             byte[] dataBytes = serializeData(data);
-            zooKeeper.setData(ROOT_PATH + "/" + nodeName, dataBytes, -1);
+            Stat stat = zooKeeper.exists(path, false);
+            zooKeeper.setData(path, dataBytes, stat.getVersion());
+            watchNode(path);
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
+        }
+    }
+
+    public void deleteZnode(String nodeName) {
+        try {
+            String path = ROOT_PATH + "/" + nodeName;
+            Stat stat = zooKeeper.exists(path, false);
+            zooKeeper.delete(path, stat.getVersion());
+        } catch (Exception e) {
+            logger.error("Failed to delete znode");
         }
     }
 

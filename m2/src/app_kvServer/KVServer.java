@@ -164,6 +164,7 @@ public class KVServer extends Thread implements IKVServer {
 	public void stopServer(){
 		logger.info(String.format("Stopping server %s", serverName));
 		this.state = ServerState.STOPPED;
+		zkWatcher.setData();
 	}
 
 	/**
@@ -334,9 +335,9 @@ public class KVServer extends Thread implements IKVServer {
 				System.out.println("Error! Invalid number of arguments!");
 				System.out.println("Usage: Server <port> <serverName> <zkHost> <zkPort> <cacheStrategy> <cacheSize> [<logLevel>]!");
 			} else {
-				new LogSetup("logs/server.log", Level.ALL);
-				int port = Integer.parseInt(args[0]);
 				String serverName = args[1];
+				new LogSetup("logs/" + serverName + ".log", Level.ALL);
+				int port = Integer.parseInt(args[0]);
 				String zkHost = args[2];
 				int zkPort = Integer.parseInt(args[3]);
 				String cacheStrategy = args[4];
