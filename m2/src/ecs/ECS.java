@@ -402,18 +402,4 @@ public class ECS {
         // Create root z-node
         zkWatcher.create(ZKWatcher.ROOT_PATH);
     }
-
-    /**
-     * TODO: Remove in future PR, the ECS server should be just initialized in the ECS client.
-     *
-     * @param args
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws KeeperException
-     */
-    public static void main(String[] args)
-            throws IOException, InterruptedException, KeeperException {
-        new LogSetup("logs/ecs.log", Level.INFO);
-        ECS ecs = new ECS("ecs.config");
-    }
 }

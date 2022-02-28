@@ -9,7 +9,6 @@ import shared.ZKData;
 
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;

@@ -42,7 +42,11 @@ public class ZKWatcher implements Watcher {
 
     public void create(String path) {
         try {
-            zooKeeper.create(path, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            Stat stat = zooKeeper.exists(path, false);
+
+            if (stat == null) {
+                zooKeeper.create(path, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            }
         } catch (Exception e) {
             logger.error("Failed to create z-node");
         }
