@@ -10,6 +10,8 @@ import shared.ZKData;
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
 
+import static java.lang.Thread.sleep;
+
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
     private Logger logger = Logger.getRootLogger();
@@ -50,20 +52,20 @@ public class ZKWatcher implements Watcher {
     public boolean create() {
         try {
             String path = ROOT_PATH + "/" + nodeName;
-
+            watchNode(path);
             zooKeeper.create(ROOT_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
-            while (true) {
-                ZKData data = getData();
-
-                if (data != null) {
-                    logger.info("Received operation: " + data.getOperationType().toString());
-
-                    ecsCommandHandler.handleCommand(data);
-                    watchNode(path);
-                    break;
-                }
-            }
+//            while (true) {
+//                ZKData data = getData();
+//
+//                if (data != null) {
+//                    logger.info("Received operation: " + data.getOperationType().toString());
+//
+//                    ecsCommandHandler.handleCommand(data);
+//                    watchNode(path);
+//                    break;
+//                }
+//            }
 
             return true;
         } catch (Exception e) {
@@ -75,7 +77,7 @@ public class ZKWatcher implements Watcher {
 
     public void watchNode(String path) {
         try {
-            zooKeeper.exists(path, this);
+            zooKeeper.exists(path + "-server", this);
         } catch (Exception e) {
             logger.error("Failed to set watcher for znode");
         }
@@ -116,10 +118,12 @@ public class ZKWatcher implements Watcher {
 
     public void setData() {
         try {
+            logger.info("SENDING AWK to ECS");
             String path = ROOT_PATH + "/" + nodeName;
-            Stat stat = zooKeeper.exists(path, false);
-            zooKeeper.setData(path, new byte[0], stat.getVersion());
             watchNode(path);
+
+            Stat stat = zooKeeper.exists(path, false);
+            zooKeeper.setData(path, new byte[stat.getVersion()], stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
         }
@@ -127,7 +131,7 @@ public class ZKWatcher implements Watcher {
 
     public ZKData getData() {
         try {
-            String path = ROOT_PATH + "/" + nodeName;
+            String path = ROOT_PATH + "/" + nodeName + "-server";
             Stat stat = zooKeeper.exists(path, false);
             byte[] data = zooKeeper.getData(path, false, stat);
             return deserializeData(data);

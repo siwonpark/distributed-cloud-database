@@ -1,9 +1,6 @@
 package ecs;
 
-import logger.LogSetup;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.zookeeper.KeeperException;
 import shared.MetadataUtils;
 import shared.ZKData;
 
@@ -99,6 +96,7 @@ public class ECS {
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
 
         zkWatcher.watchNode(ZKWatcher.ROOT_PATH + "/" + node.getNodeName());
+        zkWatcher.create(ZKWatcher.ROOT_PATH + "/" + node.getNodeName() + "-server");
 
         spawnKVServer(node, cacheStrategy, cacheSize);
 
@@ -282,7 +280,6 @@ public class ECS {
         shutDown(nodeToRemove);
         broadcastMetadataAndWait();
 
-        availableNodes.add(nodeToRemove);
         return true;
     }
 
