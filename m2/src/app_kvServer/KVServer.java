@@ -177,9 +177,8 @@ public class KVServer extends Thread implements IKVServer {
 		} catch (Exception e) {
 			logger.error("Could not close server socket");
 		}
-		for(ClientConnection connection: clientConnections){
-			// We want to end all connections, even if one of the connections throws an exception
-			// when trying to terminate
+		while(clientConnections.size() > 0){
+			ClientConnection connection = clientConnections.get(0);
 			try{
 				connection.stop();
 			} catch (IOException e){
