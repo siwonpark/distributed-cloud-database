@@ -174,13 +174,17 @@ public class KVServer extends Thread implements IKVServer {
 		zkWatcher.setData();
 		try {
 			serverSocket.close();
-			for(ClientConnection connection: clientConnections){
-				logger.info(String.format("There are currently %d connections in clientConnections",
-						clientConnections.size()));
-				connection.stop();
-			}
-		} catch (Exception e){
+		} catch (Exception e) {
 			logger.error("Could not close server socket");
+		}
+		for(ClientConnection connection: clientConnections){
+			// We want to end all connections, even if one of the connections throws an exception
+			// when trying to terminate
+			try{
+				connection.stop();
+			} catch (IOException e){
+				logger.warn("A clientConnection threw an exception while trying to stop");
+			}
 		}
 		isRunning = false;
 	}
