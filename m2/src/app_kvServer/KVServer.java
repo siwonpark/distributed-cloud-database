@@ -72,6 +72,7 @@ public class KVServer extends Thread implements IKVServer {
 
 		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,false);
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
+
 		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
 		initZkWatcher();
 	}
@@ -172,6 +173,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public void shutDown(){
 		logger.info(String.format("Shutting down server %s", serverName));
+		zkWatcher.setData();
 		try {
 			serverSocket.close();
 			for(ClientConnection connection: clientConnections){
@@ -181,7 +183,6 @@ public class KVServer extends Thread implements IKVServer {
 			logger.error("Could not close server socket");
 		}
 		isRunning = false;
-		zkWatcher.setData();
 	}
 
 	/**

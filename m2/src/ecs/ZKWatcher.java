@@ -116,9 +116,10 @@ public class ZKWatcher implements Watcher {
         try {
             String path = ROOT_PATH + "/" + nodeName;
             byte[] dataBytes = serializeData(data);
-            Stat stat = zooKeeper.exists(path, false);
-            zooKeeper.setData(path, dataBytes, stat.getVersion());
             watchNode(path);
+
+            Stat stat = zooKeeper.exists(path + "-server", false);
+            zooKeeper.setData(path + "-server", dataBytes, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
         }
@@ -128,6 +129,10 @@ public class ZKWatcher implements Watcher {
         try {
             String path = ROOT_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
+            zooKeeper.delete(path, stat.getVersion());
+
+            path = ROOT_PATH + "/" + nodeName + "-server";
+            stat = zooKeeper.exists(path, false);
             zooKeeper.delete(path, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to delete znode");
