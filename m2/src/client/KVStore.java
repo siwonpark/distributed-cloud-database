@@ -20,11 +20,11 @@ public class KVStore implements KVCommInterface {
 	private Logger logger = Logger.getRootLogger();
 	private boolean running = false;
 	private CommModule commModule;
+	private CommModule dynamicCommModule;
 	private Set<ClientSocketListener> listeners;
 	private TreeMap<String, ECSNode> serverMetadata;
 	private String address;
 	private int port;
-
 
 	/**
 	 * Initialize KVStore with address and port of KVServer
@@ -57,9 +57,11 @@ public class KVStore implements KVCommInterface {
 			try {
 				commModule.disconnect();
 				setRunning(false);
+				dynamicCommModule.disconnect();
 				for(ClientSocketListener listener : listeners) {
 					listener.handleStatus(SocketStatus.DISCONNECTED);
 				}
+
 			} catch (IOException e) {
 				logger.error("Client Socket was unable to close the connection. Error: " + e);
 			}
@@ -131,8 +133,8 @@ public class KVStore implements KVCommInterface {
 	 */
 	private Message sendMessageToCorrectServer(Message msg) throws IOException {
 		connectToCorrectServer(msg);
-		commModule.sendMessage(msg);
-		Message response = commModule.receiveMessage();
+		dynamicCommModule.sendMessage(msg);
+		Message response = dynamicCommModule.receiveMessage();
 		return response;
 	}
 
@@ -144,22 +146,27 @@ public class KVStore implements KVCommInterface {
 		// If there is no previous metadata stored,
 		// We just naively send the message to the server that the
 		// User initialized, so we can return early from here
-		if(serverMetadata == null){
-			return;
+		String host;
+		int port;
+		if (serverMetadata == null) {
+			host = this.address;
+			port = this.port;
+		} else {
+			ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(msg.getKey(), serverMetadata);
+			if (responsibleServer == null) {
+				logger.error("Could not find a responsible server in the server metadata");
+				return;
+			}
+			host = responsibleServer.getNodeHost();
+			port = responsibleServer.getNodePort();
 		}
-		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(msg.getKey(), serverMetadata);
-		if(responsibleServer == null){
-			logger.error("Could not find a responsible server in the server metadata");
-			return;
+		if (dynamicCommModule != null) {
+			dynamicCommModule.disconnect();
 		}
-		String host = responsibleServer.getNodeHost();
-		int port = responsibleServer.getNodePort();
-		commModule.disconnect();
-		commModule = new CommModule(host, port);
-		this.port = port;
-		this.address = host;
-		commModule.connect();
+		dynamicCommModule = new CommModule(host, port);
+		dynamicCommModule.connect();
 	}
+
 
 	public int getPort(){
 		return this.port;
