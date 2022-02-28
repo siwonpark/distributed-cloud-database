@@ -9,6 +9,7 @@ import shared.ZKData;
 
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
@@ -37,6 +38,10 @@ public class ZKWatcher implements Watcher {
     }
 
     public ZKData deserializeData(byte[] data) throws IOException, ClassNotFoundException {
+        if (data.length == 0) {
+            logger.error("Byte array received from get was empty");
+            return null;
+        }
         try( ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ObjectInputStream in = new ObjectInputStream(bis)) {
             return (ZKData) in.readObject();
@@ -46,13 +51,21 @@ public class ZKWatcher implements Watcher {
     public boolean create() {
         try {
             String path = ROOT_PATH + "/" + nodeName;
-            Stat stat = zooKeeper.exists(path, this);
 
-            if (stat == null) {
-                zooKeeper.create(ROOT_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            zooKeeper.create(ROOT_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+
+            while (true) {
+                ZKData data = getData();
+
+                if (data != null) {
+                    logger.info("Received operation: " + data.getOperationType().toString());
+
+                    ecsCommandHandler.handleCommand(data);
+                    watchNode(path);
+                    break;
+                }
             }
 
-            zooKeeper.exists(path, this);
             return true;
         } catch (Exception e) {
             logger.error("Failed to create z-node");
@@ -61,9 +74,17 @@ public class ZKWatcher implements Watcher {
         }
     }
 
+    public void watchNode(String path) {
+        try {
+            zooKeeper.exists(path, this);
+        } catch (Exception e) {
+            logger.error("Failed to set watcher for znode");
+        }
+    }
+
     @Override
     public void process(WatchedEvent event) {
-        logger.info("WATCHER NOTIFICATION!");
+        logger.info("Watch triggered");
         if (event == null) {
             return;
         }
@@ -72,9 +93,8 @@ public class ZKWatcher implements Watcher {
         KeeperState keeperState = event.getState();
         // Event type
         EventType eventType = event.getType();
-        // Affected path
-        logger.info("Connection status:\t" + keeperState.toString());
-        logger.info("Event type:\t" + eventType.toString());
+        logger.info("Connection status: " + keeperState.toString());
+        logger.info("Event type: " + eventType.toString());
 
         if (KeeperState.SyncConnected == keeperState) {
             // Successfully connected to ZK server
@@ -84,8 +104,11 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                logger.info("Node data update");
-                ecsCommandHandler.handleCommand(getData());
+                ZKData data = getData();
+
+                logger.info("Received operation: " + data.getOperationType().toString());
+
+                ecsCommandHandler.handleCommand(data);
             }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
@@ -94,7 +117,10 @@ public class ZKWatcher implements Watcher {
 
     public void setData() {
         try {
-            zooKeeper.setData(ROOT_PATH + "/" + nodeName, new byte[0], -1);
+            String path = ROOT_PATH + "/" + nodeName;
+            Stat stat = zooKeeper.exists(path, false);
+            zooKeeper.setData(path, new byte[0], stat.getVersion());
+            watchNode(path);
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
         }
@@ -104,7 +130,7 @@ public class ZKWatcher implements Watcher {
         try {
             String path = ROOT_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
-            byte[] data = zooKeeper.getData(path, this, stat);
+            byte[] data = zooKeeper.getData(path, false, stat);
             return deserializeData(data);
         } catch (Exception e) {
             logger.error("Failed to get data for znode");

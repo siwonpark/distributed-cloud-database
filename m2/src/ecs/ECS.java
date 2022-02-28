@@ -4,7 +4,6 @@ import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
-import shared.HashUtils;
 import shared.MetadataUtils;
 import shared.ZKData;
 
@@ -49,6 +48,7 @@ public class ECS {
     }
 
     public boolean start(ECSNode node) {
+        logger.info("SENDING START to " + node.getNodeName());
         ZKData data = new ZKData(null, ZKData.OperationType.START);
         zkWatcher.setData(node.getNodeName(), data);
 
@@ -61,6 +61,7 @@ public class ECS {
     }
 
     public boolean stop(ECSNode node) {
+        logger.info("SENDING STOP to " + node.getNodeName());
         ZKData data = new ZKData(null, ZKData.OperationType.STOP);
         zkWatcher.setData(node.getNodeName(), data);
 
@@ -73,6 +74,7 @@ public class ECS {
     }
 
     public boolean shutDown(ECSNode node) {
+        logger.info("SENDING SHUTDOWN to " + node.getNodeName());
         ZKData data = new ZKData(null, ZKData.OperationType.SHUT_DOWN);
         zkWatcher.setData(node.getNodeName(), data);
 
@@ -81,6 +83,10 @@ public class ECS {
             logger.error("Did not receive acknowledgement from all nodes");
             return false;
         }
+
+        removeNodeFromHashRing(node);
+        availableNodes.add(node);
+        zkWatcher.deleteZnode(node.getNodeName());
 
         return true;
     }
@@ -109,7 +115,7 @@ public class ECS {
 
         boolean success = initServer(node);
         if (!success) {
-            logger.error("Failed to add, rolling back changes");
+            logger.error("Failed to init, rolling back changes");
             availableNodes.add(node);
             removeNodeFromHashRing(node);
             return null;
@@ -147,6 +153,7 @@ public class ECS {
     }
 
     public boolean initServer(ECSNode node) {
+        logger.info("SENDING INIT to " + node.getNodeName());
         ZKData data = new ZKData(hashRing, ZKData.OperationType.INIT);
         zkWatcher.setData(node.getNodeName(), data);
 
@@ -159,17 +166,19 @@ public class ECS {
     }
 
     public void broadcastMetadataAndWait() {
+        logger.info("BROADCASTING METADATA");
         for (Map.Entry<String, ECSNode> entry : hashRing.entrySet()) {
             ZKData data = new ZKData(hashRing, ZKData.OperationType.METADATA);
             zkWatcher.setData(entry.getValue().getNodeName(), data);
-        }
 
-        if (!awaitNodes(hashRing.size(), 10000)) {
-            logger.error("Did not receive acknowledgement from all nodes");
+            if (!awaitNodes(1, 10000)) {
+                logger.error("Did not receive acknowledgement from " + entry.getValue().getNodeName());
+            }
         }
     }
 
     public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
+        logger.info("LOCKING WRITE for " + fromNode.getNodeName());
         ZKData data = new ZKData(null, ZKData.OperationType.LOCK_WRITE);
         zkWatcher.setData(fromNode.getNodeName(), data);
 
@@ -179,6 +188,7 @@ public class ECS {
         }
 
         // Apply move command
+        logger.info("MOVING DATA from " + fromNode.getNodeName() + " to " + toNode.getNodeName());
         data = new ZKData(null, ZKData.OperationType.MOVE_DATA);
         data.setKeyStart(keyStart);
         data.setKeyEnd(keyEnd);
@@ -192,6 +202,7 @@ public class ECS {
         }
 
         // Unlock writes
+        logger.info("UNLOCKING WRITE for " + fromNode.getNodeName());
         data = new ZKData(null, ZKData.OperationType.UNLOCK_WRITE);
         zkWatcher.setData(fromNode.getNodeName(), data);
 
@@ -270,6 +281,8 @@ public class ECS {
 
         shutDown(nodeToRemove);
         broadcastMetadataAndWait();
+
+        availableNodes.add(nodeToRemove);
         return true;
     }
 
@@ -303,6 +316,7 @@ public class ECS {
     }
 
     private void addNodeToHashRing(ECSNode node) {
+        logger.info("Adding " + node.getNodeName() + " to internal hash ring");
         // find successor and predecessor
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
         ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, node);
@@ -355,6 +369,7 @@ public class ECS {
                         cacheStrategy,
                         cacheSize);
         try {
+            logger.info("SPAWNING KVSERVER: " + node.getNodeName());
             run.exec(script);
         } catch (IOException e) {
             logger.error("Could not start up KVServer through ssh");
