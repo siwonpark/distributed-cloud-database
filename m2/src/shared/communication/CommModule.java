@@ -36,7 +36,7 @@ public class CommModule implements ICommModule {
 
     @Override
     public void disconnect() throws IOException {
-        logger.info("Trying to disconnect from the socket");
+        logger.info(String.format("Trying to disconnect from the socket at port %s", port));
         if (clientSocket != null){
             input.close();
             output.close();
