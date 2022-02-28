@@ -63,9 +63,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.cacheSize = cacheSize;
 		this.strategy = strategy;
 
-		// TODO: We need to change this once we have a way to
-		// Change the server state from ECS in the tests
-		this.state = ServerState.RUNNING;
+		this.state = ServerState.STOPPED;
 		this.lockWrite = false;
 		this.serverName = serverName;
 		this.clientConnections = new ArrayList<>();
@@ -257,7 +255,7 @@ public class KVServer extends Thread implements IKVServer {
 	 */
 	public boolean isResponsibleForKey(String key){
 		if (this.metadata == null){
-			// TODO: Remove this once updates to metadata thru ECS is implemented
+			logger.error(String.format("Server %s does not have any metadata", serverName));
 			return true;
 		}
 		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, metadata);

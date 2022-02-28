@@ -57,13 +57,21 @@ public class KVStore implements KVCommInterface {
 			try {
 				commModule.disconnect();
 				setRunning(false);
-				dynamicCommModule.disconnect();
 				for(ClientSocketListener listener : listeners) {
 					listener.handleStatus(SocketStatus.DISCONNECTED);
 				}
-
 			} catch (IOException e) {
 				logger.error("Client Socket was unable to close the connection. Error: " + e);
+			}
+			// We need two try blocks here since the dynamic communication module may
+			// Be connected to a server that is removed by ECS
+			// So an IOException on disconnect may not be an actual error.
+			try{
+				if(dynamicCommModule != null) {
+					dynamicCommModule.disconnect();
+				}
+			} catch (IOException e){
+				logger.warn("The dynamic communication module was not able to be disconnected");
 			}
 		}
 	}
@@ -115,9 +123,15 @@ public class KVStore implements KVCommInterface {
 	 */
 	private Message retryMessageUntilSuccess(Message msg) throws IOException {
 		Message response = sendMessageToCorrectServer(msg);
-		while (response.getStatus() == SERVER_NOT_RESPONSIBLE){
+		// The null case should only happen if we send a retry to a server that
+		// gets taken down
+		while (response == null || response.getStatus() == SERVER_NOT_RESPONSIBLE){
 			// update metadata
-			this.serverMetadata = response.getServerMetadata();
+			if (response == null) {
+				this.serverMetadata = null;
+			} else {
+				this.serverMetadata = response.getServerMetadata();
+			}
 			response = sendMessageToCorrectServer(msg);
 		}
 		return response;
@@ -131,11 +145,19 @@ public class KVStore implements KVCommInterface {
 	 * @return The server response
 	 * @throws IOException
 	 */
-	private Message sendMessageToCorrectServer(Message msg) throws IOException {
-		connectToCorrectServer(msg);
-		dynamicCommModule.sendMessage(msg);
-		Message response = dynamicCommModule.receiveMessage();
-		return response;
+	private Message sendMessageToCorrectServer(Message msg) {
+		try {
+			connectToCorrectServer(msg);
+			dynamicCommModule.sendMessage(msg);
+			Message response = dynamicCommModule.receiveMessage();
+			return response;
+		} catch (IOException e) {
+			// When an IOException is thrown when sending the
+			// Msg to the correct server (e.g. the server we routed to was taken down),
+			// We want to set the serverMetadata to null
+			// So that can get a metadata update and try again.
+			return null;
+		}
 	}
 
 	/**
@@ -161,7 +183,11 @@ public class KVStore implements KVCommInterface {
 			port = responsibleServer.getNodePort();
 		}
 		if (dynamicCommModule != null) {
-			dynamicCommModule.disconnect();
+			try {
+				dynamicCommModule.disconnect();
+			} catch (IOException e){
+				logger.warn("The dynamicCommModule was unable to be closed.");
+			}
 		}
 		dynamicCommModule = new CommModule(host, port);
 		dynamicCommModule.connect();
