@@ -175,6 +175,8 @@ public class KVServer extends Thread implements IKVServer {
 		try {
 			serverSocket.close();
 			for(ClientConnection connection: clientConnections){
+				logger.info(String.format("There are currently %d connections in clientConnections",
+						clientConnections.size()));
 				connection.stop();
 			}
 		} catch (Exception e){
