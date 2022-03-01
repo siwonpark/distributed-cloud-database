@@ -68,7 +68,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.serverName = serverName;
 		this.clientConnections = new ArrayList<>();
 
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,false);
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,true);
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
 
 		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
