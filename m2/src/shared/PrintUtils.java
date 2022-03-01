@@ -71,8 +71,14 @@ public class PrintUtils {
         sb.append("removeNode <nodeName>");
         sb.append("\t\t\tRemove a server with nodeName from the storage service.\n");
 
+        sb.append("removeNodeIndex <index>");
+        sb.append("\t\t\tRemove a server with arbitrary index from the storage service.\n");
+
         sb.append("logLevel");
-        sb.append("\t\t\t Changes the logLevel (ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF)q \n");
+        sb.append("\t\t\t Changes the logLevel (ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF)\n");
+
+        sb.append("list");
+        sb.append("\t\t\t Lists the current nodes in the storage service \n");
 
         sb.append("help");
         sb.append("\t\t\t Prints this help message\n");
