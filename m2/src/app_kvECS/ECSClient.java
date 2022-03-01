@@ -243,7 +243,8 @@ public class ECSClient implements IECSClient {
                         String nodeName = nodes.get(nodeIndex).getNodeName();
                         nodeNames.add(nodeName);
                         if (removeNodes(nodeNames)) {
-                            printSuccess(String.format("Node %s removed successfully", nodeName));
+                            printSuccess(String.format("Node %s (Index %d) removed successfully",
+                                    nodeName, nodeIndex));
                         } else {
                             printError("Unable to remove nodes");
                         }
