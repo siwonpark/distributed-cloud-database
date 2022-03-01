@@ -92,9 +92,38 @@ public class ECSClient implements IECSClient {
         return nodesRemoved == nodeNames.size();
     }
 
+
     @Override
     public Map<String, ECSNode> getNodes() {
         return ecs.getNodes();
+    }
+
+
+    /**
+     * Return the currently managed nodes of the ECS server,
+     * as an array list
+     * @return The nodes managed by ECS
+     */
+    private ArrayList<ECSNode> getNodeList(){
+        Map<String, ECSNode> nodes = getNodes();
+        ArrayList<ECSNode> nodeList = new ArrayList<>();
+        for(Map.Entry<String, ECSNode> entry : nodes.entrySet()){
+            nodeList.add(entry.getValue());
+        }
+        return nodeList;
+    }
+
+    /**
+     * Convenience utility to list the currently active nodes in the hash ring
+     */
+    private void listNodes(){
+        Map<String, ECSNode> nodes = getNodes();
+        System.out.println("The currently active servers are: \n");
+        for(Map.Entry<String, ECSNode> entry : nodes.entrySet()){
+            ECSNode node = entry.getValue();
+            System.out.println(String.format("\t\t Name: %s, Host Address: %s, Port: %s",
+                    node.getNodeName(), node.getNodeHost(), node.getNodePort()));
+        }
     }
 
     public void run() {
@@ -191,14 +220,43 @@ public class ECSClient implements IECSClient {
                 ArrayList<String> nodeNames = new ArrayList<>();
                 nodeNames.add(nodeName);
                 if(removeNodes(nodeNames)){
-                    printSuccess("Nodes removed successfully");
+                    printSuccess(String.format("Node %s removed successfully", nodeName));
                 } else{
                     printError("Unable to remove nodes");
                 }
             } else{
                 printError("Invalid Number of Parameters! Use help to see usage");
             }
-        } else if(tokens[0].equals("logLevel")) {
+
+
+        } else if(tokens[0].equals("removeNodeIndex")) {
+            if(tokens.length == 2){
+                try {
+                    int nodeIndex = Integer.parseInt(tokens[1]);
+                    ArrayList<String> nodeNames = new ArrayList<>();
+                    ArrayList<ECSNode> nodes = getNodeList();
+                    if(nodeIndex < 0 || nodeIndex >= nodes.size()){
+                        printError("An invalid node index was given. Use 'list' to see active nodes");
+                    } else{
+                        String nodeName = nodes.get(nodeIndex).getNodeName();
+                        nodeNames.add(nodeName);
+                        if (removeNodes(nodeNames)) {
+                            printSuccess(String.format("Node %s removed successfully", nodeName));
+                        } else {
+                            printError("Unable to remove nodes");
+                        }
+                    }
+                } catch (NumberFormatException e){
+                    printError("Could not parse parameters properly");
+                }
+            } else{
+                printError("Invalid Number of Parameters! Use help to see usage");
+            }
+        }
+        else if (tokens[0].equals("list")){
+            listNodes();
+        }
+        else if(tokens[0].equals("logLevel")) {
             handleLogLevel(tokens);
         } else if(tokens[0].equals("help")) {
             printECSClientHelp();
