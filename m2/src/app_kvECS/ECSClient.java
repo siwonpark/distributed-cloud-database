@@ -119,10 +119,12 @@ public class ECSClient implements IECSClient {
     private void listNodes(){
         Map<String, ECSNode> nodes = getNodes();
         System.out.println("The currently active servers are: \n");
+        int index = 0;
         for(Map.Entry<String, ECSNode> entry : nodes.entrySet()){
             ECSNode node = entry.getValue();
-            System.out.println(String.format("\t\t Name: %s, Host Address: %s, Port: %s",
-                    node.getNodeName(), node.getNodeHost(), node.getNodePort()));
+            System.out.printf("\t\t Index: %d, Name: %s, Host Address: %s, Port: %s%n",
+                    index, node.getNodeName(), node.getNodeHost(), node.getNodePort());
+            index += 1;
         }
     }
 
