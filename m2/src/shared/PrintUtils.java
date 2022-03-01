@@ -66,7 +66,7 @@ public class PrintUtils {
         sb.append("addNodes <numberOfNodes> <cacheStrategy> <cacheSize>");
         sb.append("\t\t\t Randomly choose <numberOfNodes> servers from the available machines " +
                 "and start the KVServer by issuing an SSH call to the respective machine. " +
-                "This call launches the storage server.\n");
+                "This call launches the storage server but does not start them.\n");
 
         sb.append("removeNode <nodeName>");
         sb.append("\t\t\tRemove a server with nodeName from the storage service.\n");
