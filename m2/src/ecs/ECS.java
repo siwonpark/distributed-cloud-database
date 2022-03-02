@@ -401,7 +401,10 @@ public class ECS {
         // create root node
         zkWatcher.create("");
 
-        // Create metadata z-node
-        zkWatcher.create(ZKWatcher.COMMAND_PATH + "metadata");
+        // Create command node
+        zkWatcher.create(ZKWatcher.COMMAND_PATH);
+
+        // Create ack node
+        zkWatcher.create(ZKWatcher.ACK_PATH);
     }
 }
