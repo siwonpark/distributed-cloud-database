@@ -1,8 +1,8 @@
 package app_kvServer;
 
 import org.apache.log4j.Logger;
-import shared.ZKData;
-import shared.ZKData.OperationType;
+import shared.KVAdminMessage;
+import shared.KVAdminMessage.OperationType;
 
 public class ECSCommandHandler {
     private KVServer server;
@@ -16,7 +16,7 @@ public class ECSCommandHandler {
         this.server = server;
     }
 
-    public void handleCommand(ZKData data){
+    public void handleCommand(KVAdminMessage data){
         OperationType op = data.getOperationType();
 
         // ACKS to ECS are performed inside each individual call

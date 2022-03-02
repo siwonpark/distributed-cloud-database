@@ -2,7 +2,7 @@ package ecs;
 
 import org.apache.log4j.Logger;
 import shared.MetadataUtils;
-import shared.ZKData;
+import shared.KVAdminMessage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,15 +39,17 @@ public class ECS {
         Collections.shuffle(availableNodes);
 
         for (int i = 0; i < numberOfNodes; i++) {
-            addedNodes.add(addNode(cacheStrategy, cacheSize));
+            addedNodes.add(addNode(cacheStrategy, cacheSize, false));
         }
+
+        broadcastMetadataAndWait();
 
         return addedNodes;
     }
 
     public boolean start(ECSNode node) {
         logger.info("SENDING START to " + node.getNodeName());
-        ZKData data = new ZKData(null, ZKData.OperationType.START);
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.START);
         zkWatcher.setData(node.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -60,7 +62,7 @@ public class ECS {
 
     public boolean stop(ECSNode node) {
         logger.info("SENDING STOP to " + node.getNodeName());
-        ZKData data = new ZKData(null, ZKData.OperationType.STOP);
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.STOP);
         zkWatcher.setData(node.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -73,7 +75,7 @@ public class ECS {
 
     public boolean shutDown(ECSNode node) {
         logger.info("SENDING SHUTDOWN to " + node.getNodeName());
-        ZKData data = new ZKData(null, ZKData.OperationType.SHUT_DOWN);
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.SHUT_DOWN);
         zkWatcher.setData(node.getNodeName(), data);
 
         // KVServer should delete the path instead of sending AWK here
@@ -89,15 +91,14 @@ public class ECS {
         return true;
     }
 
-    public ECSNode addNode(String cacheStrategy, int cacheSize) {
+    public ECSNode addNode(String cacheStrategy, int cacheSize, boolean broadcastMetadata) {
         if (availableNodes.size() == 0) {
             logger.error("No available nodes to provision!");
             return null;
         }
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
 
-        zkWatcher.watchNode(ZKWatcher.ROOT_PATH + "/" + node.getNodeName());
-        zkWatcher.create(ZKWatcher.ROOT_PATH + "/" + node.getNodeName() + "-server");
+        zkWatcher.watchNode(node.getNodeName());
 
         spawnKVServer(node, cacheStrategy, cacheSize);
 
@@ -149,14 +150,16 @@ public class ECS {
         }
 
         // Update metadata
-        broadcastMetadataAndWait();
+        if (broadcastMetadata) {
+            broadcastMetadataAndWait();
+        }
 
         return node;
     }
 
     public boolean initServer(ECSNode node) {
         logger.info("SENDING INIT to " + node.getNodeName());
-        ZKData data = new ZKData(hashRing, ZKData.OperationType.INIT);
+        KVAdminMessage data = new KVAdminMessage(hashRing, KVAdminMessage.OperationType.INIT);
         zkWatcher.setData(node.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -169,19 +172,21 @@ public class ECS {
 
     public void broadcastMetadataAndWait() {
         logger.info("BROADCASTING METADATA");
-        for (Map.Entry<String, ECSNode> entry : hashRing.entrySet()) {
-            ZKData data = new ZKData(hashRing, ZKData.OperationType.METADATA);
-            zkWatcher.setData(entry.getValue().getNodeName(), data);
+        KVAdminMessage data = new KVAdminMessage(hashRing, KVAdminMessage.OperationType.METADATA);
+        // Watch all child nodes
+        for (ECSNode node : hashRing.values()) {
+            zkWatcher.watchNode(node.getNodeName());
+        }
+        zkWatcher.setData("metadata", data);
 
-            if (!awaitNodes(1, 10000)) {
-                logger.error("Did not receive acknowledgement from " + entry.getValue().getNodeName());
-            }
+        if (!awaitNodes(hashRing.size(), 10000)) {
+            logger.error("Did not receive acknowledgement from all nodes");
         }
     }
 
     public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
         logger.info("LOCKING WRITE for " + fromNode.getNodeName());
-        ZKData data = new ZKData(null, ZKData.OperationType.LOCK_WRITE);
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.LOCK_WRITE);
         zkWatcher.setData(fromNode.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -191,7 +196,7 @@ public class ECS {
 
         // Apply move command
         logger.info("MOVING DATA from " + fromNode.getNodeName() + " to " + toNode.getNodeName());
-        data = new ZKData(null, ZKData.OperationType.MOVE_DATA);
+        data = new KVAdminMessage(null, KVAdminMessage.OperationType.MOVE_DATA);
         data.setKeyStart(keyStart);
         data.setKeyEnd(keyEnd);
         data.setTargetNode(toNode);
@@ -205,7 +210,7 @@ public class ECS {
 
         // Unlock writes
         logger.info("UNLOCKING WRITE for " + fromNode.getNodeName());
-        data = new ZKData(null, ZKData.OperationType.UNLOCK_WRITE);
+        data = new KVAdminMessage(null, KVAdminMessage.OperationType.UNLOCK_WRITE);
         zkWatcher.setData(fromNode.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
@@ -393,14 +398,10 @@ public class ECS {
         zkWatcher = new ZKWatcher();
         zkWatcher.connect();
 
-        // Wait until client has connected
-        try {
-            zkWatcher.connectedSignal.await();
-        } catch (InterruptedException e) {
-            logger.error("Admin node connection failed");
-        }
+        // create root node
+        zkWatcher.create("");
 
-        // Create root z-node
-        zkWatcher.create(ZKWatcher.ROOT_PATH);
+        // Create metadata z-node
+        zkWatcher.create(ZKWatcher.COMMAND_PATH + "metadata");
     }
 }
