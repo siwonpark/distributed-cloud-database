@@ -65,7 +65,7 @@ public class KVServer extends Thread implements IKVServer {
 
 		// TODO: We need to change this once we have a way to
 		// Change the server state from ECS in the tests
-		this.state = ServerState.RUNNING;
+		this.state = ServerState.STOPPED;
 		this.lockWrite = false;
 		this.serverName = serverName;
 		this.clientConnections = new ArrayList<>();
