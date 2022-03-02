@@ -110,7 +110,7 @@ public class ZKWatcher implements Watcher {
 
     public void setData() {
         try {
-            logger.info("SENDING AWK to ECS");
+            logger.info("SENDING ACK to ECS");
             String path = ROOT_PATH + ACK_PATH + nodeName;
             Stat stat = zooKeeper.exists(path, false);
             zooKeeper.setData(path, new byte[stat.getVersion()], stat.getVersion());

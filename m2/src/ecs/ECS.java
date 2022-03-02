@@ -78,7 +78,7 @@ public class ECS {
         KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.SHUT_DOWN);
         zkWatcher.setData(node.getNodeName(), data);
 
-        // KVServer should delete the path instead of sending AWK here
+        // KVServer should delete the path instead of sending ACK here
         if (!awaitNodes(1, 10000)) {
             logger.error("Did not receive acknowledgement from all nodes");
             return false;
