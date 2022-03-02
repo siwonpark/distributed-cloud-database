@@ -84,6 +84,8 @@ public class ZKWatcher implements Watcher {
         KeeperState keeperState = event.getState();
         // Event type
         EventType eventType = event.getType();
+
+        String path = event.getPath();
         logger.info("Connection status: " + keeperState.toString());
         logger.info("Event type: " + eventType.toString());
 
@@ -95,7 +97,7 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                KVAdminMessage data = getData();
+                KVAdminMessage data = getData(path);
 
                 logger.info("Received operation: " + data.getOperationType().toString());
 
@@ -117,9 +119,8 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public KVAdminMessage getData() {
+    public KVAdminMessage getData(String path) {
         try {
-            String path = ROOT_PATH + COMMAND_PATH + nodeName;
             Stat stat = zooKeeper.exists(path, false);
             byte[] data = zooKeeper.getData(path, this, stat);
             return deserializeData(data);
