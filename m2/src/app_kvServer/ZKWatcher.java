@@ -53,8 +53,8 @@ public class ZKWatcher implements Watcher {
 
     public boolean create() {
         try {
-            watchNode(ROOT_PATH + COMMAND_PATH + nodeName);
-            watchNode(ROOT_PATH + COMMAND_PATH + "metadata");
+            watchNode(nodeName);
+            watchNode("metadata");
             zooKeeper.create(ROOT_PATH + ACK_PATH + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
             return true;
@@ -67,7 +67,7 @@ public class ZKWatcher implements Watcher {
 
     public void watchNode(String path) {
         try {
-            zooKeeper.exists(path + "-server", this);
+            zooKeeper.exists(ROOT_PATH + COMMAND_PATH + path, this);
         } catch (Exception e) {
             logger.error("Failed to set watcher for znode");
         }
