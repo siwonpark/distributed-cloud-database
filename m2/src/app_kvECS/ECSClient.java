@@ -164,121 +164,141 @@ public class ECSClient implements IECSClient {
             return;
         }
         String[] tokens = cmdLine.split("\\s+");
-        if(tokens[0].equals("quit")) {
-            stop = true;
-            try {
-                this.shutdown();
-            } catch (Exception e){
-                logger.error("Unable to shut down servers succesfully while quitting ECSClient");
+        String command = tokens[0];
+        switch (command) {
+            case "quit": {
+                stop = true;
+                try {
+                    this.shutdown();
+                } catch (Exception e){
+                    logger.error("Unable to shut down servers succesfully while quitting ECSClient");
+                }
+                System.out.println("Application exit!");
+                break;
             }
-            System.out.println("Application exit!");
-        } else if (tokens[0].equals("start")){
-            try {
-                if (this.start()) {
-                    printSuccess("Start succesfully");
-                } else {
+            case "start": {
+                try {
+                    if (this.start()) {
+                        printSuccess("Start succesfully");
+                    } else {
+                        printError("Unable to start successfully");
+                    }
+                } catch (Exception e) {
                     printError("Unable to start successfully");
                 }
-            } catch (Exception e) {
-                printError("Unable to start successfully");
-            };
-        } else  if (tokens[0].equals("stop")) {
-            try {
-                if (this.stop()) {
-                    printSuccess("Servers stopped succesfully");
-                } else {
+                break;
+            }
+            case "stop": {
+                try {
+                    if (this.stop()) {
+                        printSuccess("Servers stopped succesfully");
+                    } else {
+                        printError("Unable to stop servers");
+                    }
+                } catch (Exception e) {
                     printError("Unable to stop servers");
                 }
-            } catch (Exception e) {
-                printError("Unable to stop servers");
-            };
-        } else if (tokens[0].equals("shutDown")) {
-            try {
-                if (this.shutdown()) {
-                    printSuccess("Shut down succesfully");
-                } else {
+                break;
+            }
+            case "shutDown": {
+                try {
+                    if (this.shutdown()) {
+                        printSuccess("Shut down succesfully");
+                    } else {
+                        printError("Unable to shut down successfully");
+                    }
+                } catch (Exception e) {
                     printError("Unable to shut down successfully");
                 }
-            } catch (Exception e) {
-                printError("Unable to shut down successfully");
-            };
-        } else if(tokens[0].equals("addNode")) {
-            if(tokens.length == 3){
-                try {
-                    String cacheStrategy = tokens[1];
-                    int cacheSize = Integer.parseInt(tokens[2]);
-                    addNode(cacheStrategy, cacheSize);
-                } catch (NumberFormatException e){
-                    printError("Could not parse parameters properly");
-                }
-            } else{
-                printError("Invalid Number of Parameters! Use help to see usage");
+                break;
             }
-        }
-        else if(tokens[0].equals("addNodes")) {
-            if(tokens.length == 4){
-                try {
-                    int count = Integer.parseInt(tokens[1]);
-                    String cacheStrategy = tokens[2];
-                    int cacheSize = Integer.parseInt(tokens[3]);
-                    addNodes(count, cacheStrategy, cacheSize);
-                } catch (NumberFormatException e){
-                    printError("Could not parse parameters properly");
-                }
-            } else{
-                printError("Invalid Number of Parameters! Use help to see usage");
-            }
-        }
-        else if(tokens[0].equals("removeNode")) {
-            if(tokens.length == 2){
-                String nodeName = tokens[1];
-                ArrayList<String> nodeNames = new ArrayList<>();
-                nodeNames.add(nodeName);
-                if(removeNodes(nodeNames)){
-                    printSuccess(String.format("Node %s removed successfully", nodeName));
-                } else{
-                    printError("Unable to remove nodes");
-                }
-            } else{
-                printError("Invalid Number of Parameters! Use help to see usage");
-            }
-
-
-        } else if(tokens[0].equals("removeNodeIndex")) {
-            if(tokens.length == 2){
-                try {
-                    int nodeIndex = Integer.parseInt(tokens[1]);
-                    ArrayList<String> nodeNames = new ArrayList<>();
-                    ArrayList<ECSNode> nodes = getNodeList();
-                    if(nodeIndex < 0 || nodeIndex >= nodes.size()){
-                        printError("An invalid node index was given. Use 'list' to see active nodes");
-                    } else{
-                        String nodeName = nodes.get(nodeIndex).getNodeName();
-                        nodeNames.add(nodeName);
-                        if (removeNodes(nodeNames)) {
-                            printSuccess(String.format("Node %s (Index %d) removed successfully",
-                                    nodeName, nodeIndex));
-                        } else {
-                            printError("Unable to remove nodes");
-                        }
+            case "addNode": {
+                if(tokens.length == 3){
+                    try {
+                        String cacheStrategy = tokens[1];
+                        int cacheSize = Integer.parseInt(tokens[2]);
+                        addNode(cacheStrategy, cacheSize);
+                    } catch (NumberFormatException e){
+                        printError("Could not parse parameters properly");
                     }
-                } catch (NumberFormatException e){
-                    printError("Could not parse parameters properly");
+                } else{
+                    printError("Invalid Number of Parameters! Use help to see usage");
                 }
-            } else{
-                printError("Invalid Number of Parameters! Use help to see usage");
+                break;
             }
-        }
-        else if (tokens[0].equals("list")){
-            listNodes();
-        }
-        else if(tokens[0].equals("logLevel")) {
-            handleLogLevel(tokens);
-        } else if(tokens[0].equals("help")) {
-            printECSClientHelp();
-        } else {
-            printError("Unknown command");
-            printECSClientHelp();
+            case "addNodes": {
+                if (tokens.length == 4) {
+                    try {
+                        int count = Integer.parseInt(tokens[1]);
+                        String cacheStrategy = tokens[2];
+                        int cacheSize = Integer.parseInt(tokens[3]);
+                        addNodes(count, cacheStrategy, cacheSize);
+                    } catch (NumberFormatException e){
+                        printError("Could not parse parameters properly");
+                    }
+                } else{
+                    printError("Invalid Number of Parameters! Use help to see usage");
+                }
+                break;
+            }
+            case "removeNode": {
+                if(tokens.length == 2){
+                    String nodeName = tokens[1];
+                    ArrayList<String> nodeNames = new ArrayList<>();
+                    nodeNames.add(nodeName);
+                    if(removeNodes(nodeNames)){
+                        printSuccess(String.format("Node %s removed successfully", nodeName));
+                    } else{
+                        printError("Unable to remove nodes");
+                    }
+                } else{
+                    printError("Invalid Number of Parameters! Use help to see usage");
+                }
+                break;
+            }
+            case "removeNodeIndex": {
+                if(tokens.length == 2){
+                    try {
+                        int nodeIndex = Integer.parseInt(tokens[1]);
+                        ArrayList<String> nodeNames = new ArrayList<>();
+                        ArrayList<ECSNode> nodes = getNodeList();
+                        if(nodeIndex < 0 || nodeIndex >= nodes.size()){
+                            printError("An invalid node index was given. Use 'list' to see active nodes");
+                        } else{
+                            String nodeName = nodes.get(nodeIndex).getNodeName();
+                            nodeNames.add(nodeName);
+                            if (removeNodes(nodeNames)) {
+                                printSuccess(String.format("Node %s (Index %d) removed successfully",
+                                        nodeName, nodeIndex));
+                            } else {
+                                printError("Unable to remove nodes");
+                            }
+                        }
+                    } catch (NumberFormatException e){
+                        printError("Could not parse parameters properly");
+                    }
+                } else{
+                    printError("Invalid Number of Parameters! Use help to see usage");
+                }
+                break;
+            }
+            case "list": {
+                listNodes();
+                break;
+            }
+            case "logLevel": {
+                handleLogLevel(tokens);
+                break;
+            }
+            case "help": {
+                printECSClientHelp();
+                break;
+            }
+            default: {
+                printError("Unknown command");
+                printECSClientHelp();
+                break;
+            }
         }
     }
 
