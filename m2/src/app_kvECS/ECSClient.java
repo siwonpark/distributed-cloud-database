@@ -39,6 +39,10 @@ public class ECSClient implements IECSClient {
         for (ECSNode node: ecs.hashRing.values()) {
             success = ecs.start(node);
         }
+
+        if (success) {
+            ecs.serviceRunning = true;
+        }
         return success;
     }
 
@@ -47,6 +51,10 @@ public class ECSClient implements IECSClient {
         boolean success = true;
         for (ECSNode node: ecs.hashRing.values()) {
             success = ecs.stop(node);
+        }
+
+        if (success) {
+            ecs.serviceRunning = false;
         }
         return success;
     }
@@ -57,6 +65,10 @@ public class ECSClient implements IECSClient {
         boolean success = true;
         for (ECSNode node: nodes) {
             success = ecs.shutDown(node);
+        }
+
+        if (success) {
+            ecs.serviceRunning = false;
         }
         return success;
     }

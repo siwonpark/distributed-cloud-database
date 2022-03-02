@@ -17,6 +17,7 @@ public class ECS {
     public TreeMap<String, ECSNode> hashRing = new TreeMap<>();
     private ArrayList<ECSNode> availableNodes;
     private ZKWatcher zkWatcher;
+    public boolean serviceRunning = false;
 
     public ECS(String configFilePath) {
         // Start ZK server
@@ -119,12 +120,15 @@ public class ECS {
             return null;
         }
 
-        success = start(node);
-        if (!success) {
-            logger.error("Failed to start, rolling back changes");
-            availableNodes.add(node);
-            removeNodeFromHashRing(node);
-            return null;
+        // Only auto start the nodes if the service is already running
+        if (serviceRunning) {
+            success = start(node);
+            if (!success) {
+                logger.error("Failed to start, rolling back changes");
+                availableNodes.add(node);
+                removeNodeFromHashRing(node);
+                return null;
+            }
         }
 
         // Move data if successor exists
