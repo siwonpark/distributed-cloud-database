@@ -68,11 +68,11 @@ public class PrintUtils {
                 "and start the KVServer by issuing an SSH call to the respective machine. " +
                 "This call launches the storage server but does not start them.\n");
 
-        sb.append("removeNode <nodeName>");
-        sb.append("\t\t\tRemove a server with nodeName from the storage service.\n");
-
-        sb.append("removeNodeIndex <index>");
+        sb.append("removeNode <index>");
         sb.append("\t\t\tRemove a server with arbitrary index from the storage service.\n");
+
+        sb.append("removeNodeName <nodeName>");
+        sb.append("\t\t\tRemove a server with nodeName from the storage service.\n");
 
         sb.append("logLevel");
         sb.append("\t\t\t Changes the logLevel (ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF)\n");

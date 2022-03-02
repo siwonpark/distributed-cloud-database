@@ -228,7 +228,7 @@ public class ECSClient implements IECSClient {
                 printError("Invalid Number of Parameters! Use help to see usage");
             }
         }
-        else if(tokens[0].equals("removeNode")) {
+        else if(tokens[0].equals("removeNodeName")) {
             if(tokens.length == 2){
                 String nodeName = tokens[1];
                 ArrayList<String> nodeNames = new ArrayList<>();
@@ -243,7 +243,7 @@ public class ECSClient implements IECSClient {
             }
 
 
-        } else if(tokens[0].equals("removeNodeIndex")) {
+        } else if(tokens[0].equals("removeNode")) {
             if(tokens.length == 2){
                 try {
                     int nodeIndex = Integer.parseInt(tokens[1]);
