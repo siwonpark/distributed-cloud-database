@@ -96,7 +96,7 @@ public class ClientConnection implements Runnable {
 		StatusType responseStatus;
 		String key = message.getKey();
 		String value = message.getValue();
-		logger.info(server.getServerState());
+		logger.info("SERVER STATE IS: " + server.getServerState());
 
 		if(message.getStatus() == StatusType.DATA_MIGRATION){
 			// If this is a data migration message
