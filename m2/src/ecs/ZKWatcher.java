@@ -116,7 +116,6 @@ public class ZKWatcher implements Watcher {
 
             Stat stat = zooKeeper.exists(path, false);
             if (stat == null) {
-                create(path);
                 stat = zooKeeper.exists(path, false);
             }
             watchNode(nodeName);

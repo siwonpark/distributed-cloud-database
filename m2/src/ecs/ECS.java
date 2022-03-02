@@ -99,6 +99,7 @@ public class ECS {
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
 
         zkWatcher.watchNode(node.getNodeName());
+        zkWatcher.create(ZKWatcher.COMMAND_PATH + "/" + node.getNodeName());
 
         spawnKVServer(node, cacheStrategy, cacheSize);
 
@@ -403,6 +404,9 @@ public class ECS {
 
         // Create command node
         zkWatcher.create(ZKWatcher.COMMAND_PATH);
+
+        // Create metadata node
+        zkWatcher.create(ZKWatcher.COMMAND_PATH + "/metadata");
 
         // Create ack node
         zkWatcher.create(ZKWatcher.ACK_PATH);
