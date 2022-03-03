@@ -10,23 +10,26 @@ public class DataBase {
     private BTree b = null;
     private static DataBase instance = null;
 
-    static DBConfig config;
     LinkedHashMap<String, Node> cache = null;
 
     private DataBase(boolean recoverFromDisk) {
         if (recoverFromDisk) {
             b = FileOp.loadTree();
-        }
-        if (b == null) {
+            if (b == null){
+                FileOp.deleteTree();
+                b = FileOp.newTree();
+            }
+        }else{
             FileOp.deleteTree();
             b = FileOp.newTree();
         }
 
-        if (config.cacheType == DBConfig.CacheType.LRU) {
+
+        if (DBConfig.getInstance().cacheType == DBConfig.CacheType.LRU) {
             cache = LRUCache.getInstance();
-        } else if (config.cacheType == DBConfig.CacheType.FIFO) {
+        } else if (DBConfig.getInstance().cacheType == DBConfig.CacheType.FIFO) {
             cache = FIFOCache.getInstance();
-        } else if (config.cacheType == DBConfig.CacheType.LFU) {
+        } else if (DBConfig.getInstance().cacheType == DBConfig.CacheType.LFU) {
             cache = LFUCache.getInstance();
         } else {
             cache = null;
@@ -35,10 +38,8 @@ public class DataBase {
 
 
     public static DataBase initInstance(int cacheSize, String strategy, String dbName, boolean recoverFromDisk) {
-        if (DataBase.instance == null) {
-            DataBase.config = DBConfig.initInstance(cacheSize, strategy, dbName);
-            DataBase.instance = new DataBase(recoverFromDisk);
-        }
+        DBConfig.initInstance(cacheSize, strategy, dbName);
+        DataBase.instance = new DataBase(recoverFromDisk);
         return DataBase.instance;
     }
 
@@ -59,9 +60,9 @@ public class DataBase {
      * write the cache to disk.
      */
     public void dumpCache() {
-        if (config.cacheType == DBConfig.CacheType.None) {
+        if (DBConfig.getInstance().cacheType == DBConfig.CacheType.None) {
             assert true;
-        } else if (config.cacheType == DBConfig.CacheType.LFU) {
+        } else if (DBConfig.getInstance().cacheType == DBConfig.CacheType.LFU) {
             ((LFUCache) cache).dumpCache();
         } else {
             for (Map.Entry<String, Node> entry : cache.entrySet()) {
@@ -75,9 +76,9 @@ public class DataBase {
      */
     public void clearCache() {
         dumpCache();
-        if (config.cacheType == DBConfig.CacheType.None) {
+        if (DBConfig.getInstance().cacheType == DBConfig.CacheType.None) {
             assert true;
-        } else if (config.cacheType == DBConfig.CacheType.LFU) {
+        } else if (DBConfig.getInstance().cacheType == DBConfig.CacheType.LFU) {
             ((LFUCache) cache).myClear();
         } else {
             cache.clear();
@@ -90,7 +91,6 @@ public class DataBase {
     public void deleteHistory() {
         clearCache();
         FileOp.deleteTree();
-        b = FileOp.newTree();
     }
 
     /**
