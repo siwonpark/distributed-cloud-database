@@ -41,7 +41,9 @@ public class DBConfig {
     }
 
     public static DBConfig initInstance(int cacheSize, String strategy, String dbName) {
-        DBConfig.instance = new DBConfig(cacheSize, strategy, dbName);
+        if (DBConfig.instance == null) {
+            DBConfig.instance = new DBConfig(cacheSize, strategy, dbName);
+        }
         return DBConfig.instance;
     }
 

@@ -14,16 +14,15 @@ public class FIFOCache extends LinkedHashMap<String, Node> {
     @Override
     protected boolean removeEldestEntry(Map.Entry<String, Node> eldest) {
         boolean removeIt = size() > size;
-        if (removeIt) {
+        if(removeIt){
             FileOp.dumpFile(eldest.getValue());
         }
         return removeIt;
     }
 
-    private static FIFOCache cache;
+    private final static FIFOCache cache = new FIFOCache();
 
     public static FIFOCache getInstance() {
-        cache = new FIFOCache();
         return cache;
     }
 }

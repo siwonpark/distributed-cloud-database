@@ -20,10 +20,9 @@ public class LRUCache extends LinkedHashMap<String, Node> {
         return removeIt;
     }
 
-    private static LRUCache cache;
+    private final static LRUCache cache = new LRUCache();
 
     public static LRUCache getInstance() {
-        cache = new LRUCache();
         return cache;
     }
 
