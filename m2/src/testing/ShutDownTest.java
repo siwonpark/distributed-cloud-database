@@ -3,7 +3,7 @@ package testing;
 import ecs.ECSNode;
 import junit.framework.TestCase;
 
-import static testing.AllTests.ecsServer;
+import static testing.AllTests.ecs;
 
 public class ShutDownTest extends TestCase {
     /**
@@ -18,13 +18,7 @@ public class ShutDownTest extends TestCase {
         Exception ex = null;
         boolean success = true;
         try {
-            ECSNode[] nodes = ecsServer.hashRing.values().toArray(new ECSNode[0]);
-
-            for (ECSNode node: nodes) {
-                if(!ecsServer.shutDown(node)) {
-                    success = false;
-                }
-            }
+            ecs.shutdown();
         } catch (Exception e){
             ex = e;
         }

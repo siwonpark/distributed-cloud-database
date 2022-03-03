@@ -1,13 +1,6 @@
 package testing;
 
-import ecs.ECS;
-import ecs.ECSNode;
 import junit.framework.TestCase;
-import org.junit.Test;
-
-import java.util.HashSet;
-
-import static testing.AllTests.ecsServer;
 
 public class ECSTest extends TestCase {
 //    @Test
