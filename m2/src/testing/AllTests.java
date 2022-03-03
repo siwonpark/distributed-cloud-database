@@ -49,8 +49,8 @@ public class AllTests {
 		clientSuite.addTestSuite(AdditionalTest.class);
 		clientSuite.addTestSuite(CLITest.class);
 		clientSuite.addTestSuite(LoadTest.class);
-//        //Commenting out until we figure out how to test with zookeeper
-//        clientSuite.addTestSuite(ECSTest.class);
+        //Commenting out until we figure out how to test with zookeeper
+        clientSuite.addTestSuite(ECSTest.class);
         return clientSuite;
     }
 
