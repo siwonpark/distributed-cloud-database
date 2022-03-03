@@ -78,6 +78,9 @@ public class KVStore implements KVCommInterface {
 
 	@Override
 	public KVMessage put(String key, String value) throws Exception {
+		if(!isRunning()){
+			throw new RuntimeException("KVStore not connected!");
+		}
 		// Note, this PUT operation works as DELETE if value is null.
 		logger.info(String.format("Putting value %s into key %s", key, value));
 		Message msg = new Message(key, value, KVMessage.StatusType.PUT);
@@ -93,6 +96,9 @@ public class KVStore implements KVCommInterface {
 
 	@Override
 	public KVMessage get(String key) throws Exception {
+		if(!isRunning()){
+			throw new RuntimeException("KVStore not connected!");
+		}
 		logger.info(String.format("Getting key %s", key));
 		Message msg = new Message(key, null, KVMessage.StatusType.GET);
 		try {

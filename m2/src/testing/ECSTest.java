@@ -35,26 +35,4 @@ public class ECSTest extends TestCase {
 //
 //        assertTrue(visited.containsAll(ecs.hashRing.keySet()));
 //    }
-
-
-    /**
-     * Test that the ECSServer can shut down
-     */
-    public void testShutDown() {
-        Exception ex = null;
-        boolean success = true;
-        try {
-            ECSNode[] nodes = ecsServer.hashRing.values().toArray(new ECSNode[0]);
-
-            for (ECSNode node: nodes) {
-                if(!ecsServer.shutDown(node)) {
-                    success = false;
-                }
-            }
-        } catch (Exception e){
-            ex = e;
-        }
-        assertNull(ex);
-        assertTrue(success);
-    }
 }
