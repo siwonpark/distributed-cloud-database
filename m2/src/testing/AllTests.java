@@ -27,13 +27,9 @@ public class AllTests {
 		try {
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-            logger.error("1");
             ecsServer = new ECS("src/testing/ecs.config");
-            logger.error("2");
             ArrayList<IECSNode> nodes =  ecsServer.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
-            logger.error("3");
             for(IECSNode node : nodes){
-               logger.error("4");
                ecsServer.start((ECSNode) node);
             }
 

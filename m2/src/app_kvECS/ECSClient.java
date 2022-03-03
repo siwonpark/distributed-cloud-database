@@ -64,7 +64,9 @@ public class ECSClient implements IECSClient {
         ECSNode[] nodes = ecs.hashRing.values().toArray(new ECSNode[0]);
         boolean success = true;
         for (ECSNode node: nodes) {
-            success = ecs.shutDown(node);
+            if(!ecs.shutDown(node)){
+                success = false;
+            };
         }
 
         if (success) {
