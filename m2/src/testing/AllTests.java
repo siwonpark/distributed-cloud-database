@@ -1,10 +1,12 @@
 package testing;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 import ecs.ECS;
 import ecs.ECSNode;
+import ecs.IECSNode;
 import org.apache.log4j.Level;
 
 import app_kvServer.KVServer;
@@ -19,20 +21,20 @@ public class AllTests {
     public static final String CACHE_STRATEGY = "FIFO";
     public static final int CACHE_SIZE = 5;
     public static ECS ecsServer;
+    private static Logger logger = Logger.getRootLogger();
 
 	static {
 		try {
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-            System.out.println("1");
+            logger.error("1");
             ecsServer = new ECS("src/testing/ecs.config");
-            System.out.println("2");
-            ecsServer.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
-            System.out.println("3");
-            for(Map.Entry<String, ECSNode> entry : ecsServer.getNodes().entrySet()){
-                System.out.println("4");
-                ECSNode node = entry.getValue();
-                ecsServer.start(node);
+            logger.error("2");
+            ArrayList<IECSNode> nodes =  ecsServer.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
+            logger.error("3");
+            for(IECSNode node : nodes){
+               logger.error("4");
+               ecsServer.start((ECSNode) node);
             }
 
 		} catch (IOException e) {
