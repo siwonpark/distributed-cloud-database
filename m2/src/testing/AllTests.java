@@ -11,6 +11,7 @@ import app_kvServer.KVServer;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import logger.LogSetup;
+import org.apache.log4j.Logger;
 import persistence.DataBase;
 
 public class AllTests {
@@ -23,9 +24,13 @@ public class AllTests {
 		try {
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
+            System.out.println("1");
             ecsServer = new ECS("src/testing/ecs.config");
+            System.out.println("2");
             ecsServer.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
+            System.out.println("3");
             for(Map.Entry<String, ECSNode> entry : ecsServer.getNodes().entrySet()){
+                System.out.println("4");
                 ECSNode node = entry.getValue();
                 ecsServer.start(node);
             }
