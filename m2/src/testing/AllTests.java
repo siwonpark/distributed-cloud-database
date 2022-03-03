@@ -2,6 +2,7 @@ package testing;
 
 import java.io.IOException;
 
+import ecs.ECS;
 import org.apache.log4j.Level;
 
 import app_kvServer.KVServer;
@@ -14,22 +15,18 @@ public class AllTests {
     public static final int PORT = 50000;
     public static final String CACHE_STRATEGY = "FIFO";
     public static final int CACHE_SIZE = 5;
+    public static ECS ecsServer;
 
-//	static {
-//		try {
-//			/* Refresh data directory when running tests */
-//			new LogSetup("logs/testing/test.log", Level.ERROR);
-//
-//
-//			new KVServer(PORT, "127.0.0.1", "1", 2, CACHE_STRATEGY,
-//					CACHE_SIZE).start();
-//
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-//	}
+	static {
+		try {
+			/* Refresh data directory when running tests */
+			new LogSetup("logs/testing/test.log", Level.ERROR);
+            ecsServer = new ECS("src/testing/ecs.config");
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 
     public static Test suite() {
