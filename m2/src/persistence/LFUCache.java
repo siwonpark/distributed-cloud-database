@@ -67,17 +67,16 @@ public class LFUCache extends LinkedHashMap<String, Node> {
         }
     }
 
-    public void myClear() {
+    public void myClear(){
         timestamp = 0;
         size = 0;
         hashmap.clear();
         queue.clear();
     }
 
-    private static LFUCache cache;
+    private final static LFUCache cache = new LFUCache();
 
     public static LFUCache getInstance() {
-        cache = new LFUCache();
         return cache;
     }
 

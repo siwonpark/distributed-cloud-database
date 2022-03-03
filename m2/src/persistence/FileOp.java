@@ -16,6 +16,7 @@ public class FileOp {
     final static int fileNameLength = 20;
     final static Random random = new Random();
     final static int charNum = 26 + 26 + 10;
+    final static DBConfig config = DBConfig.getInstance();
 
     private FileOp() {
     }
@@ -68,7 +69,7 @@ public class FileOp {
         String name;
         name = genFileName();
         try {
-            OutputStream output = new FileOutputStream(DBConfig.getInstance().filePath + name);
+            OutputStream output = new FileOutputStream(config.filePath + name);
             if (type == FileType.INDEX) {
                 output.write(0);
             } else if (type == FileType.DATA) {
@@ -119,7 +120,7 @@ public class FileOp {
     }
 
     /**
-     * create a node in memory from a disk file, find the node in cache first
+     * create a node in memory from a disk file, TODO: find the node in cache first, or add the node to the cache
      */
     public static Node loadFile(String name) {
         logger.trace("load file " + name);
@@ -127,10 +128,10 @@ public class FileOp {
             return DataBase.getInstance().cache.get(name);
         } else {
             try {
-                InputStream input = new FileInputStream(DBConfig.getInstance().filePath + name);
+                InputStream input = new FileInputStream(config.filePath + name);
                 int t = input.read();
                 if (t == 0) {
-                    IndexNode node = new IndexNode(name, FileType.INDEX, DBConfig.getInstance().maxNumber);
+                    IndexNode node = new IndexNode(name, FileType.INDEX, config.maxNumber);
                     for (node.number = 0; ; node.number++) {
                         String s = readLine(input);
                         if (s == null)
@@ -145,7 +146,7 @@ public class FileOp {
 
                     return node;
                 } else {
-                    DataNode node = new DataNode(name, FileType.DATA, DBConfig.getInstance().maxNumber);
+                    DataNode node = new DataNode(name, FileType.DATA, config.maxNumber);
                     String s_lef = readLine(input);
                     String s_rig = readLine(input);
                     node.left = "".equals(s_lef) ? null : s_lef;
@@ -185,7 +186,7 @@ public class FileOp {
         DataBase.getInstance().cache.put(node.name, node);
         if (writeDisk) {
             try {
-                OutputStream output = new FileOutputStream(DBConfig.getInstance().filePath + node.name);
+                OutputStream output = new FileOutputStream(config.filePath + node.name);
                 if (node.type == FileType.INDEX) {
                     IndexNode bn = (IndexNode) node;
                     output.write(0);
@@ -218,9 +219,9 @@ public class FileOp {
      * Load the tree information from the file and rebuild an instance of BTree
      */
     public static BTree loadTree() {
-        logger.debug(DBConfig.getInstance().filePath);
+        logger.debug(config.filePath);
         try {
-            InputStream input = new FileInputStream(DBConfig.getInstance().filePath + "treeinfo");
+            InputStream input = new FileInputStream(config.filePath + "treeinfo");
             String root = readLine(input);
             String maxNumerString = readLine(input);
             if (maxNumerString == null) {
@@ -240,9 +241,9 @@ public class FileOp {
      */
     public static boolean dumpTree(BTree b) {
         try {
-            OutputStream ouput = new FileOutputStream(DBConfig.getInstance().filePath + "treeinfo");
+            OutputStream ouput = new FileOutputStream(config.filePath + "treeinfo");
             writeLine(ouput, b.root);
-            writeLine(ouput, Integer.toString(DBConfig.getInstance().maxNumber));
+            writeLine(ouput, Integer.toString(config.maxNumber));
             return true;
         } catch (IOException e) {
             logger.error("Can't load the tree information!");
@@ -256,7 +257,7 @@ public class FileOp {
     public static boolean deleteDirectory(String dir) {
         File dirFile = new File(dir);
         if (!dirFile.exists() || !dirFile.isDirectory()) {
-            logger.debug("this tree doesn't exist!");
+            logger.error("this tree doesn't exist!");
             return false;
         }
         File[] files = dirFile.listFiles();
@@ -264,13 +265,13 @@ public class FileOp {
             if (files[i].isFile()) {
                 boolean flag = files[i].delete();
                 if (!flag) {
-                    logger.debug("Can't delete the tree due to IOException!");
+                    logger.error("Can't delete the tree due to IOException!");
                     return false;
                 }
             } else {
                 boolean flag = deleteDirectory(files[i].toString());
                 if (!flag) {
-                    logger.debug("Can't delete the tree due to IOException!");
+                    logger.error("Can't delete the tree due to IOException!");
                     return false;
                 }
             }
@@ -286,11 +287,11 @@ public class FileOp {
      * Delete all information of a BTree from disk
      */
     public static boolean deleteTree() {
-        return deleteDirectory(DBConfig.getInstance().filePath);
+        return deleteDirectory(config.filePath);
     }
 
     public static BTree newTree() {//make a new tree
-        File filePath = new File(DBConfig.getInstance().filePath);
+        File filePath = new File(config.filePath);
         if (!filePath.exists()) {
             filePath.mkdirs();
         }
