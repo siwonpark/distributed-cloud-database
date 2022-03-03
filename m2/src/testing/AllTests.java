@@ -1,8 +1,10 @@
 package testing;
 
 import java.io.IOException;
+import java.util.Map;
 
 import ecs.ECS;
+import ecs.ECSNode;
 import org.apache.log4j.Level;
 
 import app_kvServer.KVServer;
@@ -22,6 +24,11 @@ public class AllTests {
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
             ecsServer = new ECS("src/testing/ecs.config");
+            ecsServer.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
+            for(Map.Entry<String, ECSNode> entry : ecsServer.getNodes().entrySet()){
+                ECSNode node = entry.getValue();
+                ecsServer.start(node);
+            }
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -34,13 +41,13 @@ public class AllTests {
         clientSuite.addTestSuite(DataBasePutGetTest.class);
         clientSuite.addTestSuite(CacheTest.class);
         clientSuite.addTestSuite(DataBaseReBootTest.class);
-//		clientSuite.addTestSuite(ConnectionTest.class);
-//		clientSuite.addTestSuite(InteractionTest.class);
-//		clientSuite.addTestSuite(AdditionalTest.class);
-//		clientSuite.addTestSuite(CLITest.class);
-//		clientSuite.addTestSuite(LoadTest.class);
+		clientSuite.addTestSuite(ConnectionTest.class);
+		clientSuite.addTestSuite(InteractionTest.class);
+		clientSuite.addTestSuite(AdditionalTest.class);
+		clientSuite.addTestSuite(CLITest.class);
+		clientSuite.addTestSuite(LoadTest.class);
         //Commenting out until we figure out how to test with zookeeper
-        //clientSuite.addTestSuite(ECSTest.class);
+        clientSuite.addTestSuite(ECSTest.class);
         return clientSuite;
     }
 
