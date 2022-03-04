@@ -3,6 +3,7 @@ package testing;
 import ecs.ECSNode;
 import junit.framework.TestCase;
 
+import static persistence.FileOp.deleteDirectory;
 import static testing.AllTests.ecs;
 
 public class ShutDownTest extends TestCase {
@@ -19,6 +20,9 @@ public class ShutDownTest extends TestCase {
         boolean success = true;
         try {
             ecs.shutdown();
+            // Delete the data directory so no data persists
+            String path = System.getProperty("user.dir");
+            deleteDirectory(path);
         } catch (Exception e){
             ex = e;
         }
