@@ -75,6 +75,8 @@ public class EnronPerformanceTest extends TestCase {
         putKeys.add("AnInitialKey");
 
         long durationNanos = 0;
+        long shutdownDurationNanos = 0;
+        long startupDurationNanos = 0;
         final int NUM_OPS = 10000;
         final int NUM_CLIENTS = 1;
         final int NUM_SERVERS = 1;
@@ -86,9 +88,11 @@ public class EnronPerformanceTest extends TestCase {
         final int GETS_PER_PUT = 5;
         int opsPerClient = NUM_OPS / NUM_CLIENTS;
 
+        long startTime = System.nanoTime();
         ArrayList<IECSNode> nodesAdded = (ArrayList<IECSNode>)
                 ecs.addNodes(NUM_SERVERS, CACHE_STRATEGY, CACHE_SIZE);
         ecs.start();
+        startupDurationNanos = System.nanoTime() - startTime;
 
 
         for(int i = 0 ; i < NUM_CLIENTS; i++){
@@ -104,14 +108,14 @@ public class EnronPerformanceTest extends TestCase {
                 long duration;
                 if (currOp % GETS_PER_PUT == 0) {
                     String value = enronData.get(key);
-                    long startTime = System.nanoTime();
+                    startTime = System.nanoTime();
                     client.put(key, value);
                     duration = System.nanoTime() - startTime;
                     numPuts += 1;
                     putKeys.add(key);
                 } else {
                     String keyToGet = putKeys.get(numGets % putKeys.size());
-                    long startTime = System.nanoTime();
+                    startTime = System.nanoTime();
                     client.get(keyToGet);
                     duration = System.nanoTime() - startTime;
                     numGets += 1;
@@ -127,7 +131,15 @@ public class EnronPerformanceTest extends TestCase {
                 currOp, numPuts, numGets, durationMillis, durationMillis / currOp, currOp / (float)durationMillis * 1000);
         logger.info(result);
 
+        startTime = System.nanoTime();
         ecs.shutdown();
+        shutdownDurationNanos = System.nanoTime() - startTime;
+
+        long shutdownDurationMillis = TimeUnit.NANOSECONDS.toMillis(shutdownDurationNanos);
+        long startupDurationMillis = TimeUnit.NANOSECONDS.toMillis(startupDurationNanos);
+
+        logger.info(String.format("For %d nodes, ECS Took %d ms to add," +
+                " and %d ms to remove.", NUM_SERVERS, startupDurationMillis, shutdownDurationMillis));
     }
 
 
