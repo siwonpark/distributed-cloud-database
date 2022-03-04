@@ -5,6 +5,8 @@ import ecs.ECSNode;
 import junit.framework.TestCase;
 import java.util.*;
 import shared.HashUtils;
+import shared.messages.KVMessage;
+
 import static testing.AllTests.*;
 
 
@@ -102,6 +104,39 @@ public class ECSTest extends TestCase {
             }
 
         } catch (Exception e)  {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    public void testStart() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // try making request
+            KVMessage response = kvClient.put("test", "hello");
+
+            assertEquals(KVMessage.StatusType.SERVER_STOPPED, response.getStatus());
+
+            // start server
+            ecs.start();
+
+            // try making request
+            response = kvClient.put("test", "hello");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+        } catch (Exception e) {
             ex = e;
         }
 
