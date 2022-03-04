@@ -10,7 +10,7 @@ import shared.messages.KVMessage.StatusType;
 import java.util.Arrays;
 
 import static shared.PrintUtils.DELETE_STRING;
-import static testing.AllTests.PORT;
+import static testing.AllTests.port;
 
 
 public class InteractionTest extends TestCase {
@@ -18,7 +18,7 @@ public class InteractionTest extends TestCase {
 	private KVStore kvClient;
 	
 	public void setUp() {
-		kvClient = new KVStore("localhost", PORT);
+		kvClient = new KVStore("localhost", port);
 		try {
 			kvClient.connect();
 		} catch (Exception e) {

@@ -51,10 +51,10 @@ public class AllTests {
         clientSuite.addTestSuite(CacheTest.class);
         clientSuite.addTestSuite(DataBaseReBootTest.class);
 		clientSuite.addTestSuite(ConnectionTest.class);
-//		clientSuite.addTestSuite(InteractionTest.class);
-//		clientSuite.addTestSuite(AdditionalTest.class);
-//		clientSuite.addTestSuite(CLITest.class);
-//		clientSuite.addTestSuite(LoadTest.class);
+		clientSuite.addTestSuite(InteractionTest.class);
+		clientSuite.addTestSuite(AdditionalTest.class);
+		clientSuite.addTestSuite(CLITest.class);
+		clientSuite.addTestSuite(LoadTest.class);
 		clientSuite.addTestSuite(ECSTest.class);
         // We *NEED* this to be the last test in the suite!!!!!
         clientSuite.addTestSuite(ShutDownTest.class);
