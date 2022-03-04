@@ -19,13 +19,7 @@ public class BTree {
      * @return the leftmost node's name
      */
     public String getLeft() {
-        try {
-            return FileOp.loadFile(this.root).refreshLeft();
-        } catch (Exception e) {
-            logger.error("FAILURE IN GET LEFT");
-            logger.error(e.getMessage());
-            return null;
-        }
+        return FileOp.loadFile(this.root).refreshLeft();
     }
 
     /**
