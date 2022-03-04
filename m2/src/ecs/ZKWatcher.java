@@ -19,7 +19,7 @@ public class ZKWatcher implements Watcher {
     static String ACK_PATH = "/ecs/ack";
     static String COMMAND_PATH = "/ecs/command";
     static String ZK_HOST = "localhost";
-    static int ZK_PORT = 2200;
+    static int ZK_PORT = 2181;
     public CountDownLatch connectedSignal = new CountDownLatch(1);
     public CountDownLatch awaitSignal;
 
