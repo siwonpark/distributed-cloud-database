@@ -126,7 +126,7 @@ public class ECSTest extends TestCase {
             kvClient.connect();
 
             // try making request
-            KVMessage response = kvClient.put("test", "hello");
+            KVMessage response = kvClient.put("testStart", "hello");
 
             assertEquals(KVMessage.StatusType.SERVER_STOPPED, response.getStatus());
 
@@ -134,7 +134,7 @@ public class ECSTest extends TestCase {
             ecs.start();
 
             // try making request
-            response = kvClient.put("test", "hello");
+            response = kvClient.put("testStart", "hello");
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
         } catch (Exception e) {
             ex = e;
@@ -162,7 +162,7 @@ public class ECSTest extends TestCase {
             kvClient.connect();
 
             // try making request
-            KVMessage response = kvClient.put("test", "hello");
+            KVMessage response = kvClient.put("testStop", "hello");
 
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
 
@@ -170,7 +170,7 @@ public class ECSTest extends TestCase {
             ecs.stop();
 
             // try making request
-            response = kvClient.get("test");
+            response = kvClient.get("testStop");
             assertEquals(KVMessage.StatusType.SERVER_STOPPED, response.getStatus());
         } catch (Exception e) {
             ex = e;
