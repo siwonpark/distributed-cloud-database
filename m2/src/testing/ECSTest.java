@@ -1,17 +1,10 @@
 package testing;
 
-import app_kvClient.KVClient;
-import app_kvServer.KVServer;
-import client.KVCommInterface;
 import client.KVStore;
-import ecs.ECS;
 import ecs.ECSNode;
 import junit.framework.TestCase;
-
 import java.util.*;
-
 import shared.HashUtils;
-
 import static testing.AllTests.*;
 
 
@@ -83,15 +76,15 @@ public class ECSTest extends TestCase {
 
             // add a key that newNode is responsible for
             int num = 5;
-
-            while (true) {
-                if (newNode.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
-                    kvClient.put(String.valueOf(num), String.valueOf(num));
-                    addedKeys.add(String.valueOf(num));
-                    break;
-                }
-                num++;
-            }
+//
+//            while (true) {
+//                if (newNode.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
+//                    kvClient.put(String.valueOf(num), String.valueOf(num));
+//                    addedKeys.add(String.valueOf(num));
+//                    break;
+//                }
+//                num++;
+//            }
 
             // disconnect kvClient
             kvClient.disconnect();
