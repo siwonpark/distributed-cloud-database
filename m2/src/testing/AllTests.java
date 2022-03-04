@@ -49,6 +49,7 @@ public class AllTests {
         run.exec(script);
     }
 
+
     public static Test suite() {
         TestSuite clientSuite = new TestSuite("Basic Storage ServerTest-Suite");
         clientSuite.addTestSuite(DataBasePutGetTest.class);
@@ -60,10 +61,9 @@ public class AllTests {
 		clientSuite.addTestSuite(CLITest.class);
 		clientSuite.addTestSuite(LoadTest.class);
 //        //Commenting out until we figure out how to test with zookeeper
-        clientSuite.addTestSuite(ECSTest.class);
+		clientSuite.addTestSuite(ECSTest.class);
         // We *NEED* this to be the last test in the suite!!!!!
         clientSuite.addTestSuite(ShutDownTest.class);
-
         return clientSuite;
     }
 
