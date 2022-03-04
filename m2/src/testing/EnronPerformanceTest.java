@@ -117,8 +117,8 @@ public class EnronPerformanceTest extends TestCase {
 
         long durationMillis = TimeUnit.NANOSECONDS.toMillis(durationNanos);
         String result = String.format("The server did %d iterations (%d puts, %d gets) in %d milliseconds" +
-                        "This is a latency of %d ms per operation and a throughput of %f operations/s",
-                NUM_OPS + GETS_PER_PUT * NUM_OPS , NUM_OPS, GETS_PER_PUT * NUM_OPS, durationMillis, durationMillis / NUM_OPS, NUM_OPS / (float)durationMillis * 1000);
+                        "This is a latency of %d ms per operation",
+                NUM_OPS + GETS_PER_PUT * NUM_OPS , NUM_OPS, GETS_PER_PUT * NUM_OPS, durationMillis, durationMillis / NUM_OPS);
         logger.info(result);
 
         startTime = System.nanoTime();
