@@ -143,4 +143,40 @@ public class ECSTest extends TestCase {
 
         assertNull(ex);
     }
+
+    public void testStop() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // try making request
+            KVMessage response = kvClient.put("test", "hello");
+
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+
+            // stop server
+            ecs.stop();
+
+            // try making request
+            response = kvClient.get("test");
+            assertEquals(KVMessage.StatusType.SERVER_STOPPED, response.getStatus());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
 }
