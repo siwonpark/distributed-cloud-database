@@ -169,7 +169,8 @@ public class ECSClient implements IECSClient {
      */
     private void listNodes(){
         Map<String, ECSNode> nodes = getNodes();
-        System.out.println("The currently active servers are: \n");
+        String running = ecs.serviceRunning? "STARTED" : "STOPPED";
+        System.out.printf("The service is currently %s. The currently active servers are: \n", running);
         int index = 0;
         for(Map.Entry<String, ECSNode> entry : nodes.entrySet()){
             ECSNode node = entry.getValue();
@@ -256,6 +257,7 @@ public class ECSClient implements IECSClient {
                         String cacheStrategy = tokens[1];
                         int cacheSize = Integer.parseInt(tokens[2]);
                         addNode(cacheStrategy, cacheSize);
+                        listNodes();
                     } catch (NumberFormatException e){
                         printError("Could not parse parameters properly");
                     }
@@ -271,6 +273,7 @@ public class ECSClient implements IECSClient {
                         String cacheStrategy = tokens[2];
                         int cacheSize = Integer.parseInt(tokens[3]);
                         addNodes(count, cacheStrategy, cacheSize);
+                        listNodes();
                     } catch (NumberFormatException e){
                         printError("Could not parse parameters properly");
                     }
@@ -286,6 +289,7 @@ public class ECSClient implements IECSClient {
                     nodeNames.add(nodeName);
                     if(removeNodes(nodeNames)){
                         printSuccess(String.format("Node %s removed successfully", nodeName));
+                        listNodes();
                     } else{
                         printError("Unable to remove nodes");
                     }
@@ -308,6 +312,7 @@ public class ECSClient implements IECSClient {
                             if (removeNodes(nodeNames)) {
                                 printSuccess(String.format("Node %s (Index %d) removed successfully",
                                         nodeName, nodeIndex));
+                                listNodes();
                             } else {
                                 printError("Unable to remove nodes");
                             }
