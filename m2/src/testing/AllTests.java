@@ -31,8 +31,8 @@ public class AllTests {
 			new LogSetup("logs/testing/test.log", Level.INFO);
             File ecsConfigFile = new File("src/testing/ecs.config");
             ecs = new ECSClient(ecsConfigFile);
-//            ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
-//            ecs.start();
+            ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
+            ecs.start();
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -63,7 +63,7 @@ public class AllTests {
 //        //Commenting out until we figure out how to test with zookeeper
 		clientSuite.addTestSuite(ECSTest.class);
         // We *NEED* this to be the last test in the suite!!!!!
-       //clientSuite.addTestSuite(ShutDownTest.class);
+        clientSuite.addTestSuite(ShutDownTest.class);
         return clientSuite;
     }
 
