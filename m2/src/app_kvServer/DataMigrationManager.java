@@ -24,12 +24,6 @@ public class DataMigrationManager implements Runnable {
 
 
     public DataMigrationManager(ECSNode destServer, String[] migrationHashRange, DataBase db, ZKWatcher zkWatcher){
-        logger.info("CONSTRUCTOR");
-        try {
-            logger.info(migrationHashRange[0]);
-        } catch (Exception e) {
-            logger.error("EXCPETGIEJSTOEWJWTN");
-        }
         this.destServer = destServer;
         this.migrationHashRangeStart = migrationHashRange[0];
         this.migrationHashRangeEnd = migrationHashRange[1];
@@ -39,7 +33,6 @@ public class DataMigrationManager implements Runnable {
 
     @Override
     public void run() {
-        logger.info("MIGRATION STARTED");
         commModule = new CommModule(destServer.getNodeHost(), destServer.getNodePort());
         try {
             commModule.connect();
@@ -50,11 +43,7 @@ public class DataMigrationManager implements Runnable {
         }
 
         // Delete null values before performing migration
-        try {
-            db.batchDeleteNull();
-        } catch (Exception e) {
-            logger.error("Batch delete failed");
-        }
+        db.batchDeleteNull();
         /*
          * An arraylist of the data to migrate.
          * At the inner level, ArrayList<String> is an array of two

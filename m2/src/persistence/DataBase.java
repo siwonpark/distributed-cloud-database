@@ -125,7 +125,12 @@ public class DataBase {
      * batch delete all the null values in the DataBase
      * */
     public void batchDeleteNull() {
-        DataNode node = (DataNode) FileOp.loadFile(b.getLeft());
+        DataNode node = null;
+        try {
+            node = (DataNode) FileOp.loadFile(b.getLeft());
+        } catch (Exception e) {
+            System.out.println("EXCEPTION 1");
+        }
         ArrayList<ArrayList<String>> data = new ArrayList<>();
         int null_num = 0;
         while (node != null) {
@@ -139,11 +144,21 @@ public class DataBase {
                     null_num += 1;
                 }
             }
+            try {
+
             node = (DataNode) FileOp.loadFile(node.right);
+            } catch (Exception e) {
+                System.out.println("EXCEPTION 2");
+            }
         }
 
         if ((float) null_num / (float) data.size() > 0.5) {//rebuild the tree if necessary
+            try {
+
             this.deleteHistory();
+            } catch (Exception e) {
+                System.out.println("EXCEPTION 3");
+            }
             for (ArrayList<String> i : data) {
                 this.put(i.get(0), i.get(1));
             }
