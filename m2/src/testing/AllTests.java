@@ -27,7 +27,7 @@ public class AllTests {
 	static {
 		try {
 			/* Refresh data directory when running tests */
-			new LogSetup("logs/testing/test.log", Level.INFO);
+			new LogSetup("logs/testing/test.log", Level.ERROR);
             File ecsConfigFile = new File("src/testing/ecs.config");
             ecs = new ECSClient(ecsConfigFile);
             ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
@@ -52,7 +52,7 @@ public class AllTests {
 //        //Commenting out until we figure out how to test with zookeeper
 //        clientSuite.addTestSuite(ECSTest.class);
         // We *NEED* this to be the last test in the suite!!!!!
-        clientSuite.addTestSuite(EnronPerformanceTest.class);
+        clientSuite.addTestSuite(ShutDownTest.class);
 
         return clientSuite;
     }

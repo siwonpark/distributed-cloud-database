@@ -27,15 +27,6 @@ public class EnronPerformanceTest extends TestCase {
     public final int[] numServers = {1, 5, 20, 50, 100};
     private Logger logger = Logger.getRootLogger();
 
-    @Before
-    public void setUp(){
-
-    }
-
-    @After
-    public void tearDown(){
-
-    }
 
     private HashMap<String, String> loadEnronData(int numEntries){
         HashMap<String, String> data = new HashMap<>();
@@ -141,10 +132,4 @@ public class EnronPerformanceTest extends TestCase {
         logger.info(String.format("For %d nodes, ECS Took %d ms to add," +
                 " and %d ms to remove.", NUM_SERVERS, startupDurationMillis, shutdownDurationMillis));
     }
-
-
-
-
-
-
 }
