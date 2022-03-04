@@ -33,6 +33,7 @@ public class DataMigrationManager implements Runnable {
 
     @Override
     public void run() {
+        logger.info("MIGRATION STARTED");
         commModule = new CommModule(destServer.getNodeHost(), destServer.getNodePort());
         try {
             commModule.connect();
