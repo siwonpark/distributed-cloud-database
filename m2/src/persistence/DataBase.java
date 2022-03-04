@@ -144,6 +144,7 @@ public class DataBase {
 
         if ((float) null_num / (float) data.size() > 0.5) {//rebuild the tree if necessary
             this.deleteHistory();
+			b = FileOp.newTree();
             for (ArrayList<String> i : data) {
                 this.put(i.get(0), i.get(1));
             }
