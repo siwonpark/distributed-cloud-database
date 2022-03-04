@@ -66,7 +66,7 @@ public class EnronPerformanceTest extends TestCase {
 
     @Test
     public void testPerformance() throws Exception {
-        File configFile = new File("src/testing/ecs.config");
+        File configFile = new File("src/testing/performancetest.config");
         ECSClient ecs = new ECSClient(configFile);
         ArrayList<KVStore> clients = new ArrayList<>();
         HashMap<String, String> enronData = loadEnronData(10500);
