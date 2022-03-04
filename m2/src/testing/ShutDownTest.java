@@ -1,10 +1,6 @@
 package testing;
 
-import ecs.ECSNode;
 import junit.framework.TestCase;
-
-import java.io.IOException;
-
 import static testing.AllTests.ecs;
 
 public class ShutDownTest extends TestCase {
@@ -28,5 +24,4 @@ public class ShutDownTest extends TestCase {
         assertNull(ex);
         assertTrue(success);
     }
-
 }
