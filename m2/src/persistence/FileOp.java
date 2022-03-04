@@ -186,7 +186,9 @@ public class FileOp {
      */
     public static boolean dumpFile(Node node, boolean writeDisk) {
         logger.trace("dump file " + node.name);
-        DataBase.getInstance().cache.put(node.name, node);
+        if (DataBase.getInstance().cache != null) {
+            DataBase.getInstance().cache.put(node.name, node);
+        }
         if (writeDisk) {
             try {
                 OutputStream output = new FileOutputStream(DBConfig.getInstance().filePath + node.name);
