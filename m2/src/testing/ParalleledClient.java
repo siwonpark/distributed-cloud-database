@@ -5,12 +5,14 @@ import client.KVStore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 public class ParalleledClient implements Runnable{
     KVStore client;
     EnronPerformanceTest caller;
     HashMap<String, String> data;
     List<String> keys;
+    Random rand = new Random(); //instance of random class
 
     public ParalleledClient(KVStore client,
                             EnronPerformanceTest EnronPerformanceTest,
@@ -34,22 +36,24 @@ public class ParalleledClient implements Runnable{
         long duration;
         long durationNanos = 0;
         ArrayList<String> putKeys = new ArrayList<>();
+
         putKeys.add("AnInitialKey");
 
 
         for(String key: keys){
-            if(currOp % caller.GETS_PER_PUT == 0){
-                String value = data.get(key);
-                startTime = System.nanoTime();
-                try {
-                    client.put(key, value);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                putKeys.add(key);
-                duration = System.nanoTime() - startTime;
-            } else{
-                String keyToGet = putKeys.get(currOp % putKeys.size());
+            String value = data.get(key);
+            startTime = System.nanoTime();
+            try {
+                client.put(key, value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            putKeys.add(key);
+            duration = System.nanoTime() - startTime;
+            durationNanos += duration;
+            for(int j = 0; j < caller.GETS_PER_PUT; j++ ) {
+                int random = rand.nextInt(caller.NUM_OPS);
+                String keyToGet = putKeys.get(random % putKeys.size());
                 startTime = System.nanoTime();
                 try {
                     client.get(keyToGet);
@@ -57,9 +61,8 @@ public class ParalleledClient implements Runnable{
                     e.printStackTrace();
                 }
                 duration = System.nanoTime() - startTime;
+                durationNanos += duration;
             }
-            durationNanos += duration;
-            currOp += 1;
         }
         caller.incrementDuration(durationNanos);
     }
