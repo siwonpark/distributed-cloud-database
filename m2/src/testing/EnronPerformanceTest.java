@@ -39,6 +39,7 @@ public class EnronPerformanceTest extends TestCase {
         HashMap<String, String> data = new HashMap<>();
         File enronData = new File(ENRON_DATA_PATH);
         int counter = 0;
+        System.out.println(ENRON_DATA_PATH);
         for (File email: enronData.listFiles()){
             try{
                 Scanner reader = new Scanner(email);
