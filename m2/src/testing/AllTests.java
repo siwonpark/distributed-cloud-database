@@ -1,6 +1,7 @@
 package testing;
 
 import app_kvECS.ECSClient;
+import ecs.ECSNode;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import logger.LogSetup;
@@ -13,10 +14,10 @@ import java.io.IOException;
 
 
 public class AllTests {
-    public static final int PORT = 50237;
     public static final String CACHE_STRATEGY = "FIFO";
     public static final int CACHE_SIZE = 5;
     public static ECSClient ecs;
+    public static int port;
     private static Logger logger = Logger.getRootLogger();
 
 	static {
@@ -26,7 +27,8 @@ public class AllTests {
 			new LogSetup("logs/testing/test.log", Level.ERROR);
             File ecsConfigFile = new File("src/testing/ecs.config");
             ecs = new ECSClient(ecsConfigFile);
-            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+            ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+            port = node.getNodePort();
             ecs.start();
 
 		} catch (IOException e) {
@@ -49,10 +51,10 @@ public class AllTests {
         clientSuite.addTestSuite(CacheTest.class);
         clientSuite.addTestSuite(DataBaseReBootTest.class);
 		clientSuite.addTestSuite(ConnectionTest.class);
-		clientSuite.addTestSuite(InteractionTest.class);
-		clientSuite.addTestSuite(AdditionalTest.class);
-		clientSuite.addTestSuite(CLITest.class);
-		clientSuite.addTestSuite(LoadTest.class);
+//		clientSuite.addTestSuite(InteractionTest.class);
+//		clientSuite.addTestSuite(AdditionalTest.class);
+//		clientSuite.addTestSuite(CLITest.class);
+//		clientSuite.addTestSuite(LoadTest.class);
 		clientSuite.addTestSuite(ECSTest.class);
         // We *NEED* this to be the last test in the suite!!!!!
         clientSuite.addTestSuite(ShutDownTest.class);
