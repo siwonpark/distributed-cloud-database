@@ -69,22 +69,29 @@ public class EnronPerformanceTest extends TestCase {
         File configFile = new File("src/testing/ecs.config");
         ECSClient ecs = new ECSClient(configFile);
         ArrayList<KVStore> clients = new ArrayList<>();
-        HashMap<String, String> enronData = loadEnronData(10000);
+        HashMap<String, String> enronData = loadEnronData(10500);
         ArrayList<String> keys = new ArrayList<>(enronData.keySet());
         ArrayList<String> putKeys = new ArrayList<>();
         putKeys.add("AnInitialKey");
 
         long durationNanos = 0;
-        int numOps = 0;
+        final int NUM_OPS = 10000;
+        final int NUM_CLIENTS = 1;
+        final int NUM_SERVERS = 1;
+        final int CACHE_SIZE = 20;
+        final String CACHE_STRATEGY = "FIFO";
+        int currOp = 0;
         int numPuts = 0;
         int numGets = 0;
-        int opsPerClient = 500;
+        final int GETS_PER_PUT = 5;
+        int opsPerClient = NUM_OPS / NUM_CLIENTS;
 
-        ArrayList<IECSNode> nodesAdded = (ArrayList<IECSNode>) ecs.addNodes(1, "FIFO", 20);
+        ArrayList<IECSNode> nodesAdded = (ArrayList<IECSNode>)
+                ecs.addNodes(NUM_SERVERS, CACHE_STRATEGY, CACHE_SIZE);
         ecs.start();
 
 
-        for(int i = 0 ; i < 1; i++){
+        for(int i = 0 ; i < NUM_CLIENTS; i++){
             int serverToConnect = nodesAdded.get(i % nodesAdded.size()).getNodePort();
             KVStore kvClient = new KVStore("localhost", serverToConnect);
             kvClient.connect();
@@ -93,9 +100,9 @@ public class EnronPerformanceTest extends TestCase {
 
         for(KVStore client: clients) {
             for (int i = 0; i < opsPerClient; i++){
-                String key = keys.get(numOps);
+                String key = keys.get(currOp);
                 long duration;
-                if (numOps % 2 == 0) {
+                if (currOp % GETS_PER_PUT == 0) {
                     String value = enronData.get(key);
                     long startTime = System.nanoTime();
                     client.put(key, value);
@@ -110,14 +117,14 @@ public class EnronPerformanceTest extends TestCase {
                     numGets += 1;
                 }
                 durationNanos += duration;
-                numOps += 1;
+                currOp += 1;
             }
         }
 
         long durationMillis = TimeUnit.NANOSECONDS.toMillis(durationNanos);
         String result = String.format("The server did %d iterations (%d puts, %d gets) in %d milliseconds" +
                         "This is a latency of %d ms per operation and a throughput of %f operations/s",
-                numOps, numPuts, numGets, durationMillis, durationMillis / numOps, numOps / (float)durationMillis * 1000);
+                currOp, numPuts, numGets, durationMillis, durationMillis / currOp, currOp / (float)durationMillis * 1000);
         logger.info(result);
 
         ecs.shutdown();
