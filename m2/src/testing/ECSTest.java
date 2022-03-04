@@ -2,6 +2,7 @@ package testing;
 
 import client.KVStore;
 import ecs.ECSNode;
+import ecs.IECSNode;
 import junit.framework.TestCase;
 import java.util.*;
 import shared.HashUtils;
@@ -173,6 +174,54 @@ public class ECSTest extends TestCase {
             response = kvClient.get("testStop");
             assertEquals(KVMessage.StatusType.SERVER_STOPPED, response.getStatus());
         } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    public void testClientServerRetry() {
+        Exception ex = null;
+        ArrayList<String> addedKeys = new ArrayList<>();
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add 3 nodes
+        IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client and connect to one node
+            KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+            kvClient.connect();
+
+            HashSet<Integer> needed = new HashSet<>(Arrays.asList(0, 1, 2));
+            int num = 100;
+
+            // populate datastore until all nodes responsible for at least one key
+            while (!needed.isEmpty()) {
+                for (int index: needed) {
+                    ECSNode node = (ECSNode) addedNodes[index];
+                    if (node.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
+                        kvClient.put(String.valueOf(num), String.valueOf(num));
+                        addedKeys.add(String.valueOf(num));
+                        needed.remove(index);
+                    }
+                }
+
+                num++;
+            }
+
+            // check that we can still get all keys we added even when not connected to the other servers
+            for (String key: addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+        } catch (Exception e)  {
             ex = e;
         }
 
