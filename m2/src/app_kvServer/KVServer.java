@@ -73,10 +73,6 @@ public class KVServer extends Thread implements IKVServer {
 
 		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
 		initZkWatcher();
-
-		String rootPath = System.getProperty("user.dir");
-
-		logger.info(rootPath + "/data");
 	}
 
 	private void initZkWatcher() throws InterruptedException {

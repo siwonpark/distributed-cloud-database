@@ -39,7 +39,6 @@ public class AllTests {
         String rootPath = System.getProperty("user.dir");
 
         logger.info("Deleting data dir");
-        System.out.println(rootPath + "/data");
         FileOp.deleteDirectory(rootPath + "/data");
     }
 
