@@ -48,7 +48,7 @@ public class AllTests {
 //        //Commenting out until we figure out how to test with zookeeper
 //        clientSuite.addTestSuite(ECSTest.class);
 		// We *NEED* this to be the last test in the suite!!!!!
-
+		clientSuite.addTestSuite(ShutDownTest.class);
 		return clientSuite;
 	}
 
