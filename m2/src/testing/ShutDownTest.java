@@ -19,6 +19,7 @@ public class ShutDownTest extends TestCase {
         boolean success = true;
         try {
             ecs.shutdown();
+            deleteDataDir();
         } catch (Exception e){
             ex = e;
         }
