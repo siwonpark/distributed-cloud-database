@@ -18,7 +18,7 @@ public class ZKWatcher implements Watcher {
     private Logger logger = Logger.getRootLogger();
     static String ROOT_PATH = "/ecs";
     static String ZK_HOST = "localhost";
-    static int ZK_PORT = 2181;
+    static int ZK_PORT = 2200;
     public CountDownLatch connectedSignal = new CountDownLatch(1);
     public CountDownLatch awaitSignal;
 
