@@ -17,7 +17,7 @@ public class ECSTest extends TestCase {
 
     @Override
     protected void tearDown(){
-        ecs.shutdown();
+        // ecs.shutdown();
 //        ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
 //        ecs.start();
     }
