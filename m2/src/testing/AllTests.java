@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 
 
 public class AllTests {
-    public static final int PORT = 50000;
+    public static final int PORT = 50235;
     public static final String CACHE_STRATEGY = "FIFO";
     public static final int CACHE_SIZE = 5;
     public static ECSClient ecs;
