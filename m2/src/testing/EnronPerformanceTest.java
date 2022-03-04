@@ -71,18 +71,20 @@ public class EnronPerformanceTest extends TestCase {
         ArrayList<KVStore> clients = new ArrayList<>();
         HashMap<String, String> enronData = loadEnronData(10000);
         ArrayList<String> keys = new ArrayList<>(enronData.keySet());
+        ArrayList<String> putKeys = new ArrayList<>();
+        putKeys.add("AnInitialKey");
 
         long durationNanos = 0;
         int numOps = 0;
         int numPuts = 0;
         int numGets = 0;
-        int opsPerClient = 100;
+        int opsPerClient = 500;
 
         ArrayList<IECSNode> nodesAdded = (ArrayList<IECSNode>) ecs.addNodes(1, "FIFO", 20);
         ecs.start();
 
 
-        for(int i = 0 ; i < 2; i++){
+        for(int i = 0 ; i < 1; i++){
             int serverToConnect = nodesAdded.get(i % nodesAdded.size()).getNodePort();
             KVStore kvClient = new KVStore("localhost", serverToConnect);
             kvClient.connect();
@@ -90,9 +92,8 @@ public class EnronPerformanceTest extends TestCase {
         }
 
         for(KVStore client: clients) {
-            String key = keys.get(numOps);
-
             for (int i = 0; i < opsPerClient; i++){
+                String key = keys.get(numOps);
                 long duration;
                 if (numOps % 2 == 0) {
                     String value = enronData.get(key);
@@ -100,9 +101,11 @@ public class EnronPerformanceTest extends TestCase {
                     client.put(key, value);
                     duration = System.nanoTime() - startTime;
                     numPuts += 1;
+                    putKeys.add(key);
                 } else {
+                    String keyToGet = putKeys.get(numGets % putKeys.size());
                     long startTime = System.nanoTime();
-                    client.get(key);
+                    client.get(keyToGet);
                     duration = System.nanoTime() - startTime;
                     numGets += 1;
                 }
