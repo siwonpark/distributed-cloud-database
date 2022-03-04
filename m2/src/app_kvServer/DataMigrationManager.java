@@ -80,7 +80,13 @@ public class DataMigrationManager implements Runnable {
                 db.put(key, null);
             }
             // We want to remove the keys that were migrated
-            db.batchDeleteNull(logger);
+            try {
+                db.batchDeleteNull(logger);
+            } catch (Exception e) {
+                logger.error("SECOND BATCH DELETE NULL");
+                logger.error(e.getStackTrace());
+            }
+
             // Send ACK to Zookeeper
             zkWatcher.setData();
         }
