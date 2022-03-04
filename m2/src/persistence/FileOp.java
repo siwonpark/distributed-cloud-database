@@ -141,7 +141,9 @@ public class FileOp {
                     node.size = input.available();
                     input.close();
 
-                    DataBase.getInstance().cache.put(node.name, node);
+                    if (DataBase.getInstance().cache != null) {
+                        DataBase.getInstance().cache.put(node.name, node);
+                    }
 
                     return node;
                 } else {
@@ -160,7 +162,9 @@ public class FileOp {
                     node.size = input.available();
                     input.close();
 
-                    DataBase.getInstance().cache.put(node.name, node);
+                    if (DataBase.getInstance().cache != null) {
+                        DataBase.getInstance().cache.put(node.name, node);
+                    }
 
                     return node;
                 }
