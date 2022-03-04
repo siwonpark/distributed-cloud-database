@@ -1,9 +1,6 @@
 package testing;
 
 import junit.framework.TestCase;
-import persistence.FileOp;
-
-import static java.lang.Thread.sleep;
 import static testing.AllTests.ecs;
 
 public class ShutDownTest extends TestCase {
@@ -20,20 +17,11 @@ public class ShutDownTest extends TestCase {
         boolean success = true;
         try {
             ecs.shutdown();
-            sleep(5000);
-            deleteDataDir();
         } catch (Exception e){
             ex = e;
         }
 
         assertNull(ex);
         assertTrue(success);
-    }
-
-    // Delete the data directory if it exists
-    private static void deleteDataDir() {
-        String rootPath = System.getProperty("user.home");
-        boolean a = FileOp.deleteDirectory(rootPath + "/data");
-        System.out.println(a);
     }
 }
