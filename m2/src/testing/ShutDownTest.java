@@ -22,7 +22,6 @@ public class ShutDownTest extends TestCase {
             ecs.shutdown();
             // Delete the data directory so no data persists
             String path = System.getProperty("user.dir");
-            deleteDirectory(path);
         } catch (Exception e){
             ex = e;
         }

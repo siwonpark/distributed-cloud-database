@@ -41,8 +41,14 @@ public class InteractionTest extends TestCase {
 			response = kvClient.put(key, value);
 		} catch (Exception e) {
 			ex = e;
+		} finally{
+			// Delete the key after the test so subsequent runs don't get affected
+			try {
+				kvClient.put(key, null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-
 		assertTrue(ex == null && response.getStatus() == StatusType.PUT_SUCCESS);
 	}
 	
