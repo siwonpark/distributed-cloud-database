@@ -52,10 +52,11 @@ public class ECSTest extends TestCase {
         ArrayList<String> addedKeys = new ArrayList<>();
 
         // start with no nodes
-        ecs.shutdown();
+        boolean worked = ecs.shutdown();
 
-//        // add initial node
-//        ECSNode initialNode = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        System.out.println(worked);
+        // add initial node
+        ECSNode initialNode = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
 //
 //        // start service
 //        ecs.start();
