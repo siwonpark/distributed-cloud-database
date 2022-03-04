@@ -30,7 +30,7 @@ public class ShutDownTest extends TestCase {
 
     // Delete the data directory if it exists
     private static void deleteDataDir() {
-        String rootPath = System.getProperty("user.dir");
+        String rootPath = System.getProperty("user.home");
         FileOp.deleteDirectory(rootPath + "/data");
     }
 }
