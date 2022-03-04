@@ -71,8 +71,8 @@ public class ECSTest extends TestCase {
                 addedKeys.add(String.valueOf(i));
             }
 
-//            // add new node
-//            ECSNode newNode = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+            // add new node
+            ECSNode newNode = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
 //
 //            // add a key that newNode is responsible for
 //            int num = 5;
