@@ -77,7 +77,7 @@ public class ECSClient implements IECSClient {
 
     @Override
     public IECSNode addNode(String cacheStrategy, int cacheSize) {
-        return ecs.addNode(cacheStrategy, cacheSize);
+        return ecs.addNode(cacheStrategy, cacheSize, true);
     }
 
     @Override
