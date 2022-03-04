@@ -26,7 +26,6 @@ public class AllTests {
 
 	static {
 		try {
-            deleteDataDir();
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
             File ecsConfigFile = new File("src/testing/ecs.config");
@@ -38,16 +37,6 @@ public class AllTests {
 			e.printStackTrace();
 		}
 	}
-
-    // Delete the data directory if it exists
-    private static void deleteDataDir() throws IOException {
-        Runtime run = Runtime.getRuntime();
-        String rootPath = System.getProperty("user.dir");
-
-        String script = String.format("rm -rf %s/data", rootPath);
-        logger.info("Deleting data dir");
-        run.exec(script);
-    }
 
 
     public static Test suite() {
