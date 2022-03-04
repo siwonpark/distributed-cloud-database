@@ -123,7 +123,7 @@ public class FileOp {
      */
     public static Node loadFile(String name) {
         logger.trace("load file " + name);
-        if (DataBase.getInstance().cache.containsKey(name)) {
+        if (DataBase.getInstance().cache != null && DataBase.getInstance().cache.containsKey(name)) {
             return DataBase.getInstance().cache.get(name);
         } else {
             try {
