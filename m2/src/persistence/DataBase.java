@@ -130,7 +130,7 @@ public class DataBase {
         try {
             node = (DataNode) FileOp.loadFile(b.getLeft());
         } catch (Exception e) {
-            logger.info("EXCEPTION 1");
+            logger.error("EXCEPTION 1");
             logger.info(e.getMessage());
             logger.info(b);
             logger.info(b.getLeft());
@@ -139,20 +139,25 @@ public class DataBase {
         int null_num = 0;
         while (node != null) {
             for (int i = 0; i < node.number; i++) {
-                if (node.values[i] != null) {
-                    ArrayList<String> tmp = new ArrayList<>();
-                    tmp.add(node.keys[i]);
-                    tmp.add(node.values[i]);
-                    data.add(tmp);
-                } else {
-                    null_num += 1;
+                try {
+                    if (node.values[i] != null) {
+                        ArrayList<String> tmp = new ArrayList<>();
+                        tmp.add(node.keys[i]);
+                        tmp.add(node.values[i]);
+                        data.add(tmp);
+                    } else {
+                        null_num += 1;
+                    }
+                } catch (Exception e) {
+                    logger.error("EXCEPTIOON values");
                 }
+
             }
             try {
 
             node = (DataNode) FileOp.loadFile(node.right);
             } catch (Exception e) {
-                logger.info("EXCEPTION 2");
+                logger.error("EXCEPTION 2");
             }
         }
 
@@ -161,10 +166,14 @@ public class DataBase {
 
             this.deleteHistory();
             } catch (Exception e) {
-                logger.info("EXCEPTION 3");
+                logger.error("EXCEPTION 3");
             }
-            for (ArrayList<String> i : data) {
-                this.put(i.get(0), i.get(1));
+            try {
+                for (ArrayList<String> i : data) {
+                    this.put(i.get(0), i.get(1));
+                }
+            } catch (Exception e) {
+                logger.error("EXCEPTION 4");
             }
         }
     }
