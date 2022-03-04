@@ -7,6 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+/*
+    This class is for use in performance tests, to
+    emulate multiple concurrent client operations.
+    Meant to be run in a separate thread, and each thread
+    will put/get some number of keys.
+
+ */
 public class ParalleledClient implements Runnable{
     KVStore client;
     EnronPerformanceTest caller;

@@ -15,6 +15,11 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * Test performance of storage service
+ * There are a number of constants that can be adjusted to try different storage
+ * service configurations, such as number of clients, number of servers, etc.
+ */
 public class EnronPerformanceTest extends TestCase {
 
     /**
