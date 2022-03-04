@@ -214,24 +214,21 @@ public class ECSTest extends TestCase {
             kvClient.connect();
 
             HashSet<Integer> needed = new HashSet<>(Arrays.asList(0, 1, 2));
+            Iterator<Integer> iter = needed.iterator();
             int num = 100;
 
             // populate datastore until all nodes responsible for at least one key
-            try {
-                while (!needed.isEmpty()) {
-                    for (int index: needed) {
-                        ECSNode node = (ECSNode) addedNodes[index];
-                        if (node.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
-                            kvClient.put(String.valueOf(num), String.valueOf(num));
-                            addedKeys.add(String.valueOf(num));
-                            needed.remove(index);
-                        }
+            while (iter.hasNext()) {
+                for (int index: needed) {
+                    ECSNode node = (ECSNode) addedNodes[index];
+                    if (node.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
+                        kvClient.put(String.valueOf(num), String.valueOf(num));
+                        addedKeys.add(String.valueOf(num));
+                        iter.remove();
                     }
-
-                    num++;
                 }
-            } catch (Exception e) {
-                System.out.println("CATCHED CONCURRENT MOD");
+
+                num++;
             }
 
 
