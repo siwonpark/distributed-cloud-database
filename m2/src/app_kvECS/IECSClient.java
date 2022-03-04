@@ -71,6 +71,19 @@ public interface IECSClient {
     public Map<String, ECSNode> getNodes();
 
     /**
+     * Lock Write for node
+     * @return
+     */
+    public boolean lockWrite(String nodeName);
+
+    /**
+     * Unlock Write for node
+     * @return
+     */
+    public boolean unlockWrite(String nodeName);
+
+
+    /**
      * Get the specific node responsible for the given key
      */
     public IECSNode getNodeByKey(String Key);

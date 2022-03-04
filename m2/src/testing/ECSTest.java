@@ -246,4 +246,43 @@ public class ECSTest extends TestCase {
 
         assertNull(ex);
     }
+
+    /**
+     * Test that if server is writeLocked client can't put keys into it
+     */
+    public void testWriteLocked() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // lock writes to server
+            ecs.lockWrite(node.getNodeName());
+
+            // try adding key
+            KVMessage response = kvClient.put("lock", "lock");
+            assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
+
+            // unlock writes to server
+            ecs.unlockWrite(node.getNodeName());
+            response = kvClient.put("lock", "lock");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
 }
