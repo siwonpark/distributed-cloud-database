@@ -38,6 +38,7 @@ public class DBConfig {
         }
         String rootPath = System.getProperty("user.dir");
         this.filePath = rootPath + "/data/" + dbName +"/";
+        System.out.println(this.filePath);
     }
 
     public static DBConfig initInstance(int cacheSize, String strategy, String dbName) {
