@@ -40,8 +40,7 @@ public class AllTests {
         System.out.println(rootPath);
 
         logger.info("Deleting data dir");
-        boolean a = FileOp.deleteDirectory(rootPath + "/data");
-        System.out.println(a);
+        FileOp.deleteDirectory(rootPath + "/data");
     }
 
 
