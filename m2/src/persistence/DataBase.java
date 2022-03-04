@@ -131,6 +131,9 @@ public class DataBase {
             node = (DataNode) FileOp.loadFile(b.getLeft());
         } catch (Exception e) {
             logger.info("EXCEPTION 1");
+            logger.info(e.getMessage());
+            logger.info(b);
+            logger.info(b.getLeft());
         }
         ArrayList<ArrayList<String>> data = new ArrayList<>();
         int null_num = 0;
