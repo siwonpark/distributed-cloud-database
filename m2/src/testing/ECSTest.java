@@ -267,12 +267,20 @@ public class ECSTest extends TestCase {
             KVStore kvClient = new KVStore("localhost", node.getNodePort());
             kvClient.connect();
 
+            KVMessage response = kvClient.put("prelock", "prelock");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+
             // lock writes to server
             ecs.lockWrite(node.getNodeName());
 
             // try adding key
-            KVMessage response = kvClient.put("lock", "lock");
+            response = kvClient.put("lock", "lock");
             assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
+
+            // get should not be locked
+            response = kvClient.get("prelock");
+            assertEquals(KVMessage.StatusType.GET_SUCCESS, response.getStatus());
+            assertEquals("prelock", response.getValue());
 
             // unlock writes to server
             ecs.unlockWrite(node.getNodeName());
