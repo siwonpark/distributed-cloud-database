@@ -1,20 +1,15 @@
 package testing;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import app_kvECS.ECSClient;
-import ecs.ECS;
-import ecs.ECSNode;
-import ecs.IECSNode;
-import ecs.ZKWatcher;
-import org.apache.log4j.Level;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import logger.LogSetup;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import persistence.FileOp;
+
+import java.io.File;
+import java.io.IOException;
 
 
 public class AllTests {
@@ -41,12 +36,10 @@ public class AllTests {
 
     // Delete the data directory if it exists
     private static void deleteDataDir() throws IOException {
-        Runtime run = Runtime.getRuntime();
         String rootPath = System.getProperty("user.dir");
 
-        String script = String.format("rm -rf %s/data", rootPath);
         logger.info("Deleting data dir");
-        run.exec(script);
+        FileOp.deleteDirectory(rootPath + "/data");
     }
 
 
