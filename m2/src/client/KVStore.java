@@ -11,6 +11,7 @@ import shared.messages.Message;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -189,10 +190,16 @@ public class KVStore implements KVCommInterface {
 			port = responsibleServer.getNodePort();
 		}
 		if (dynamicCommModule != null) {
-			try {
-				dynamicCommModule.disconnect();
-			} catch (IOException e){
-				logger.warn("The dynamicCommModule was unable to be closed.");
+			if(dynamicCommModule.getPort() == port &&
+					Objects.equals(dynamicCommModule.getHost(), host)){
+				// We can return early if its already connected to the right host/port
+				return;
+			} else {
+				try {
+					dynamicCommModule.disconnect();
+				} catch (IOException e) {
+					logger.warn("The dynamicCommModule was unable to be closed.");
+				}
 			}
 		}
 		dynamicCommModule = new CommModule(host, port);

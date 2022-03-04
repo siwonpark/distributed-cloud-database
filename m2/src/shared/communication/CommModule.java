@@ -67,4 +67,12 @@ public class CommModule implements ICommModule {
         output.flush();
         logger.debug("Send message: " + message.getMessageString());
     };
+
+    public int getPort(){
+        return this.port;
+    }
+
+    public String getHost(){
+        return this.address;
+    }
 }
