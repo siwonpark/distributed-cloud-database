@@ -50,6 +50,9 @@ public class ECSTest extends TestCase {
         assertTrue(visited.containsAll(hashRing.keySet()));
     }
 
+    /**
+     * Test that data between nodes are migrated when new nodes are added/old nodes are removed
+     */
     public void testMigrateData() {
         Exception ex = null;
         ArrayList<String> addedKeys = new ArrayList<>();
@@ -112,6 +115,10 @@ public class ECSTest extends TestCase {
         assertNull(ex);
     }
 
+    /**
+     * Test that the service boots up with all nodes in STOPPED mode and calling the start command puts them in
+     * START mode and ready to receive requests
+     */
     public void testStart() {
         Exception ex = null;
 
@@ -145,6 +152,9 @@ public class ECSTest extends TestCase {
         assertNull(ex);
     }
 
+    /**
+     * Test that all nodes are in STOPPED mode when we call command stop
+     */
     public void testStop() {
         Exception ex = null;
 
@@ -181,6 +191,10 @@ public class ECSTest extends TestCase {
         assertNull(ex);
     }
 
+    /**
+     * Test that even if there are multiple responsible servers, each key can be retrieved by one client connected to
+     * a single node using the client-server retry mechanism
+     */
     public void testClientServerRetry() {
         Exception ex = null;
         ArrayList<String> addedKeys = new ArrayList<>();
