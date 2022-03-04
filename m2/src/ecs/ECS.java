@@ -281,8 +281,6 @@ public class ECS {
             return false;
         }
 
-        removeNodeFromHashRing(nodeToRemove);
-
         // Move data if successor exists
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, nodeToRemove);
         if (successor != nodeToRemove) {
