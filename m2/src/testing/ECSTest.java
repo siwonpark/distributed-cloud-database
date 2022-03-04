@@ -22,7 +22,7 @@ public class ECSTest extends TestCase {
     @Override
     protected void tearDown(){
         ecs.shutdown();
-        ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE);
+        ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
         ecs.start();
     }
 

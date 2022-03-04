@@ -13,7 +13,7 @@ import java.io.IOException;
 
 
 public class AllTests {
-    public static final int PORT = 50235;
+    public static final int PORT = 50237;
     public static final String CACHE_STRATEGY = "FIFO";
     public static final int CACHE_SIZE = 5;
     public static ECSClient ecs;
@@ -26,7 +26,7 @@ public class AllTests {
 			new LogSetup("logs/testing/test.log", Level.ERROR);
             File ecsConfigFile = new File("src/testing/ecs.config");
             ecs = new ECSClient(ecsConfigFile);
-            ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE);
+            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
             ecs.start();
 
 		} catch (IOException e) {
@@ -45,14 +45,14 @@ public class AllTests {
 
     public static Test suite() {
         TestSuite clientSuite = new TestSuite("Basic Storage ServerTest-Suite");
-//        clientSuite.addTestSuite(DataBasePutGetTest.class);
-//        clientSuite.addTestSuite(CacheTest.class);
-//        clientSuite.addTestSuite(DataBaseReBootTest.class);
-//		clientSuite.addTestSuite(ConnectionTest.class);
-//		clientSuite.addTestSuite(InteractionTest.class);
-//		clientSuite.addTestSuite(AdditionalTest.class);
-//		clientSuite.addTestSuite(CLITest.class);
-//		clientSuite.addTestSuite(LoadTest.class);
+        clientSuite.addTestSuite(DataBasePutGetTest.class);
+        clientSuite.addTestSuite(CacheTest.class);
+        clientSuite.addTestSuite(DataBaseReBootTest.class);
+		clientSuite.addTestSuite(ConnectionTest.class);
+		clientSuite.addTestSuite(InteractionTest.class);
+		clientSuite.addTestSuite(AdditionalTest.class);
+		clientSuite.addTestSuite(CLITest.class);
+		clientSuite.addTestSuite(LoadTest.class);
 		clientSuite.addTestSuite(ECSTest.class);
         // We *NEED* this to be the last test in the suite!!!!!
         clientSuite.addTestSuite(ShutDownTest.class);
