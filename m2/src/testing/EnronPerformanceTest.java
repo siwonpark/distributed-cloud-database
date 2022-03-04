@@ -5,6 +5,7 @@ import client.KVStore;
 import ecs.ECSNode;
 import ecs.IECSNode;
 import junit.framework.TestCase;
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +25,7 @@ public class EnronPerformanceTest extends TestCase {
 
     public final int[] numClients = {1, 5, 20, 50, 100};
     public final int[] numServers = {1, 5, 20, 50, 100};
+    private Logger logger = Logger.getRootLogger();
 
     @Before
     public void setUp(){
@@ -39,7 +41,7 @@ public class EnronPerformanceTest extends TestCase {
         HashMap<String, String> data = new HashMap<>();
         File enronData = new File(ENRON_DATA_PATH);
         int counter = 0;
-        System.out.println(ENRON_DATA_PATH);
+        logger.info(ENRON_DATA_PATH);
         for (File email: enronData.listFiles()){
             try{
                 Scanner reader = new Scanner(email);
@@ -110,9 +112,10 @@ public class EnronPerformanceTest extends TestCase {
         }
 
         long durationMillis = TimeUnit.NANOSECONDS.toMillis(durationNanos);
-        System.out.printf("The server did %d iterations (%d puts, %d gets) in %d milliseconds" +
+        String result = String.format("The server did %d iterations (%d puts, %d gets) in %d milliseconds" +
                         "This is a latency of %d ms per operation and a throughput of %f operations/s",
                 numOps, numPuts, numGets, durationMillis, durationMillis / numOps, numOps / (float)durationMillis * 1000);
+        logger.info(result);
 
         ecs.shutdown();
     }

@@ -24,20 +24,20 @@ public class AllTests {
     public static ECSClient ecs;
     private static Logger logger = Logger.getRootLogger();
 
-//	static {
-//		try {
+	static {
+		try {
 //            deleteDataDir();
-//			/* Refresh data directory when running tests */
-//			new LogSetup("logs/testing/test.log", Level.ERROR);
+			/* Refresh data directory when running tests */
+			new LogSetup("logs/testing/test.log", Level.INFO);
 //            File ecsConfigFile = new File("src/testing/ecs.config");
 //            ecs = new ECSClient(ecsConfigFile);
 //            ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
 //            ecs.start();
-//
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
     // Delete the data directory if it exists
     private static void deleteDataDir() throws IOException {
