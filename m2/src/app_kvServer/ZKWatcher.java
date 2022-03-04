@@ -5,7 +5,7 @@ import org.apache.zookeeper.*;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.data.Stat;
-import shared.ZKData;
+import shared.KVAdminMessage;
 
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
@@ -20,6 +20,8 @@ public class ZKWatcher implements Watcher {
     private int zkPort;
     private ECSCommandHandler ecsCommandHandler;
     static String ROOT_PATH = "/ecs";
+    static String ACK_PATH = "/ecs/ack";
+    static String COMMAND_PATH = "/ecs/command";
     public CountDownLatch connectedSignal = new CountDownLatch(1);
 
     public ZKWatcher(String nodeName, String zkHost, int zkPort, ECSCommandHandler ecsCommandHandler) {
@@ -38,34 +40,22 @@ public class ZKWatcher implements Watcher {
         return zooKeeper;
     }
 
-    public ZKData deserializeData(byte[] data) throws IOException, ClassNotFoundException {
+    public KVAdminMessage deserializeData(byte[] data) throws IOException, ClassNotFoundException {
         if (data.length == 0) {
             logger.error("Byte array received from get was empty");
             return null;
         }
         try( ByteArrayInputStream bis = new ByteArrayInputStream(data);
              ObjectInputStream in = new ObjectInputStream(bis)) {
-            return (ZKData) in.readObject();
+            return (KVAdminMessage) in.readObject();
         }
     }
 
     public boolean create() {
         try {
-            String path = ROOT_PATH + "/" + nodeName;
-            watchNode(path);
-            zooKeeper.create(ROOT_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-
-//            while (true) {
-//                ZKData data = getData();
-//
-//                if (data != null) {
-//                    logger.info("Received operation: " + data.getOperationType().toString());
-//
-//                    ecsCommandHandler.handleCommand(data);
-//                    watchNode(path);
-//                    break;
-//                }
-//            }
+            watchNode(nodeName);
+            watchNode("metadata");
+            zooKeeper.create(ACK_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
             return true;
         } catch (Exception e) {
@@ -75,9 +65,9 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void watchNode(String path) {
+    public void watchNode(String nodeName) {
         try {
-            zooKeeper.exists(path + "-server", this);
+            zooKeeper.exists(COMMAND_PATH + "/" + nodeName, this);
         } catch (Exception e) {
             logger.error("Failed to set watcher for znode");
         }
@@ -94,6 +84,8 @@ public class ZKWatcher implements Watcher {
         KeeperState keeperState = event.getState();
         // Event type
         EventType eventType = event.getType();
+
+        String path = event.getPath();
         logger.info("Connection status: " + keeperState.toString());
         logger.info("Event type: " + eventType.toString());
 
@@ -105,7 +97,7 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                ZKData data = getData();
+                KVAdminMessage data = getData(path);
 
                 logger.info("Received operation: " + data.getOperationType().toString());
 
@@ -118,10 +110,8 @@ public class ZKWatcher implements Watcher {
 
     public void setData() {
         try {
-            logger.info("SENDING AWK to ECS");
-            String path = ROOT_PATH + "/" + nodeName;
-            watchNode(path);
-
+            logger.info("SENDING ACK to ECS");
+            String path = ACK_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
             zooKeeper.setData(path, new byte[stat.getVersion()], stat.getVersion());
         } catch (Exception e) {
@@ -129,11 +119,10 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public ZKData getData() {
+    public KVAdminMessage getData(String path) {
         try {
-            String path = ROOT_PATH + "/" + nodeName + "-server";
             Stat stat = zooKeeper.exists(path, false);
-            byte[] data = zooKeeper.getData(path, false, stat);
+            byte[] data = zooKeeper.getData(path, this, stat);
             return deserializeData(data);
         } catch (Exception e) {
             logger.error("Failed to get data for znode");
