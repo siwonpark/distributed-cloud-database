@@ -221,6 +221,7 @@ public class KVServer extends Thread implements IKVServer {
 		logger.info(String.format("Moving data from server %s to server %s",
 				serverName, server.getNodeName()));
 		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
+		logger.info("After instantiation");
 		new Thread(migrationMgr).start();
 	}
 
