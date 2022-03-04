@@ -74,7 +74,7 @@ public class EnronPerformanceTest extends TestCase {
         File configFile = new File("src/testing/performancetest.config");
         ECSClient ecs = new ECSClient(configFile);
         ArrayList<KVStore> clients = new ArrayList<>();
-        HashMap<String, String> enronData = loadEnronData(10500);
+        HashMap<String, String> enronData = loadEnronData(NUM_OPS + 500);
         ArrayList<String> keys = new ArrayList<>(enronData.keySet());
         ArrayList<String> putKeys = new ArrayList<>();
         ArrayList<Thread> threads = new ArrayList<>();
