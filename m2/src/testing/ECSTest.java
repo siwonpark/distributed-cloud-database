@@ -1,6 +1,9 @@
 package testing;
 
 import junit.framework.TestCase;
+import org.junit.Test;
+import testing.AllTests;
+
 
 public class ECSTest extends TestCase {
 //    @Test
@@ -28,4 +31,9 @@ public class ECSTest extends TestCase {
 //
 //        assertTrue(visited.containsAll(ecs.hashRing.keySet()));
 //    }
+    public void testAddNodes() {
+        System.out.println(AllTests.ecs.getNodes());
+        assertEquals(AllTests.ecs.getNodes(), 1);
+
+    }
 }
