@@ -241,7 +241,7 @@ public class ECSClient implements IECSClient {
                 }
                 break;
             }
-            case "removeNode": {
+            case "removeNodeName": {
                 if(tokens.length == 2){
                     String nodeName = tokens[1];
                     ArrayList<String> nodeNames = new ArrayList<>();
@@ -256,7 +256,7 @@ public class ECSClient implements IECSClient {
                 }
                 break;
             }
-            case "removeNodeIndex": {
+            case "removeNode": {
                 if(tokens.length == 2){
                     try {
                         int nodeIndex = Integer.parseInt(tokens[1]);
