@@ -1,9 +1,7 @@
 package testing;
 
-import ecs.ECSNode;
 import junit.framework.TestCase;
-
-import java.io.IOException;
+import persistence.FileOp;
 
 import static testing.AllTests.ecs;
 
@@ -31,11 +29,8 @@ public class ShutDownTest extends TestCase {
     }
 
     // Delete the data directory if it exists
-    private static void deleteDataDir() throws IOException {
-        Runtime run = Runtime.getRuntime();
+    private static void deleteDataDir() {
         String rootPath = System.getProperty("user.dir");
-
-        String script = String.format("rm -rf %s/data", rootPath);
-        run.exec(script);
+        FileOp.deleteDirectory(rootPath + "/data");
     }
 }
