@@ -26,7 +26,7 @@ public class AllTests {
 			new LogSetup("logs/testing/test.log", Level.ERROR);
             File ecsConfigFile = new File("src/testing/ecs.config");
             ecs = new ECSClient(ecsConfigFile);
-            ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
+            ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE);
             ecs.start();
 
 		} catch (IOException e) {
