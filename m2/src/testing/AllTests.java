@@ -23,7 +23,7 @@ public class AllTests {
 		try {
             deleteDataDir();
 			/* Refresh data directory when running tests */
-			new LogSetup("logs/testing/test.log", Level.ERROR);
+			new LogSetup("logs/testing/test.log", Level.INFO);
             File ecsConfigFile = new File("src/testing/ecs.config");
             ecs = new ECSClient(ecsConfigFile);
             ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE);
@@ -45,10 +45,10 @@ public class AllTests {
 
     public static Test suite() {
         TestSuite clientSuite = new TestSuite("Basic Storage ServerTest-Suite");
-        clientSuite.addTestSuite(DataBasePutGetTest.class);
-        clientSuite.addTestSuite(CacheTest.class);
-        clientSuite.addTestSuite(DataBaseReBootTest.class);
-		clientSuite.addTestSuite(ConnectionTest.class);
+//        clientSuite.addTestSuite(DataBasePutGetTest.class);
+//        clientSuite.addTestSuite(CacheTest.class);
+//        clientSuite.addTestSuite(DataBaseReBootTest.class);
+//		clientSuite.addTestSuite(ConnectionTest.class);
 //		clientSuite.addTestSuite(InteractionTest.class);
 //		clientSuite.addTestSuite(AdditionalTest.class);
 //		clientSuite.addTestSuite(CLITest.class);
