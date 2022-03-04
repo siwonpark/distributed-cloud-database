@@ -186,18 +186,13 @@ public class ECS {
     }
 
     public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
-        logger.info("LOCKING WRITE for " + fromNode.getNodeName());
-        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.LOCK_WRITE);
-        zkWatcher.setData(fromNode.getNodeName(), data);
-
-        if (!awaitNodes(1, 10000)) {
-            logger.error("Node was not responsive to lock write, moveData stopped");
+        if (!lockWrite(fromNode)) {
             return false;
         }
 
         // Apply move command
         logger.info("MOVING DATA from " + fromNode.getNodeName() + " to " + toNode.getNodeName());
-        data = new KVAdminMessage(null, KVAdminMessage.OperationType.MOVE_DATA);
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.MOVE_DATA);
         data.setKeyStart(keyStart);
         data.setKeyEnd(keyEnd);
         data.setTargetNode(toNode);
@@ -209,13 +204,30 @@ public class ECS {
             return false;
         }
 
-        // Unlock writes
-        logger.info("UNLOCKING WRITE for " + fromNode.getNodeName());
-        data = new KVAdminMessage(null, KVAdminMessage.OperationType.UNLOCK_WRITE);
-        zkWatcher.setData(fromNode.getNodeName(), data);
+        return unlockWrite(fromNode);
+    }
+
+    public boolean lockWrite(ECSNode node) {
+        logger.info("LOCKING WRITE for " + node.getNodeName());
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.LOCK_WRITE);
+        zkWatcher.setData(node.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
-            logger.error("Node was not responsive to unlock write, but data already moved");
+            logger.error("Node was not responsive to lock write");
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean unlockWrite(ECSNode node) {
+        logger.info("UNLOCKING WRITE for " + node.getNodeName());
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.UNLOCK_WRITE);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node was not responsive to unlock write");
+            return false;
         }
 
         return true;

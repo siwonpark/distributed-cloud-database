@@ -1,42 +1,48 @@
 package testing;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import app_kvECS.ECSClient;
-import ecs.ECS;
 import ecs.ECSNode;
-import ecs.IECSNode;
-import ecs.ZKWatcher;
-import org.apache.log4j.Level;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import logger.LogSetup;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import persistence.FileOp;
+
+import java.io.File;
+import java.io.IOException;
 
 
 public class AllTests {
-    public static final int PORT = 50000;
     public static final String CACHE_STRATEGY = "FIFO";
     public static final int CACHE_SIZE = 5;
     public static ECSClient ecs;
+    public static int port;
     private static Logger logger = Logger.getRootLogger();
 
 	static {
 		try {
+            deleteDataDir();
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
             File ecsConfigFile = new File("src/testing/ecs.config");
             ecs = new ECSClient(ecsConfigFile);
-            ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE);
+            ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+            port = node.getNodePort();
             ecs.start();
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+
+    // Delete the data directory if it exists
+    private static void deleteDataDir() throws IOException {
+        String rootPath = System.getProperty("user.home");
+
+        logger.info("Deleting data dir");
+        FileOp.deleteDirectory(rootPath + "/data");
+    }
 
 
     public static Test suite() {
@@ -49,11 +55,9 @@ public class AllTests {
 		clientSuite.addTestSuite(AdditionalTest.class);
 		clientSuite.addTestSuite(CLITest.class);
 		clientSuite.addTestSuite(LoadTest.class);
-        //Commenting out until we figure out how to test with zookeeper
-        clientSuite.addTestSuite(ECSTest.class);
-//         We *NEED* this to be the last test in the suite!!!!!
+		clientSuite.addTestSuite(ECSTest.class);
+        // We *NEED* this to be the last test in the suite!!!!!
         clientSuite.addTestSuite(ShutDownTest.class);
-
         return clientSuite;
     }
 

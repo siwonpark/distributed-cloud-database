@@ -1,19 +1,13 @@
 package testing;
 
-import app_kvServer.KVServer;
-import org.junit.Test;
-
 import client.KVStore;
 import junit.framework.TestCase;
+import org.junit.Test;
 import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
 
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-
 import static shared.PrintUtils.DELETE_STRING;
-import static testing.AllTests.PORT;
+import static testing.AllTests.port;
 
 
 public class LoadTest extends TestCase {
@@ -21,7 +15,7 @@ public class LoadTest extends TestCase {
     private KVStore kvClient;
 
     public void setUp() {
-        kvClient = new KVStore("localhost", PORT);
+        kvClient = new KVStore("localhost", port);
         try {
             kvClient.connect();
         } catch (Exception e) {

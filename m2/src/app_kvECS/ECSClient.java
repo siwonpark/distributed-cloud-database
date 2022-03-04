@@ -92,7 +92,7 @@ public class ECSClient implements IECSClient {
     }
 
     @Override
-    public boolean awaitNodes(int count, int timeout) throws Exception {
+    public boolean awaitNodes(int count, int timeout) {
         return ecs.awaitNodes(count, timeout);
     }
 
@@ -111,6 +111,42 @@ public class ECSClient implements IECSClient {
     @Override
     public Map<String, ECSNode> getNodes() {
         return ecs.getNodes();
+    }
+
+    @Override
+    public boolean lockWrite(String nodeName) {
+        ECSNode nodeToLock = null;
+        for (ECSNode node : ecs.hashRing.values()) {
+            if (node.getNodeName().equals(nodeName)) {
+                nodeToLock = node;
+                break;
+            }
+        }
+
+        if (nodeToLock == null) {
+            logger.error("Node does not exist");
+            return false;
+        }
+
+        return ecs.lockWrite(nodeToLock);
+    }
+
+    @Override
+    public boolean unlockWrite(String nodeName) {
+        ECSNode nodeToUnlock = null;
+        for (ECSNode node : ecs.hashRing.values()) {
+            if (node.getNodeName().equals(nodeName)) {
+                nodeToUnlock = node;
+                break;
+            }
+        }
+
+        if (nodeToUnlock == null) {
+            logger.error("Node does not exist");
+            return false;
+        }
+
+        return ecs.unlockWrite(nodeToUnlock);
     }
 
 

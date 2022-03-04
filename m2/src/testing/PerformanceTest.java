@@ -9,14 +9,14 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static testing.AllTests.PORT;
+import static testing.AllTests.port;
 
 public class PerformanceTest extends TestCase {
     private KVStore kvClient;
     static final Random random = new Random();
 
     public void setUp() {
-        kvClient = new KVStore("localhost", PORT);
+        kvClient = new KVStore("localhost", port);
         try {
             kvClient.connect();
         } catch (Exception e) {
