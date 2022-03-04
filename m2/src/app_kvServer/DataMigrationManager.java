@@ -24,6 +24,7 @@ public class DataMigrationManager implements Runnable {
 
 
     public DataMigrationManager(ECSNode destServer, String[] migrationHashRange, DataBase db, ZKWatcher zkWatcher){
+        logger.info(migrationHashRange);
         this.destServer = destServer;
         this.migrationHashRangeStart = migrationHashRange[0];
         this.migrationHashRangeEnd = migrationHashRange[1];
