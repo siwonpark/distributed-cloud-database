@@ -42,7 +42,7 @@ public class DataMigrationManager implements Runnable {
         }
 
         // Delete null values before performing migration
-//        db.batchDeleteNull(logger);
+        db.batchDeleteNull();
         /*
          * An arraylist of the data to migrate.
          * At the inner level, ArrayList<String> is an array of two
@@ -80,13 +80,7 @@ public class DataMigrationManager implements Runnable {
                 db.put(key, null);
             }
             // We want to remove the keys that were migrated
-            try {
-                db.batchDeleteNull(logger);
-            } catch (Exception e) {
-                logger.error("SECOND BATCH DELETE NULL");
-                logger.error(e.getStackTrace());
-            }
-
+            db.batchDeleteNull();
             // Send ACK to Zookeeper
             zkWatcher.setData();
         }
