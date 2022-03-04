@@ -36,14 +36,13 @@ public class DataMigrationManager implements Runnable {
         commModule = new CommModule(destServer.getNodeHost(), destServer.getNodePort());
         try {
             commModule.connect();
-            logger.info("Data migration manager connected");
         } catch (IOException e) {
             logger.error("Could not connect to destination server to perform data migration");
             return;
         }
 
         // Delete null values before performing migration
-        db.batchDeleteNull();
+        db.batchDeleteNull(logger);
         /*
          * An arraylist of the data to migrate.
          * At the inner level, ArrayList<String> is an array of two

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import shared.HashUtils;
 
 public class DataBase {
@@ -124,12 +125,12 @@ public class DataBase {
     /**
      * batch delete all the null values in the DataBase
      * */
-    public void batchDeleteNull() {
+    public void batchDeleteNull(Logger logger) {
         DataNode node = null;
         try {
             node = (DataNode) FileOp.loadFile(b.getLeft());
         } catch (Exception e) {
-            System.out.println("EXCEPTION 1");
+            logger.info("EXCEPTION 1");
         }
         ArrayList<ArrayList<String>> data = new ArrayList<>();
         int null_num = 0;
@@ -148,7 +149,7 @@ public class DataBase {
 
             node = (DataNode) FileOp.loadFile(node.right);
             } catch (Exception e) {
-                System.out.println("EXCEPTION 2");
+                logger.info("EXCEPTION 2");
             }
         }
 
@@ -157,7 +158,7 @@ public class DataBase {
 
             this.deleteHistory();
             } catch (Exception e) {
-                System.out.println("EXCEPTION 3");
+                logger.info("EXCEPTION 3");
             }
             for (ArrayList<String> i : data) {
                 this.put(i.get(0), i.get(1));
