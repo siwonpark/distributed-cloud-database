@@ -6,6 +6,7 @@ import ecs.IECSNode;
 import junit.framework.TestCase;
 import java.util.*;
 import shared.HashUtils;
+import shared.MetadataUtils;
 import shared.messages.KVMessage;
 
 import static testing.AllTests.*;
@@ -213,24 +214,25 @@ public class ECSTest extends TestCase {
             KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
             kvClient.connect();
 
-            HashSet<Integer> needed = new HashSet<>(Arrays.asList(0, 1, 2));
-            Iterator<Integer> iter = needed.iterator();
+            HashSet<String> needed =
+                    new HashSet<>(
+                            Arrays.asList(
+                                    addedNodes[0].getNodeName(),
+                                    addedNodes[1].getNodeName(),
+                                    addedNodes[2].getNodeName()));
             int num = 100;
 
             // populate datastore until all nodes responsible for at least one key
-            while (iter.hasNext()) {
-                for (int index: needed) {
-                    ECSNode node = (ECSNode) addedNodes[index];
-                    if (node.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
-                        kvClient.put(String.valueOf(num), String.valueOf(num));
-                        addedKeys.add(String.valueOf(num));
-                        iter.remove();
-                    }
-                }
+            while (!needed.isEmpty()) {
+                ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
+
+                kvClient.put(String.valueOf(num), String.valueOf(num));
+                addedKeys.add(String.valueOf(num));
+
+                needed.remove(responsible.getNodeName());
 
                 num++;
             }
-
 
             // check that we can still get all keys we added even when not connected to the other servers
             for (String key: addedKeys) {
