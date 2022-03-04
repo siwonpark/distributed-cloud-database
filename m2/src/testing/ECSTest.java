@@ -97,7 +97,7 @@ public class ECSTest extends TestCase {
             kvClient.disconnect();
 
             // remove old node
-            ecs.removeNodes(List.of(initialNode.getNodeName()));
+            ecs.removeNodes(Arrays.asList(initialNode.getNodeName()));
 
             // reconnect kvClient
             kvClient = new KVStore("localhost", newNode.getNodePort());
