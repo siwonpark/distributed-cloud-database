@@ -57,10 +57,10 @@ public class ECSTest extends TestCase {
         System.out.println(worked);
         // add initial node
         ECSNode initialNode = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-//
-//        // start service
-//        ecs.start();
-//
+
+        // start service
+        ecs.start();
+
 //        try {
 //            // start kv client
 //            KVStore kvClient = new KVStore("localhost", initialNode.getNodePort());
