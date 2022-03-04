@@ -45,23 +45,25 @@ public class EnronPerformanceTest extends TestCase {
         File enronData = new File(ENRON_DATA_PATH);
         int counter = 0;
         logger.info(ENRON_DATA_PATH);
-        for (File email: enronData.listFiles()){
-            try{
-                Scanner reader = new Scanner(email);
-                while(reader.hasNextLine()){
-                    String value = reader.nextLine();
-                    if (value.length() > 500){
-                        value = value.substring(0, 500);
+        while(counter < numEntries) {
+            for (File email : enronData.listFiles()) {
+                try {
+                    Scanner reader = new Scanner(email);
+                    while (reader.hasNextLine()) {
+                        String value = reader.nextLine();
+                        if (value.length() > 500) {
+                            value = value.substring(0, 500);
+                        }
+                        data.put(Integer.toString(counter), value);
+                        counter += 1;
+                        if (counter >= numEntries) {
+                            break;
+                        }
                     }
-                    data.put(Integer.toString(counter), value);
-                    counter += 1;
-                    if (counter >= numEntries){
-                        break;
-                    }
+                } catch (Exception e) {
+                    System.out.printf("Exception at %s", email.getAbsolutePath());
+                    e.printStackTrace();
                 }
-            } catch (Exception e){
-                System.out.printf("Exception at %s", email.getAbsolutePath());
-                e.printStackTrace();
             }
         }
         return data;
