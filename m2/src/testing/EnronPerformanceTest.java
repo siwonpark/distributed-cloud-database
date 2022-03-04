@@ -77,7 +77,7 @@ public class EnronPerformanceTest extends TestCase {
         long durationNanos = 0;
         long shutdownDurationNanos = 0;
         long startupDurationNanos = 0;
-        final int NUM_OPS = 10000;
+        final int NUM_OPS = 1000;
         final int NUM_CLIENTS = 1;
         final int NUM_SERVERS = 1;
         final int CACHE_SIZE = 20;
