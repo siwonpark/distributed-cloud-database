@@ -19,7 +19,6 @@ public class ShutDownTest extends TestCase {
         boolean success = true;
         try {
             ecs.shutdown();
-            deleteDataDir();
         } catch (Exception e){
             ex = e;
         }
@@ -31,6 +30,7 @@ public class ShutDownTest extends TestCase {
     // Delete the data directory if it exists
     private static void deleteDataDir() {
         String rootPath = System.getProperty("user.home");
-        FileOp.deleteDirectory(rootPath + "/data");
+        boolean a = FileOp.deleteDirectory(rootPath + "/data");
+        System.out.println(a);
     }
 }
