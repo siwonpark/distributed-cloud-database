@@ -37,7 +37,6 @@ public class AllTests {
     // Delete the data directory if it exists
     private static void deleteDataDir() throws IOException {
         String rootPath = System.getProperty("user.home");
-        System.out.println(rootPath);
 
         logger.info("Deleting data dir");
         FileOp.deleteDirectory(rootPath + "/data");
@@ -49,7 +48,7 @@ public class AllTests {
         clientSuite.addTestSuite(DataBasePutGetTest.class);
         clientSuite.addTestSuite(CacheTest.class);
         clientSuite.addTestSuite(DataBaseReBootTest.class);
-//		clientSuite.addTestSuite(ConnectionTest.class);
+		clientSuite.addTestSuite(ConnectionTest.class);
 //		clientSuite.addTestSuite(InteractionTest.class);
 //		clientSuite.addTestSuite(AdditionalTest.class);
 //		clientSuite.addTestSuite(CLITest.class);
