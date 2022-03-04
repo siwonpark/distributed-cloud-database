@@ -55,7 +55,7 @@ public class ZKWatcher implements Watcher {
         try {
             watchNode(nodeName);
             watchNode("metadata");
-            zooKeeper.create(ROOT_PATH + ACK_PATH + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            zooKeeper.create(ACK_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
             return true;
         } catch (Exception e) {
@@ -111,7 +111,7 @@ public class ZKWatcher implements Watcher {
     public void setData() {
         try {
             logger.info("SENDING ACK to ECS");
-            String path = ACK_PATH + nodeName;
+            String path = ACK_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
             zooKeeper.setData(path, new byte[stat.getVersion()], stat.getVersion());
         } catch (Exception e) {
