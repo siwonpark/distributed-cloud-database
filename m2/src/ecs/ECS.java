@@ -400,7 +400,7 @@ public class ECS {
         zkWatcher.connect();
 
         // create root node
-        zkWatcher.create("");
+        zkWatcher.create(ZKWatcher.ROOT_PATH);
 
         // Create command node
         zkWatcher.create(ZKWatcher.COMMAND_PATH);

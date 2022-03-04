@@ -16,8 +16,8 @@ public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
     private Logger logger = Logger.getRootLogger();
     static String ROOT_PATH = "/ecs";
-    static String ACK_PATH = "/ack";
-    static String COMMAND_PATH = "/command";
+    static String ACK_PATH = "/ecs/ack";
+    static String COMMAND_PATH = "/ecs/command";
     static String ZK_HOST = "localhost";
     static int ZK_PORT = 2181;
     public CountDownLatch connectedSignal = new CountDownLatch(1);
@@ -44,10 +44,10 @@ public class ZKWatcher implements Watcher {
 
     public void create(String path) {
         try {
-            Stat stat = zooKeeper.exists(ROOT_PATH + path, false);
+            Stat stat = zooKeeper.exists(path, false);
 
             if (stat == null) {
-                zooKeeper.create(ROOT_PATH + path, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                zooKeeper.create(path, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             }
         } catch (Exception e) {
             logger.error("Failed to create z-node");
@@ -103,7 +103,7 @@ public class ZKWatcher implements Watcher {
 
     public void watchNode(String nodeName) {
         try {
-            zooKeeper.exists(ROOT_PATH + ACK_PATH + "/" + nodeName, this);
+            zooKeeper.exists(ACK_PATH + "/" + nodeName, this);
         } catch (Exception e) {
             logger.error("Failed to set watcher for znode");
         }
@@ -112,7 +112,7 @@ public class ZKWatcher implements Watcher {
     public void setData(String nodeName, KVAdminMessage data) {
         try {
             byte[] dataBytes = serializeData(data);
-            String path = ROOT_PATH + COMMAND_PATH + "/" + nodeName;
+            String path = COMMAND_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
             if (stat == null) {
@@ -128,11 +128,11 @@ public class ZKWatcher implements Watcher {
 
     public void deleteZnode(String nodeName) {
         try {
-            String path = ROOT_PATH + COMMAND_PATH + "/" + nodeName;
+            String path = COMMAND_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
             zooKeeper.delete(path, stat.getVersion());
 
-            path = ROOT_PATH + ACK_PATH + "/" + nodeName;
+            path = ACK_PATH + "/" + nodeName;
             stat = zooKeeper.exists(path, false);
             zooKeeper.delete(path, stat.getVersion());
         } catch (Exception e) {
