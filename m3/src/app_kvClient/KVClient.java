@@ -28,6 +28,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
     private int serverPort;
     private KVStore kvStore;
     private Heartbeat heartbeat;
+    private boolean userRequestedDisconnect = false;
 
 
     @Override
@@ -35,14 +36,18 @@ public class KVClient implements IKVClient, ClientSocketListener {
         kvStore = new KVStore(hostname, port);
         kvStore.addListener(this);
         kvStore.connect();
-        heartbeat = new Heartbeat(kvStore);
-        heartbeat.addListener(this);
-        new Thread(heartbeat).start();
+        setNewHeartbeat(kvStore);
     }
 
     @Override
     public KVCommInterface getStore(){
         return kvStore;
+    }
+
+    public void setNewHeartbeat(KVStore kvStore){
+        heartbeat = new Heartbeat(kvStore);
+        heartbeat.addListener(this);
+        new Thread(heartbeat).start();
     }
 
     public void run() {
@@ -224,9 +229,22 @@ public class KVClient implements IKVClient, ClientSocketListener {
         } else if (status == SocketStatus.CONNECTION_LOST) {
             System.out.println("Connection lost: "
                     + serverAddress + " / " + serverPort);
+            if(!userRequestedDisconnect){ // Make sure the user did not request to disconnect already
+                boolean connected = false;
+                if (kvStore != null) {
+                    connected = kvStore.tryConnectingOtherServer();
+                }
+                if (connected) {
+                    serverPort = kvStore.getPort();
+                    serverAddress = kvStore.getHost();
+                    System.out.printf("Connected to %s port %s!%n", serverAddress, serverPort);
+                } else {
+                    System.out.print("Unable to connect to any other servers in the cached server metadata");
+                    heartbeat.stopProbing();
+                    kvStore = null;
+                }
+            }
             System.out.print(PROMPT);
-            heartbeat.stopProbing();
-            kvStore = null;
         }
     }
 
