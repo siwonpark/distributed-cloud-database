@@ -224,8 +224,9 @@ public class KVStore implements KVCommInterface {
 				commModule.connect();
 				this.port = server.getNodePort();
 				this.address = server.getNodeHost();
-				System.out.printf("Able to maintain connection to storage service via new server %s / %s",
+				System.out.printf("Able to maintain connection to storage service via new server %s / %s\n",
 						this.address, this.port);
+				return true;
 			} catch (IOException e){
 				logger.warn("Could not connect to a server in the cached metadata");
 			}
