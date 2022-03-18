@@ -210,9 +210,11 @@ public class KVStore implements KVCommInterface {
 	public boolean tryConnectingOtherServer(){
 		System.out.println("Attempting to connect to other servers in the storage service");
 		if(this.serverMetadata == null){
+			logger.info("No server metadata is on client side");
 			return false;
 		}
 		for (ECSNode server : serverMetadata.values()){
+			logger.info("Trying to connect to a new host in the cached server metadata");
 			if(Objects.equals(server.getNodeHost(), getHost()) &&
 					server.getNodePort() == getPort()){
 				continue;
