@@ -218,8 +218,8 @@ public class KVStore implements KVCommInterface {
 				continue;
 			}
 			try {
-				dynamicCommModule = new CommModule(server.getNodeHost(), server.getNodePort());
-				dynamicCommModule.connect();
+				commModule = new CommModule(server.getNodeHost(), server.getNodePort());
+				commModule.connect();
 				this.port = server.getNodePort();
 				this.address = server.getNodeHost();
 				System.out.printf("Able to maintain connection to storage service via new server %s / %s",

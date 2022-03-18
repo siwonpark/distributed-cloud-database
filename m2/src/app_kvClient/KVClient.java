@@ -229,16 +229,22 @@ public class KVClient implements IKVClient, ClientSocketListener {
         } else if (status == SocketStatus.CONNECTION_LOST) {
             System.out.println("Connection lost: "
                     + serverAddress + " / " + serverPort);
-            if(!userRequestedDisconnect && kvStore != null){
-
-                boolean connected = kvStore.tryConnectingOtherServer();
-                if (connected){
-                    System.out.printf("Unable to connect to any other servers in the cached server metadata");
+            if(!userRequestedDisconnect){ // Make sure the user did not request to disconnect already
+                boolean connected = false;
+                if (kvStore != null) {
+                    connected = kvStore.tryConnectingOtherServer();
+                }
+                if (connected) {
+                    serverPort = kvStore.getPort();
+                    serverAddress = kvStore.getHost();
+                    System.out.printf("Connected to %s port %s!%n", serverAddress, serverPort);
+                } else {
+                    System.out.print("Unable to connect to any other servers in the cached server metadata");
+                    heartbeat.stopProbing();
+                    kvStore = null;
                 }
             }
             System.out.print(PROMPT);
-            heartbeat.stopProbing();
-            kvStore = null;
         }
     }
 
