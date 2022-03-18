@@ -45,6 +45,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
     }
 
     public void setNewHeartbeat(KVStore kvStore){
+        if(heartbeat != null){
+            // If a heartbeat currently exists, stop it before we start a new one
+            heartbeat.stopProbing();
+        }
         heartbeat = new Heartbeat(kvStore);
         heartbeat.addListener(this);
         new Thread(heartbeat).start();
@@ -237,6 +241,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                 if (connected) {
                     serverPort = kvStore.getPort();
                     serverAddress = kvStore.getHost();
+                    setNewHeartbeat(kvStore);
                     System.out.printf("Connected to %s port %s!%n", serverAddress, serverPort);
                 } else {
                     System.out.print("Unable to connect to any other servers in the cached server metadata");
