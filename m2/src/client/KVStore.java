@@ -10,7 +10,10 @@ import shared.messages.KVMessage;
 import shared.messages.Message;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import static shared.messages.KVMessage.StatusType.SERVER_NOT_RESPONSIBLE;
 
@@ -203,33 +206,6 @@ public class KVStore implements KVCommInterface {
 		dynamicCommModule.connect();
 	}
 
-	/**
-	 *
-	 * @return true if was able to connect to another server, false otherwise
-	 */
-	public boolean tryConnectingOtherServer(){
-		System.out.println("Attempting to connect to other servers in the storage service");
-		if(this.serverMetadata == null){
-			return false;
-		}
-		for (ECSNode server : serverMetadata.values()){
-			if(Objects.equals(server.getNodeHost(), getHost()) &&
-					server.getNodePort() == getPort()){
-				continue;
-			}
-			try {
-				dynamicCommModule = new CommModule(server.getNodeHost(), server.getNodePort());
-				dynamicCommModule.connect();
-				this.port = server.getNodePort();
-				this.address = server.getNodeHost();
-				System.out.printf("Able to maintain connection to storage service via new server %s / %s",
-						this.address, this.port);
-			} catch (IOException e){
-				logger.warn("Could not connect to a server in the cached metadata");
-			}
-		}
-		return false;
-	}
 
 	public int getPort(){
 		return this.port;

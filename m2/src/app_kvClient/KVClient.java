@@ -28,7 +28,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
     private int serverPort;
     private KVStore kvStore;
     private Heartbeat heartbeat;
-    private boolean userRequestedDisconnect = false;
 
 
     @Override
@@ -36,18 +35,14 @@ public class KVClient implements IKVClient, ClientSocketListener {
         kvStore = new KVStore(hostname, port);
         kvStore.addListener(this);
         kvStore.connect();
-        setNewHeartbeat(kvStore);
+        heartbeat = new Heartbeat(kvStore);
+        heartbeat.addListener(this);
+        new Thread(heartbeat).start();
     }
 
     @Override
     public KVCommInterface getStore(){
         return kvStore;
-    }
-
-    public void setNewHeartbeat(KVStore kvStore){
-        heartbeat = new Heartbeat(kvStore);
-        heartbeat.addListener(this);
-        new Thread(heartbeat).start();
     }
 
     public void run() {
@@ -229,13 +224,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
         } else if (status == SocketStatus.CONNECTION_LOST) {
             System.out.println("Connection lost: "
                     + serverAddress + " / " + serverPort);
-            if(!userRequestedDisconnect && kvStore != null){
-
-                boolean connected = kvStore.tryConnectingOtherServer();
-                if (connected){
-                    System.out.printf("Unable to connect to any other servers in the cached server metadata");
-                }
-            }
             System.out.print(PROMPT);
             heartbeat.stopProbing();
             kvStore = null;
