@@ -244,7 +244,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                     setNewHeartbeat(kvStore);
                     System.out.printf("Connected to %s port %s!%n", serverAddress, serverPort);
                 } else {
-                    System.out.println("No other servers are available to connect. Disconnected from storage service");
+                    System.out.println("Client has no knowledge of other servers that are available to connect. Disconnected from storage service");
                     heartbeat.stopProbing();
                     kvStore = null;
                 }
