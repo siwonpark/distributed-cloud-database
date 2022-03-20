@@ -17,7 +17,10 @@
 
   each KVServer is a coordinator and two replica, need two more replica database, play as Stable History role.
 
-  only the tail replica should use cache for getKV
+  - only the tail replica should use cache for getKV
+  - let putKV operate on coordinator database
+  - let getKV operate on replica2 database
+  - make read and write lock work on single database
 
   <img src="replication mechanism.assets/image-20220320015450631.png" alt="image-20220320015450631" style="zoom: 67%;" />
 
@@ -32,8 +35,17 @@
 ### In KVStore
 
 - should connect head replica for put operation，and wait for response from tail
-
 - connect tail for get replica operation.
+
+### In ECSClient
+
+- **On start**
+
+  before start any KV Servers, there should be at least three servers on the ring and start them at the same time.
+
+- **On stop**
+
+  stop all the servers if after this stop there are less than three servers on the ring.
 
 ### In ECS
 
@@ -48,11 +60,17 @@
   rechain the replica chain
 
   - insert  i
-    1. make i a tail replica for i-2 by coping the (i-1 for i-2) database
-    2. make i a middle replica for i-1 by coping the 
-    3. delete two tail replica: (i+2 for i-1), (i+1 for i-2)
-    4. 
-    5. 
+    1. stop the putkv on i-2, wait for consistency being achieved on chain (i-2, i-1, i+1)/(coordinator, replica1, replica2)
+    2. make i a tail replica for i-2 by coping the (i-1 for i-2) database
+    3. start coordinator database on i-2, start replica2 on i
+    4. delete replica2 on i+1
+    5. stop the putkv on i-1, wait for consistency being achieved on chain (i-1, i+1, i+2)
+    6. make i a middle replica for i-1 coordinator by coping the  (i+1 for i-1) database
+    7. move i+1's replica1 database to replica2.
+    8. start coordinator database on i-1, start replica1 on i
+    9. 
+    10. 
+    11. 
 
   
 
