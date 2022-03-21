@@ -171,6 +171,87 @@ public class ECS {
         return true;
     }
 
+    public ECSNode getECSNode(String nodeName) {
+        for (ECSNode node : hashRing.values()) {
+            if (node.getNodeName().equals(nodeName)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    public void handleServerFailure(String nodeName) {
+        // reconstruct service
+        // find node with name nodeName
+        ECSNode nodeToRemove = getECSNode(nodeName);
+
+        if (nodeToRemove == null) {
+            logger.error("Node does not exist");
+            return;
+        }
+
+        removeNodeFromHashRing(nodeToRemove);
+        redistributeReplicas(nodeToRemove);
+
+        // replace failed node with new node
+        // TODO: decide what to do with cache strategy/size
+        if (addNode("FIFO", 100, true) == null) {
+            broadcastMetadataAndWait();
+        }
+    }
+
+    private boolean redistributeReplicas(ECSNode failedNode) {
+        // Move data from failed node's replica to that node's last replica
+        ECSNode successor = MetadataUtils.getSuccessor(hashRing, failedNode);
+        ECSNode successorReplica = MetadataUtils.getSuccessor(hashRing, successor);
+        ECSNode furthestSuccessorReplica = MetadataUtils.getSuccessor(hashRing, successorReplica);
+        if (successor != furthestSuccessorReplica && successor != failedNode && furthestSuccessorReplica != failedNode) {
+            boolean result =
+                    moveData(
+                            successor,
+                            furthestSuccessorReplica,
+                            failedNode.getNodeHashRange()[0],
+                            failedNode.getNodeHashRange()[1]);
+            if (!result) {
+                logger.error("Move data failed between node " + successor.getNodeName() + " and " + furthestSuccessorReplica.getNodeName());
+                return false;
+            }
+        }
+
+        // Move data from failed node's predecessor to new replica
+        ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, failedNode);
+        if (predecessor != failedNode && predecessor != successorReplica && failedNode != successorReplica) {
+            boolean result =
+                    moveData(
+                            predecessor,
+                            successorReplica,
+                            predecessor.getNodeHashRange()[0],
+                            predecessor.getNodeHashRange()[1]);
+            if (!result) {
+                logger.error("Move data failed between node " + predecessor.getNodeName() + " and " + successorReplica.getNodeName());
+                return false;
+            }
+        }
+
+        // Move data from furthest predecessor replica to successor
+        ECSNode furthestPredecessorReplica = MetadataUtils.getPredecessor(hashRing, predecessor);
+        if (furthestPredecessorReplica != failedNode && furthestPredecessorReplica != successor && successor != failedNode) {
+            boolean result =
+                    moveData(
+                            furthestPredecessorReplica,
+                            successor,
+                            furthestPredecessorReplica.getNodeHashRange()[0],
+                            furthestPredecessorReplica.getNodeHashRange()[1]);
+            if (!result) {
+                logger.error("Move data failed between node " + furthestPredecessorReplica.getNodeName() + " and " + successor.getNodeName());
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public void broadcastMetadataAndWait() {
         logger.info("BROADCASTING METADATA");
         KVAdminMessage data = new KVAdminMessage(hashRing, KVAdminMessage.OperationType.METADATA);
@@ -268,13 +349,7 @@ public class ECS {
 
     public boolean removeNode(String nodeName) {
         // find node with name nodeName
-        ECSNode nodeToRemove = null;
-        for (ECSNode node : hashRing.values()) {
-            if (node.getNodeName().equals(nodeName)) {
-                nodeToRemove = node;
-                break;
-            }
-        }
+        ECSNode nodeToRemove = getECSNode(nodeName);
 
         if (nodeToRemove == null) {
             logger.error("Node does not exist");
@@ -408,7 +483,7 @@ public class ECS {
 
     private void startZKWatcher() {
         // Connect with Zookeeper watcher client
-        zkWatcher = new ZKWatcher();
+        zkWatcher = new ZKWatcher(this);
         zkWatcher.connect();
 
         // create root node

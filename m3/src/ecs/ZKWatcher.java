@@ -14,6 +14,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
+    private ECS ecs;
     private Logger logger = Logger.getRootLogger();
     static String ROOT_PATH = "/ecs";
     static String ACK_PATH = "/ecs/ack";
@@ -23,12 +24,16 @@ public class ZKWatcher implements Watcher {
     public CountDownLatch connectedSignal = new CountDownLatch(1);
     public CountDownLatch awaitSignal;
 
+    public ZKWatcher(ECS ecs) {
+        this.ecs = ecs;
+    }
+
     public ZooKeeper connect() {
         try {
             zooKeeper = new ZooKeeper(ZK_HOST + ":" + ZK_PORT, 1000, this);
             connectedSignal.await();
         } catch (Exception e) {
-            logger.error("Failed to connect to ZooKeeper server at localhost:2181");
+            logger.error("Failed to connect to ZooKeeper server at " + ZK_HOST + ":" + ZK_PORT);
         }
         return zooKeeper;
     }
@@ -89,8 +94,9 @@ public class ZKWatcher implements Watcher {
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {
+                logger.info("Node deleted at znode " + path);
                 awaitSignal.countDown();
-                logger.info("node " + path + " Deleted");
+                handleDisconnectedNode(path);
             }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
@@ -99,6 +105,12 @@ public class ZKWatcher implements Watcher {
         } else if (KeeperState.Expired == keeperState) {
             logger.info("Session failure");
         }
+    }
+
+    private void handleDisconnectedNode(String path) {
+        String[] pathParts = path.split("/");
+        String nodeName = pathParts[pathParts.length - 1];
+        ecs.handleServerFailure(nodeName);
     }
 
     public void watchNode(String nodeName) {
