@@ -77,8 +77,6 @@
     6. init replica1 on i+1, replica2 on i+2 by coping coordinate database on i
     7. start coordinator database on i, start replica1 on i+1, start replica2 on i+2
 
-  
-
 - **removenode**
 
   

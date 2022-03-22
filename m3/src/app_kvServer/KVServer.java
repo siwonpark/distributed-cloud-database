@@ -8,6 +8,8 @@ import persistence.DataBase;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
+import app_kvServer.KVServer.Update.UpdateType;
 import shared.MetadataUtils;
 import shared.communication.CommModule;
 
@@ -18,6 +20,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.Queue;
+import java.util.LinkedList;
 
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
@@ -45,8 +49,30 @@ public class KVServer extends Thread implements IKVServer {
 
 
 	private DataBase db;
+	class Update {
+		enum UpdateType{
+			MIDDLE,
+			TAIL
+		}
+		Update(String k, String v, UpdateType type){
+			this.key = k;
+			this.value = v;
+			this.sequence = Update.globalSeq;
+			this.type = type;
+			Update.incre();
+		}
+		static long globalSeq = 0;
+		static void incre(){
+			Update.globalSeq += 1;
+		}
+		String key;
+		String value;
+		long sequence;
+		UpdateType type;
+	}
 
-
+	Queue<Update> window;
+	
 	/**
 	 * Start KV Server at given port
 	 * @param port given port for storage server to operate
@@ -67,10 +93,10 @@ public class KVServer extends Thread implements IKVServer {
 		this.lockWrite = false;
 		this.serverName = serverName;
 		this.clientConnections = new ArrayList<>();
-
+		
 		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,true);
+		this.window = new LinkedList<Update>();
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
-
 		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
 		initZkWatcher();
 	}
@@ -132,7 +158,13 @@ public class KVServer extends Thread implements IKVServer {
 
 	@Override
     public void putKV(String key, String value) throws Exception{
-		db.put(key, value);
+		db.put(key,value);
+		this.window.offer(new Update(key,value,UpdateType.MIDDLE));
+		this.clearWindow();
+	}
+
+	public Boolean isConsistent(){
+		return this.window.size() == 0;
 	}
 
 	@Override
@@ -222,6 +254,20 @@ public class KVServer extends Thread implements IKVServer {
 				serverName, server.getNodeName()));
 		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
 		new Thread(migrationMgr).start();
+	}
+
+	public void sendUpdate(Update update){
+		ECSNode  successor = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
+		logger.info(String.format("send an update from server %s to server %s",
+				serverName, successor.getNodeName()));
+		UpdateSender sender = new UpdateSender(successor, update);
+		new Thread(sender).start();
+	}
+
+	public void clearWindow(){
+		for(Update u : this.window){
+            this.sendUpdate(u);
+        }
 	}
 
 	/**

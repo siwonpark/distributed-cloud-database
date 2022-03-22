@@ -16,6 +16,7 @@ public class Message implements Serializable, KVMessage {
 	private static final long serialVersionUID = 5549512212003782618L;
 	private String key;
 	private String value;
+	private Long seq;
 	private StatusType status;
 
 	/**
@@ -35,6 +36,17 @@ public class Message implements Serializable, KVMessage {
 	public Message(String key, String value, StatusType status) {
 		this.key = key;
 		this.value = value;
+		this.status = status;
+	}
+
+
+	public Message(String key, String value, long seq, StatusType status){
+		if(status != StatusType.REPLICATION_MIDDLE && status != StatusType.REPLICATION_TAIL){
+			throw new IllegalArgumentException("Status Type must be REPLICATION_MIDDLE or REPLICATION_TAIL");
+		}
+		this.key = key;
+		this.value = value;
+		this.seq = seq;
 		this.status = status;
 	}
 
