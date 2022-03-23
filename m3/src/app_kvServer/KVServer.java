@@ -138,7 +138,7 @@ public class KVServer extends Thread implements IKVServer {
 	// TODO make the buffer work like sliding window to ignore old resend putKV request if the kv is already in window (not urgent)
 
 	public void putKVinCoordinator(String key, String value){
-		logger.debug("putKV in Coordinator Server Num: " + MetadataUtils.getServersNum(metadata));
+		logger.info("putKV in Coordinator Server Num: " + MetadataUtils.getServersNum(metadata));
 		if(MetadataUtils.getServersNum(metadata) <= 1){// won't be any replica if there is only one server
 			if(MetadataUtils.getServersNum(metadata) == 1){
 				this.db.put(key, value);
@@ -157,7 +157,7 @@ public class KVServer extends Thread implements IKVServer {
 	}
 
 	public void putKVinMiddleReplica(String key, String value, long seq){
-		logger.debug("putKV in Middle Replica Server Num: " + MetadataUtils.getServersNum(metadata));
+		logger.info("putKV in Middle Replica Server Num: " + MetadataUtils.getServersNum(metadata));
 		if(MetadataUtils.getServersNum(metadata) <= 2){
 			if(MetadataUtils.getServersNum(metadata) == 2){// won't be any tail replica if there is only two servers
 				this.db.put(key, value);
@@ -174,13 +174,13 @@ public class KVServer extends Thread implements IKVServer {
 	}
 
 	public void putKVinTail(String key, String value, long seq){
-		logger.debug("putKV in Tail Replica");
+		logger.info("putKV in Tail Replica");
 		this.db.put(key, value);
 		this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.ACK_FROM_TAIL));
 	}
 
 	public void getAckFromTail(String key, String value, long seq){
-		logger.debug("get ACK from Tail Replica");
+		logger.info("get ACK from Tail Replica");
 		ReplicationMsg inBuffer = middleReplicaBuffer.get(seq);
 		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
 			this.db.put(inBuffer.key, inBuffer.value);
@@ -192,7 +192,7 @@ public class KVServer extends Thread implements IKVServer {
 	}
 
 	public void getAckFromMiddleReplica(String key, String value, long seq){
-		logger.debug("get ACK from Middle Replica");
+		logger.info("get ACK from Middle Replica");
 		ReplicationMsg inBuffer = coordinatorBuffer.get(seq);
 		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
 			this.db.put(inBuffer.key, inBuffer.value);
