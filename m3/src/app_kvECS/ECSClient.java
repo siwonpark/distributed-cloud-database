@@ -337,6 +337,10 @@ public class ECSClient implements IECSClient {
                 printECSClientHelp();
                 break;
             }
+            case "consistency":
+            case "c":
+                
+                break;
             default: {
                 printError("Unknown command");
                 printECSClientHelp();

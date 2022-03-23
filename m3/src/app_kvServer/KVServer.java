@@ -19,8 +19,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.Queue;
-import java.util.LinkedList;
 import java.util.HashMap;
 
 import static shared.LogUtils.setLevel;
@@ -160,18 +158,35 @@ public class KVServer extends Thread implements IKVServer {
 
 
 	public void putKVinCoordinator(String key, String value){
-		this.coordinatorBuffer.put(ReplicationMsg.globalSeq, new ReplicationMsg(key, value, ReplicationMsg.globalSeq, ReplicationMsgType.REPLICATE_MIDDLE_REPLICA));
-		ReplicationMsg.increSeq();
-		for(ReplicationMsg u : this.coordinatorBuffer.values()){
-            this.sendReplicationMsg(u);
-        }
+		if(MetadataUtils.getServersNum(metadata) <= 1){// won't be any replica if there is only one server
+			if(MetadataUtils.getServersNum(metadata) == 1){
+				this.db.put(key, value);
+			}else{
+				logger.error(String.format("there shouldn't be %d servers on the ring", MetadataUtils.getServersNum(metadata)));
+			}
+		}else{
+			this.coordinatorBuffer.put(ReplicationMsg.globalSeq, new ReplicationMsg(key, value, ReplicationMsg.globalSeq, ReplicationMsgType.REPLICATE_MIDDLE_REPLICA));
+			ReplicationMsg.increSeq();
+			for(ReplicationMsg u : this.coordinatorBuffer.values()){
+				this.sendReplicationMsg(u);
+			}
+		}
 	}
 
 	public void putKVinMiddleReplica(String key, String value, long seq){
-		this.middleReplicaBuffer.put(seq, new ReplicationMsg(key, value, seq, ReplicationMsgType.REPLICATE_TAIL));
-		for(ReplicationMsg u : this.middleReplicaBuffer.values()){
-            this.sendReplicationMsg(u);
-        }
+		if(MetadataUtils.getServersNum(metadata) <= 2){
+			if(MetadataUtils.getServersNum(metadata) == 2){// won't be any tail replica if there is only two servers
+				this.db.put(key, value);
+				this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
+			}else{
+				logger.error(String.format("there shouldn't be %d servers on the ring when we do putKV in middle replica", MetadataUtils.getServersNum(metadata)));
+			}
+		}else{
+			this.middleReplicaBuffer.put(seq, new ReplicationMsg(key, value, seq, ReplicationMsgType.REPLICATE_TAIL));
+			for(ReplicationMsg u : this.middleReplicaBuffer.values()){
+				this.sendReplicationMsg(u);
+			}
+		}
 	}
 
 	public void putKVinTail(String key, String value, long seq){

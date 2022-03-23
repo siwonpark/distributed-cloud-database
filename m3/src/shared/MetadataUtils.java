@@ -82,4 +82,8 @@ public class MetadataUtils {
 
         return predecessor.getValue();
     }
+
+    public static int getServersNum(TreeMap<String, ECSNode> metadata){
+        return metadata.size();
+    }
 }
