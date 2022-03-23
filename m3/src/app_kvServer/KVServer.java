@@ -72,6 +72,7 @@ public class KVServer extends Thread implements IKVServer {
 
 	HashMap<Long, ReplicationMsg> coordinatorBuffer;
 	HashMap<Long, ReplicationMsg> middleReplicaBuffer;
+	private boolean consistent = true;
 	/**
 	 * Start KV Server at given port
 	 * @param port given port for storage server to operate
@@ -156,6 +157,7 @@ public class KVServer extends Thread implements IKVServer {
 		}
 	}
 
+	// TODO make the buffer work like sliding window to ignore old putKV request (not urgent)
 
 	public void putKVinCoordinator(String key, String value){
 		if(MetadataUtils.getServersNum(metadata) <= 1){// won't be any replica if there is only one server
@@ -165,7 +167,9 @@ public class KVServer extends Thread implements IKVServer {
 				logger.error(String.format("there shouldn't be %d servers on the ring", MetadataUtils.getServersNum(metadata)));
 			}
 		}else{
+			this.consistent = false;
 			this.coordinatorBuffer.put(ReplicationMsg.globalSeq, new ReplicationMsg(key, value, ReplicationMsg.globalSeq, ReplicationMsgType.REPLICATE_MIDDLE_REPLICA));
+			
 			ReplicationMsg.increSeq();
 			for(ReplicationMsg u : this.coordinatorBuffer.values()){
 				this.sendReplicationMsg(u);
@@ -210,6 +214,9 @@ public class KVServer extends Thread implements IKVServer {
 		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
 			this.db.put(inBuffer.key, inBuffer.value);
 			coordinatorBuffer.remove(seq);
+			if(coordinatorBuffer.size() == 0){
+				this.consistent = true;
+			}
 		}else{
 			logger.error("recieve wrong ack from middle replica");
 		}
@@ -229,19 +236,6 @@ public class KVServer extends Thread implements IKVServer {
 			ReplicationMsgSender sender = new ReplicationMsgSender(dest, msg);
 			new Thread(sender).start();
 		}
-	}
-
-	public void clearBuffer(){
-		for(ReplicationMsg u : this.coordinatorBuffer.values()){
-            this.sendReplicationMsg(u);
-        }
-		for(ReplicationMsg u : this.middleReplicaBuffer.values()){
-            this.sendReplicationMsg(u);
-        }
-	}
-
-	public Boolean isConsistent(){
-		return this.coordinatorBuffer.size() == 0;
 	}
 
 	@Override
@@ -336,6 +330,19 @@ public class KVServer extends Thread implements IKVServer {
 				serverName, server.getNodeName()));
 		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
 		new Thread(migrationMgr).start();
+	}
+
+	public void forceConsistency(){
+		if(this.consistent){
+			zkWatcher.setData();
+			return;
+		}else{
+			for(ReplicationMsg u : this.coordinatorBuffer.values()){
+				this.sendReplicationMsg(u);
+			}
+			//this coordinator is not consistent, just don't reply. (can't do the ack waiting at this function because the ack handling is the same thread)
+			return;
+		}
 	}
 
 	/**

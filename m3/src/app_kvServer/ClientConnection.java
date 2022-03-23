@@ -194,22 +194,22 @@ public class ClientConnection implements Runnable {
 
 			case REPLICATE_TO_MIDDLE_REPLICA:
 				server.putKVinMiddleReplica(key, value, message.getSeq());
-				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 				break;
 
 			case REPLICATE_TO_TAIL:
 				server.putKVinTail(key, value, message.getSeq());
-				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 				break;
 
 			case REPLICATION_ACK_FROM_TAIL:
 				server.getAckFromTail(key, value, message.getSeq());
-				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 				break;
 
 			case REPLICATION_ACK_FROM_MIDDLE_REPLICA:
 				server.getAckFromMiddleReplica(key, value, message.getSeq());
-				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();

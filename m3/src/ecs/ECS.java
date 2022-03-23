@@ -91,6 +91,22 @@ public class ECS {
         return true;
     }
 
+    public boolean forceConsistency(ECSNode node) {
+        int try_times = 3;
+        while(try_times >= 0){
+            try_times -= 1;
+            logger.info("SENDING FORCE CONSISTENCY to " + node.getNodeName());
+            KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.FORCE_CONSISTENCY);
+            zkWatcher.setData(node.getNodeName(), data);
+            if (!awaitNodes(1, 1000)) {
+                continue;
+            }else{
+                return true;
+            }
+        }
+        return false;
+    }
+
     public ECSNode addNode(String cacheStrategy, int cacheSize, boolean broadcastMetadata) {
         if (availableNodes.size() == 0) {
             logger.error("No available nodes to provision!");
