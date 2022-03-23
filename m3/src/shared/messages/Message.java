@@ -41,8 +41,11 @@ public class Message implements Serializable, KVMessage {
 
 
 	public Message(String key, String value, long seq, StatusType status){
-		if(status != StatusType.REPLICATION_MIDDLE && status != StatusType.REPLICATION_TAIL){
-			throw new IllegalArgumentException("Status Type must be REPLICATION_MIDDLE or REPLICATION_TAIL");
+		if(status != StatusType.REPLICATE_TO_MIDDLE_REPLICA 
+		&& status != StatusType.REPLICATE_TO_TAIL
+		&& status != StatusType.REPLICATION_ACK_FROM_MIDDLE_REPLICA
+		&& status != StatusType.REPLICATION_ACK_FROM_TAIL){
+			throw new IllegalArgumentException("Status Type must be related to replication message related");
 		}
 		this.key = key;
 		this.value = value;
@@ -94,6 +97,11 @@ public class Message implements Serializable, KVMessage {
 	@Override
 	public StatusType getStatus() {
 		return this.status;
+	}
+
+	@Override
+	public long getSeq() {
+		return this.seq;
 	}
 
 	@Override

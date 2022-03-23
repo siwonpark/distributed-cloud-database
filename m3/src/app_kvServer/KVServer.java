@@ -9,7 +9,6 @@ import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import app_kvServer.KVServer.Update.UpdateType;
 import shared.MetadataUtils;
 import shared.communication.CommModule;
 
@@ -22,6 +21,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.HashMap;
 
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
@@ -49,30 +49,31 @@ public class KVServer extends Thread implements IKVServer {
 
 
 	private DataBase db;
-	class Update {
-		enum UpdateType{
-			MIDDLE,
-			TAIL
-		}
-		Update(String k, String v, UpdateType type){
+	enum ReplicationMsgType{
+		REPLICATE_MIDDLE_REPLICA,
+		REPLICATE_TAIL,
+		ACK_FROM_MIDDLE_REPLICA,
+		ACK_FROM_TAIL
+	}
+	class ReplicationMsg {
+		ReplicationMsg(String k, String v, long seq, ReplicationMsgType type){
 			this.key = k;
 			this.value = v;
-			this.sequence = Update.globalSeq;
+			this.sequence = seq;
 			this.type = type;
-			Update.incre();
 		}
 		static long globalSeq = 0;
-		static void incre(){
-			Update.globalSeq += 1;
+		static void increSeq(){
+			ReplicationMsg.globalSeq += 1;
 		}
 		String key;
 		String value;
 		long sequence;
-		UpdateType type;
+		ReplicationMsgType type;
 	}
 
-	Queue<Update> window;
-	
+	HashMap<Long, ReplicationMsg> coordinatorBuffer;
+	HashMap<Long, ReplicationMsg> middleReplicaBuffer;
 	/**
 	 * Start KV Server at given port
 	 * @param port given port for storage server to operate
@@ -95,7 +96,8 @@ public class KVServer extends Thread implements IKVServer {
 		this.clientConnections = new ArrayList<>();
 		
 		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,true);
-		this.window = new LinkedList<Update>();
+		this.coordinatorBuffer = new HashMap<Long, ReplicationMsg>();
+		this.middleReplicaBuffer = new HashMap<Long, ReplicationMsg>();
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
 		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
 		initZkWatcher();
@@ -156,15 +158,80 @@ public class KVServer extends Thread implements IKVServer {
 		}
 	}
 
-	@Override
-    public void putKV(String key, String value) throws Exception{
-		db.put(key,value);
-		this.window.offer(new Update(key,value,UpdateType.MIDDLE));
-		this.clearWindow();
+
+	public void putKVinCoordinator(String key, String value){
+		this.coordinatorBuffer.put(ReplicationMsg.globalSeq, new ReplicationMsg(key, value, ReplicationMsg.globalSeq, ReplicationMsgType.REPLICATE_MIDDLE_REPLICA));
+		ReplicationMsg.increSeq();
+		for(ReplicationMsg u : this.coordinatorBuffer.values()){
+            this.sendReplicationMsg(u);
+        }
+	}
+
+	public void putKVinMiddleReplica(String key, String value, long seq){
+		this.middleReplicaBuffer.put(seq, new ReplicationMsg(key, value, seq, ReplicationMsgType.REPLICATE_TAIL));
+		for(ReplicationMsg u : this.middleReplicaBuffer.values()){
+            this.sendReplicationMsg(u);
+        }
+	}
+
+	public void putKVinTail(String key, String value, long seq){
+		this.db.put(key, value);
+		this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsgType.ACK_FROM_TAIL));
+	}
+
+	public void getAckFromTail(String key, String value, long seq){
+		ReplicationMsg inBuffer = middleReplicaBuffer.get(seq);
+		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
+			this.db.put(inBuffer.key, inBuffer.value);
+			middleReplicaBuffer.remove(seq);
+			this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
+		}else{
+			logger.error("recieve wrong ack from tail");
+		}
+	}
+
+	public void getAckFromMiddleReplica(String key, String value, long seq){
+		ReplicationMsg inBuffer = coordinatorBuffer.get(seq);
+		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
+			this.db.put(inBuffer.key, inBuffer.value);
+			coordinatorBuffer.remove(seq);
+		}else{
+			logger.error("recieve wrong ack from middle replica");
+		}
+	}
+
+	public void sendReplicationMsg(ReplicationMsg msg){
+		ECSNode dest = null;
+		if(msg.type == ReplicationMsgType.REPLICATE_MIDDLE_REPLICA || msg.type == ReplicationMsgType.REPLICATE_TAIL){
+			dest = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
+		}else if(msg.type == ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA || msg.type == ReplicationMsgType.ACK_FROM_TAIL){
+			dest = MetadataUtils.getPredecessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
+		}
+		if (dest == null){
+			logger.error("can't get the destination in sendReplicationMsg!");
+		}else{
+			logger.info(String.format("send an replication message from server %s to server %s", serverName, dest.getNodeName()));
+			ReplicationMsgSender sender = new ReplicationMsgSender(dest, msg);
+			new Thread(sender).start();
+		}
+	}
+
+	public void clearBuffer(){
+		for(ReplicationMsg u : this.coordinatorBuffer.values()){
+            this.sendReplicationMsg(u);
+        }
+		for(ReplicationMsg u : this.middleReplicaBuffer.values()){
+            this.sendReplicationMsg(u);
+        }
 	}
 
 	public Boolean isConsistent(){
-		return this.window.size() == 0;
+		return this.coordinatorBuffer.size() == 0;
+	}
+
+	@Override
+    public void putKV(String key, String value) throws Exception{
+		db.put(key, value);
 	}
 
 	@Override
@@ -254,20 +321,6 @@ public class KVServer extends Thread implements IKVServer {
 				serverName, server.getNodeName()));
 		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
 		new Thread(migrationMgr).start();
-	}
-
-	public void sendUpdate(Update update){
-		ECSNode  successor = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
-		logger.info(String.format("send an update from server %s to server %s",
-				serverName, successor.getNodeName()));
-		UpdateSender sender = new UpdateSender(successor, update);
-		new Thread(sender).start();
-	}
-
-	public void clearWindow(){
-		for(Update u : this.window){
-            this.sendUpdate(u);
-        }
 	}
 
 	/**

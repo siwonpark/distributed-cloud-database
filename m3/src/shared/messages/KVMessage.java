@@ -24,9 +24,12 @@ public interface KVMessage {
 		SERVER_NOT_RESPONSIBLE, /* Request not successful, server not responsible for key */
 		DATA_MIGRATION, /* Server is sending other server data as part of data migration process */
 
-		REPLICATION_MIDDLE,
-		REPLICATION_TAIL,
-		REPLICATION_ACK
+
+		REPLICATE_TO_MIDDLE_REPLICA, 
+		REPLICATE_TO_TAIL,
+		REPLICATION_MESSAGE_SENDED,
+		REPLICATION_ACK_FROM_TAIL,
+		REPLICATION_ACK_FROM_MIDDLE_REPLICA
 	}
 
 	/**
@@ -53,6 +56,7 @@ public interface KVMessage {
 	 */
 	public TreeMap<String, ECSNode> getServerMetadata();
 	
+	public long getSeq();
 }
 
 

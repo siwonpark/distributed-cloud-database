@@ -186,10 +186,31 @@ public class ClientConnection implements Runnable {
 					}
 				}
 				break;
+				
 			case HEARTBEAT:
 				logger.debug("Received heartbeat request from client");
 				responseStatus = StatusType.HEARTBEAT;
 				break;
+
+			case REPLICATE_TO_MIDDLE_REPLICA:
+				server.putKVinMiddleReplica(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+				break;
+
+			case REPLICATE_TO_TAIL:
+				server.putKVinTail(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+				break;
+
+			case REPLICATION_ACK_FROM_TAIL:
+				server.getAckFromTail(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+				break;
+
+			case REPLICATION_ACK_FROM_MIDDLE_REPLICA:
+				server.getAckFromMiddleReplica(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SENDED;
+
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 				logger.error(errorMsg);
