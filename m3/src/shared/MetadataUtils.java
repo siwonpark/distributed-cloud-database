@@ -41,12 +41,12 @@ public class MetadataUtils {
             return metadata.get(serverHash);
         } else {
             throw new RuntimeException(
-                    String.format("Server Hash %s is not contained in the metadata", serverHash));
+                    String.format("Server Hash %s is not contained in the metadata, the server passed is %s", serverHash, server));
         }
     }
 
     public static ECSNode getServerNodeWithAddress(String host, int port, TreeMap<String, ECSNode> metadata){
-        return getServerNode(host + ":" + Integer.toString(port), metadata);
+        return getServerNode(host + ":" + port, metadata);
     }
 
     /**
