@@ -312,6 +312,12 @@ public class KVServer extends Thread implements IKVServer {
 		new Thread(migrationMgr).start();
 	}
 
+
+	/**
+	 * if this coordinator is not consistent now, just don't reply. 
+	 * can't do the ack waiting at this function because the ack handling is the same thread, 
+	 * just send ReplicationMsg again and wait for someone check the consistent status later
+	 */
 	public void forceConsistency(){
 		if(this.consistent){
 			zkWatcher.setData();
@@ -320,7 +326,6 @@ public class KVServer extends Thread implements IKVServer {
 			for(ReplicationMsg u : this.coordinatorBuffer.values()){
 				this.sendReplicationMsg(u);
 			}
-			//this coordinator is not consistent, just don't reply. (can't do the ack waiting at this function because the ack handling is the same thread)
 			return;
 		}
 	}
@@ -369,6 +374,39 @@ public class KVServer extends Thread implements IKVServer {
 		assert responsibleServer != null;
 		return responsibleServer.getNodePort() == port &&
 				Objects.equals(responsibleServer.getNodeName(), this.serverName);
+	}
+
+	/**
+	 * Is this server responsible for key (including replicas)
+	 * @param key The key to query
+	 * @return True if server is responsible, false otherwise
+	 */
+	public boolean isResponsibleForKeywithReplicas(String key){
+		if (this.metadata == null){
+			logger.error(String.format("Server %s does not have any metadata", serverName));
+			return true;
+		}
+		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, metadata);
+		assert responsibleServer != null;
+		
+		if(responsibleServer.getNodePort() == port && Objects.equals(responsibleServer.getNodeName(), this.serverName)){
+			return true;
+		}
+		if(MetadataUtils.getServersNum(metadata) <= 1){
+			return false;
+		}
+		ECSNode pre1 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNode(serverName, metadata));
+		if(responsibleServer.getNodePort() == pre1.getNodePort() && Objects.equals(responsibleServer.getNodeName(), pre1.getNodeName())){
+			return true;
+		}
+		if(MetadataUtils.getServersNum(metadata) <= 2){
+			return false;
+		}
+		ECSNode pre2 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNode(pre1.getNodeName(), metadata));
+		if(responsibleServer.getNodePort() == pre2.getNodePort() && Objects.equals(responsibleServer.getNodeName(), pre2.getNodeName())){
+			return true;
+		}
+		return false;
 	}
 
 	@Override
