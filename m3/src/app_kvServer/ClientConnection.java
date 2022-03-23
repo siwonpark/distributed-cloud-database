@@ -194,6 +194,7 @@ public class ClientConnection implements Runnable {
 						responseStatus = isInStorage ? StatusType.PUT_UPDATE : StatusType.PUT_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
+						logger.error(e);
 						responseStatus = StatusType.PUT_ERROR;
 					}
 				}
@@ -205,21 +206,25 @@ public class ClientConnection implements Runnable {
 				break;
 
 			case REPLICATE_TO_MIDDLE_REPLICA:
+				logger.debug("Received Replicate to Middle Replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
 				server.putKVinMiddleReplica(key, value, message.getSeq());
 				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 				break;
 
 			case REPLICATE_TO_TAIL:
+				logger.debug("Received Replicate to Middle Replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
 				server.putKVinTail(key, value, message.getSeq());
 				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 				break;
 
 			case REPLICATION_ACK_FROM_TAIL:
+				logger.debug("Received replication ack from tailZ: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
 				server.getAckFromTail(key, value, message.getSeq());
 				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 				break;
 
 			case REPLICATION_ACK_FROM_MIDDLE_REPLICA:
+				logger.debug("Received replication ack from middle replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
 				server.getAckFromMiddleReplica(key, value, message.getSeq());
 				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 
