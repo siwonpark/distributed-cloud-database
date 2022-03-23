@@ -212,7 +212,7 @@ public class KVServer extends Thread implements IKVServer {
 			dest = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNodeWithAddress("127.0.0.1", this.port, metadata));// have to Hardcoded this for now, the host string hasn't been passed to KVServer
 		}else if(msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA 
 		|| msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_TAIL){
-			dest = MetadataUtils.getPredecessor(metadata, MetadataUtils.getServerNodeWithAddress(("127.0.0.1", this.port, metadata));
+			dest = MetadataUtils.getPredecessor(metadata, MetadataUtils.getServerNodeWithAddress("127.0.0.1", this.port, metadata));
 		}
 		if (dest == null){
 			logger.error("can't get the destination in sendReplicationMsg!");
