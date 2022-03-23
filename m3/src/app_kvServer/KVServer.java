@@ -209,10 +209,10 @@ public class KVServer extends Thread implements IKVServer {
 		ECSNode dest = null;
 		if(msg.type == ReplicationMsg.ReplicationMsgType.REPLICATE_MIDDLE_REPLICA 
 		|| msg.type == ReplicationMsg.ReplicationMsgType.REPLICATE_TAIL){
-			dest = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
+			dest = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNodeWithAddress("localhost", this.port, metadata));// have to Hardcoded this for now, the host string hasn't been passed to KVServer
 		}else if(msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA 
 		|| msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_TAIL){
-			dest = MetadataUtils.getPredecessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
+			dest = MetadataUtils.getPredecessor(metadata, MetadataUtils.getServerNodeWithAddress("localhost", this.port, metadata));
 		}
 		if (dest == null){
 			logger.error("can't get the destination in sendReplicationMsg!");
@@ -383,6 +383,10 @@ public class KVServer extends Thread implements IKVServer {
 				Objects.equals(responsibleServer.getNodeName(), this.serverName);
 	}
 
+	private String getServerHashName(){
+		return "127.0.0.1:" + Integer.toString(this.port);
+	}
+
 	/**
 	 * Is this server responsible for key (including replicas)
 	 * @param key The key to query
@@ -402,14 +406,14 @@ public class KVServer extends Thread implements IKVServer {
 		if(MetadataUtils.getServersNum(metadata) <= 1){
 			return false;
 		}
-		ECSNode pre1 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNode(serverName, metadata));
+		ECSNode pre1 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNodeWithAddress("localhost", this.port, metadata));
 		if(responsibleServer.getNodePort() == pre1.getNodePort() && Objects.equals(responsibleServer.getNodeName(), pre1.getNodeName())){
 			return true;
 		}
 		if(MetadataUtils.getServersNum(metadata) <= 2){
 			return false;
 		}
-		ECSNode pre2 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNode(pre1.getNodeName(), metadata));
+		ECSNode pre2 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNodeWithAddress(pre1.getNodeHost(), pre1.getNodePort(), metadata));
 		if(responsibleServer.getNodePort() == pre2.getNodePort() && Objects.equals(responsibleServer.getNodeName(), pre2.getNodeName())){
 			return true;
 		}

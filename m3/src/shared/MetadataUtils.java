@@ -45,6 +45,10 @@ public class MetadataUtils {
         }
     }
 
+    public static ECSNode getServerNodeWithAddress(String host, int port, TreeMap<String, ECSNode> metadata){
+        return getServerNode(host + ":" + Integer.toString(port), metadata);
+    }
+
     /**
      * Get Successor of given node in the HashRing, returns itself if the hashring is empty
      * @param metadata HashRing of servers
