@@ -5,7 +5,6 @@ import org.apache.log4j.Logger;
 import shared.communication.CommModule;
 import shared.messages.KVMessage;
 import shared.messages.Message;
-import app_kvServer.KVServer.ReplicationMsg;
 
 import java.io.IOException;
 
@@ -54,7 +53,7 @@ public class ReplicationMsgSender implements Runnable {
         try {
             commModule.sendMessage(msg);
             Message response = commModule.receiveMessage();
-            if (response.getStatus() != KVMessage.StatusType.REPLICATION_MESSAGE_SENDED) {
+            if (response.getStatus() != KVMessage.StatusType.REPLICATION_MESSAGE_SEND) {
                 logger.error(String.format("Unable to send replication message: key %s and value %s to server port %s", rpmsg.key, rpmsg.value, dest.getNodePort()));
             }
         } catch (IOException e) {

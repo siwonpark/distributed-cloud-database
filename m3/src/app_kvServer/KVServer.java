@@ -47,28 +47,6 @@ public class KVServer extends Thread implements IKVServer {
 
 
 	private DataBase db;
-	enum ReplicationMsgType{
-		REPLICATE_MIDDLE_REPLICA,
-		REPLICATE_TAIL,
-		ACK_FROM_MIDDLE_REPLICA,
-		ACK_FROM_TAIL
-	}
-	class ReplicationMsg {
-		ReplicationMsg(String k, String v, long seq, ReplicationMsgType type){
-			this.key = k;
-			this.value = v;
-			this.sequence = seq;
-			this.type = type;
-		}
-		static long globalSeq = 0;
-		static void increSeq(){
-			ReplicationMsg.globalSeq += 1;
-		}
-		String key;
-		String value;
-		long sequence;
-		ReplicationMsgType type;
-	}
 
 	HashMap<Long, ReplicationMsg> coordinatorBuffer;
 	HashMap<Long, ReplicationMsg> middleReplicaBuffer;
@@ -168,7 +146,7 @@ public class KVServer extends Thread implements IKVServer {
 			}
 		}else{
 			this.consistent = false;
-			this.coordinatorBuffer.put(ReplicationMsg.globalSeq, new ReplicationMsg(key, value, ReplicationMsg.globalSeq, ReplicationMsgType.REPLICATE_MIDDLE_REPLICA));
+			this.coordinatorBuffer.put(ReplicationMsg.getSeq(), new ReplicationMsg(key, value, ReplicationMsg.getSeq(), ReplicationMsg.ReplicationMsgType.REPLICATE_MIDDLE_REPLICA));
 			
 			ReplicationMsg.increSeq();
 			for(ReplicationMsg u : this.coordinatorBuffer.values()){
@@ -181,12 +159,12 @@ public class KVServer extends Thread implements IKVServer {
 		if(MetadataUtils.getServersNum(metadata) <= 2){
 			if(MetadataUtils.getServersNum(metadata) == 2){// won't be any tail replica if there is only two servers
 				this.db.put(key, value);
-				this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
+				this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
 			}else{
 				logger.error(String.format("there shouldn't be %d servers on the ring when we do putKV in middle replica", MetadataUtils.getServersNum(metadata)));
 			}
 		}else{
-			this.middleReplicaBuffer.put(seq, new ReplicationMsg(key, value, seq, ReplicationMsgType.REPLICATE_TAIL));
+			this.middleReplicaBuffer.put(seq, new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.REPLICATE_TAIL));
 			for(ReplicationMsg u : this.middleReplicaBuffer.values()){
 				this.sendReplicationMsg(u);
 			}
@@ -195,7 +173,7 @@ public class KVServer extends Thread implements IKVServer {
 
 	public void putKVinTail(String key, String value, long seq){
 		this.db.put(key, value);
-		this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsgType.ACK_FROM_TAIL));
+		this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.ACK_FROM_TAIL));
 	}
 
 	public void getAckFromTail(String key, String value, long seq){
@@ -203,7 +181,7 @@ public class KVServer extends Thread implements IKVServer {
 		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
 			this.db.put(inBuffer.key, inBuffer.value);
 			middleReplicaBuffer.remove(seq);
-			this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
+			this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
 		}else{
 			logger.error("recieve wrong ack from tail");
 		}
@@ -224,9 +202,11 @@ public class KVServer extends Thread implements IKVServer {
 
 	public void sendReplicationMsg(ReplicationMsg msg){
 		ECSNode dest = null;
-		if(msg.type == ReplicationMsgType.REPLICATE_MIDDLE_REPLICA || msg.type == ReplicationMsgType.REPLICATE_TAIL){
+		if(msg.type == ReplicationMsg.ReplicationMsgType.REPLICATE_MIDDLE_REPLICA 
+		|| msg.type == ReplicationMsg.ReplicationMsgType.REPLICATE_TAIL){
 			dest = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
-		}else if(msg.type == ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA || msg.type == ReplicationMsgType.ACK_FROM_TAIL){
+		}else if(msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA 
+		|| msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_TAIL){
 			dest = MetadataUtils.getPredecessor(metadata, MetadataUtils.getServerNode(serverName, metadata));
 		}
 		if (dest == null){
