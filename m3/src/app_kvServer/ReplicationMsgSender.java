@@ -8,6 +8,8 @@ import shared.messages.Message;
 
 import java.io.IOException;
 
+import static shared.PrintUtils.DELETE_STRING;
+
 public class ReplicationMsgSender implements Runnable {
     private Logger logger = Logger.getRootLogger();
 
@@ -48,7 +50,8 @@ public class ReplicationMsgSender implements Runnable {
                 logger.error("Wrong Replication Message Type");
                 return;
         }
-        Message msg = new Message(rpmsg.key, rpmsg.value, rpmsg.sequence, msgType);            
+        String value = rpmsg.value == null ? DELETE_STRING : rpmsg.value;
+        Message msg = new Message(rpmsg.key, value, rpmsg.sequence, msgType);
 
         try {
             commModule.sendMessage(msg);
