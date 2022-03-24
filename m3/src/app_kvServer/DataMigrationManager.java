@@ -74,13 +74,14 @@ public class DataMigrationManager implements Runnable {
 
         if (migrationSuccess){
             logger.info("Successfully migrated keys" + dataToMigrate);
+            // TODO: need to give delete old one or don't delete old one flag, for now just don't delete
             // Delete all the keys that were migrated, since migration was successful
-            for (ArrayList<String> keyValue : dataToMigrate) {
-                String key = keyValue.get(0);
-                db.put(key, null);
-            }
+            //for (ArrayList<String> keyValue : dataToMigrate) {
+            //    String key = keyValue.get(0);
+            //    db.put(key, null);
+            //}
             // We want to remove the keys that were migrated
-            db.batchDeleteNull();
+            // db.batchDeleteNull();
             // Send ACK to Zookeeper
             zkWatcher.setData();
         }
