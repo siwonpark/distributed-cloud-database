@@ -180,6 +180,20 @@ public class ECSClient implements IECSClient {
         }
     }
 
+
+
+    private boolean sync(){ 
+        boolean consistent = true;
+        Map<String, ECSNode> nodes = getNodes();
+        for (Map.Entry<String, ECSNode> entry : nodes.entrySet()) {
+            ECSNode node = entry.getValue();
+            if(!ecs.forceConsistency(node)){
+                consistent = false;
+            }
+        }
+        return consistent;
+    }
+
     public void run() {
         while(!stop) {
             stdin = new BufferedReader(new InputStreamReader(System.in));
@@ -337,6 +351,21 @@ public class ECSClient implements IECSClient {
                 printECSClientHelp();
                 break;
             }
+            case "sync":
+                if(tokens.length == 1){
+                    try {
+                        if(sync()){
+                            printSuccess("Consistency is achieved among all the servers!");
+                        }else{
+                            printError("Consistency haven't been achieved! There might be partition.");
+                        }
+                    } catch (NumberFormatException e){
+                        printError("Could not parse parameters properly");
+                    }
+                } else{
+                    printError("Invalid Number of Parameters! Use help to see usage");
+                }
+                break;
             default: {
                 printError("Unknown command");
                 printECSClientHelp();

@@ -30,12 +30,12 @@ public class EnronPerformanceTest extends TestCase {
 
     public final int[] numClients = {1, 5, 20, 50, 100};
     public final int[] numServers = {1, 5, 20, 50, 100};
-    public final int NUM_OPS = 1000;
+    public final int NUM_OPS = 10000;
     public final int NUM_CLIENTS = 1;
     public final int NUM_SERVERS = 1;
     public final int CACHE_SIZE = 20;
     public final String CACHE_STRATEGY = "FIFO";
-    public final int GETS_PER_PUT = 5;
+    public final int GETS_PER_PUT = 3;
 
     private Logger logger = Logger.getRootLogger();
     private long durationNanos = 0;

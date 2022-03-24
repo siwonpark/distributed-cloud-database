@@ -25,11 +25,11 @@ public class AllTests {
             deleteDataDir();
 			/* Refresh data directory when running tests */
 			new LogSetup("logs/testing/test.log", Level.ERROR);
-//            File ecsConfigFile = new File("src/testing/ecs.config");
-//            ecs = new ECSClient(ecsConfigFile);
-//            ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-//            port = node.getNodePort();
-//            ecs.start();
+            File ecsConfigFile = new File("src/testing/ecs.config");
+            ecs = new ECSClient(ecsConfigFile);
+            ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+            port = node.getNodePort();
+            ecs.start();
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -47,17 +47,17 @@ public class AllTests {
 
     public static Test suite() {
         TestSuite clientSuite = new TestSuite("Basic Storage ServerTest-Suite");
-//        clientSuite.addTestSuite(DataBasePutGetTest.class);
-//        clientSuite.addTestSuite(CacheTest.class);
-//        clientSuite.addTestSuite(DataBaseReBootTest.class);
-//		clientSuite.addTestSuite(ConnectionTest.class);
-//		clientSuite.addTestSuite(InteractionTest.class);
-//		clientSuite.addTestSuite(AdditionalTest.class);
-//		clientSuite.addTestSuite(CLITest.class);
-//		clientSuite.addTestSuite(LoadTest.class);
-//		clientSuite.addTestSuite(ECSTest.class);
+        clientSuite.addTestSuite(DataBasePutGetTest.class);
+        clientSuite.addTestSuite(CacheTest.class);
+        clientSuite.addTestSuite(DataBaseReBootTest.class);
+		clientSuite.addTestSuite(ConnectionTest.class);
+		clientSuite.addTestSuite(InteractionTest.class);
+		clientSuite.addTestSuite(AdditionalTest.class);
+		clientSuite.addTestSuite(CLITest.class);
+		clientSuite.addTestSuite(LoadTest.class);
+		clientSuite.addTestSuite(ECSTest.class);
         // We *NEED* this to be the last test in the suite!!!!!
-        clientSuite.addTestSuite(PerformanceTest.class);
+        clientSuite.addTestSuite(ShutDownTest.class);
         return clientSuite;
     }
 

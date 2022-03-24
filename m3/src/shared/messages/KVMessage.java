@@ -22,7 +22,15 @@ public interface KVMessage {
 		SERVER_STOPPED, /* Server is stopped, no requests are processed */
 		SERVER_WRITE_LOCK, /* Server locked for write, only get possible */
 		SERVER_NOT_RESPONSIBLE, /* Request not successful, server not responsible for key */
-		DATA_MIGRATION /* Server is sending other server data as part of data migration process */
+		DATA_MIGRATION, /* Server is sending other server data as part of data migration process */
+
+		GET_WITH_REPLICA,
+		PUT_WITH_REPLICATION,
+		REPLICATE_TO_MIDDLE_REPLICA,
+		REPLICATE_TO_TAIL,
+		REPLICATION_MESSAGE_SEND,
+		REPLICATION_ACK_FROM_TAIL,
+		REPLICATION_ACK_FROM_MIDDLE_REPLICA
 	}
 
 	/**
@@ -49,6 +57,7 @@ public interface KVMessage {
 	 */
 	public TreeMap<String, ECSNode> getServerMetadata();
 	
+	public long getSeq();
 }
 
 

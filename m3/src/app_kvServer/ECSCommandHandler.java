@@ -45,6 +45,8 @@ public class ECSCommandHandler {
             case MOVE_DATA:
                 server.moveData(data.getMoveRange(), data.getTargetNode());
                 break;
+            case FORCE_CONSISTENCY:
+                server.forceConsistency();
             default:
                 String errorMsg = "Request contained a status unknown to the server: " + op;
                 logger.error(errorMsg);
