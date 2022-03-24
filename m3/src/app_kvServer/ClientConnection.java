@@ -134,9 +134,11 @@ public class ClientConnection implements Runnable {
 
 
 		switch(message.getStatus()) {
+			case GET_WITH_REPLICA:
 			case GET:
 				try {
-					if (!server.isResponsibleForKey(message.getKey())){
+					if(message.getStatus() == StatusType.GET && !server.isResponsibleForKey(message.getKey()) 
+				   	|| (message.getStatus() == StatusType.GET_WITH_REPLICA && !server.isResponsibleForKeywithReplicas(message.getKey()))){
 						responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
 						Message response = new Message(server.getMetadata(), responseStatus);
 						sendMessage(response);
@@ -149,6 +151,8 @@ public class ClientConnection implements Runnable {
 					responseStatus = StatusType.GET_ERROR;
 				}
 				break;
+			
+			case PUT_WITH_REPLICATION:
 			case PUT:
 				if (server.isWriteLocked()) {
 					responseStatus = StatusType.SERVER_WRITE_LOCK;
@@ -168,9 +172,13 @@ public class ClientConnection implements Runnable {
 						responseStatus = StatusType.DELETE_ERROR;
 						break;
 					}
-
+					
 					try {
-						server.putKV(key, null);
+						if(message.getStatus() == StatusType.PUT){
+							server.putKV(key, null);
+						}else{
+							server.putKVinCoordinator(key, null);
+						}
 						responseStatus = StatusType.DELETE_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to delete from store: Key " + message.getKey());
@@ -178,18 +186,48 @@ public class ClientConnection implements Runnable {
 					}
 				} else {
 					try {
-						server.putKV(key, value);
+						if(message.getStatus() == StatusType.PUT){
+							server.putKV(key, value);
+						}else{
+							server.putKVinCoordinator(key, value);
+						}
 						responseStatus = isInStorage ? StatusType.PUT_UPDATE : StatusType.PUT_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
+						logger.error(e);
 						responseStatus = StatusType.PUT_ERROR;
 					}
 				}
 				break;
+				
 			case HEARTBEAT:
 				logger.debug("Received heartbeat request from client");
 				responseStatus = StatusType.HEARTBEAT;
 				break;
+
+			case REPLICATE_TO_MIDDLE_REPLICA:
+				logger.info("Received Replicate to Middle Replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
+				server.putKVinMiddleReplica(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
+				break;
+
+			case REPLICATE_TO_TAIL:
+				logger.info("Received Replicate to Middle Replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
+				server.putKVinTail(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
+				break;
+
+			case REPLICATION_ACK_FROM_TAIL:
+				logger.info("Received replication ack from tailZ: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
+				server.getAckFromTail(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
+				break;
+
+			case REPLICATION_ACK_FROM_MIDDLE_REPLICA:
+				logger.info("Received replication ack from middle replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
+				server.getAckFromMiddleReplica(key, value, message.getSeq());
+				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
+
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 				logger.error(errorMsg);

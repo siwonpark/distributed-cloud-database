@@ -8,6 +8,7 @@ import persistence.DataBase;
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
 import shared.MetadataUtils;
 import shared.communication.CommModule;
 
@@ -18,6 +19,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.HashMap;
 
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
@@ -46,7 +48,9 @@ public class KVServer extends Thread implements IKVServer {
 
 	private DataBase db;
 
-
+	HashMap<Long, ReplicationMsg> coordinatorBuffer;
+	HashMap<Long, ReplicationMsg> middleReplicaBuffer;
+	private boolean consistent = true;
 	/**
 	 * Start KV Server at given port
 	 * @param port given port for storage server to operate
@@ -67,10 +71,11 @@ public class KVServer extends Thread implements IKVServer {
 		this.lockWrite = false;
 		this.serverName = serverName;
 		this.clientConnections = new ArrayList<>();
-
+		
 		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,true);
+		this.coordinatorBuffer = new HashMap<Long, ReplicationMsg>();
+		this.middleReplicaBuffer = new HashMap<Long, ReplicationMsg>();
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
-
 		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
 		initZkWatcher();
 	}
@@ -127,6 +132,96 @@ public class KVServer extends Thread implements IKVServer {
 			throw new RuntimeException(String.format("No such key %s exists", key));
 		} else {
 			return result;
+		}
+	}
+
+	// TODO make the buffer work like sliding window to ignore old resend putKV request if the kv is already in window (not urgent)
+
+	public void putKVinCoordinator(String key, String value){
+		logger.info("putKV in Coordinator Server Num: " + MetadataUtils.getServersNum(metadata));
+		if(MetadataUtils.getServersNum(metadata) <= 1){// won't be any replica if there is only one server
+			if(MetadataUtils.getServersNum(metadata) == 1){
+				this.db.put(key, value);
+			}else{
+				logger.error(String.format("there shouldn't be %d servers on the ring", MetadataUtils.getServersNum(metadata)));
+			}
+		}else{
+			this.consistent = false;
+			this.coordinatorBuffer.put(ReplicationMsg.getSeq(), new ReplicationMsg(key, value, ReplicationMsg.getSeq(), ReplicationMsg.ReplicationMsgType.REPLICATE_MIDDLE_REPLICA));
+			
+			ReplicationMsg.increSeq();
+			for(ReplicationMsg u : this.coordinatorBuffer.values()){
+				this.sendReplicationMsg(u);
+			}
+		}
+	}
+
+	public void putKVinMiddleReplica(String key, String value, long seq){
+		logger.info("putKV in Middle Replica Server Num: " + MetadataUtils.getServersNum(metadata));
+		if(MetadataUtils.getServersNum(metadata) <= 2){
+			if(MetadataUtils.getServersNum(metadata) == 2){// won't be any tail replica if there is only two servers
+				this.db.put(key, value);
+				this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
+			}else{
+				logger.error(String.format("there shouldn't be %d servers on the ring when we do putKV in middle replica", MetadataUtils.getServersNum(metadata)));
+			}
+		}else{
+			this.middleReplicaBuffer.put(seq, new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.REPLICATE_TAIL));
+			for(ReplicationMsg u : this.middleReplicaBuffer.values()){
+				this.sendReplicationMsg(u);
+			}
+		}
+	}
+
+	public void putKVinTail(String key, String value, long seq){
+		logger.info("putKV in Tail Replica");
+		this.db.put(key, value);
+		this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.ACK_FROM_TAIL));
+	}
+
+	public void getAckFromTail(String key, String value, long seq){
+		logger.info("get ACK from Tail Replica");
+		ReplicationMsg inBuffer = middleReplicaBuffer.get(seq);
+		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
+			this.db.put(inBuffer.key, inBuffer.value);
+			middleReplicaBuffer.remove(seq);
+			this.sendReplicationMsg(new ReplicationMsg(key, value, seq, ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA));
+		}else{
+			logger.error("recieve wrong ack from tail");
+		}
+	}
+
+	public void getAckFromMiddleReplica(String key, String value, long seq){
+		logger.info("get ACK from Middle Replica");
+		ReplicationMsg inBuffer = coordinatorBuffer.get(seq);
+		if(inBuffer.key.equals(key) && inBuffer.value.equals(value)){
+			this.db.put(inBuffer.key, inBuffer.value);
+			coordinatorBuffer.remove(seq);
+			if(coordinatorBuffer.size() == 0){
+				this.consistent = true;
+			}
+		}else{
+			logger.error("recieve wrong ack from middle replica");
+		}
+	}
+
+	public void sendReplicationMsg(ReplicationMsg msg){
+		ECSNode dest = null;
+		if(msg.type == ReplicationMsg.ReplicationMsgType.REPLICATE_MIDDLE_REPLICA 
+		|| msg.type == ReplicationMsg.ReplicationMsgType.REPLICATE_TAIL){
+			dest = MetadataUtils.getSuccessor(metadata, MetadataUtils.getServerNodeWithAddress("127.0.0.1", this.port, metadata));// have to Hardcoded this for now, the host string hasn't been passed to KVServer
+		}else if(msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_MIDDLE_REPLICA 
+		|| msg.type == ReplicationMsg.ReplicationMsgType.ACK_FROM_TAIL){
+			dest = MetadataUtils.getPredecessor(metadata, MetadataUtils.getServerNodeWithAddress("127.0.0.1", this.port, metadata));
+		}
+		if (dest == null){
+			logger.error("can't get the destination in sendReplicationMsg!");
+			return;
+		}else{
+			logger.info(String.format("send an replication message from server %s to server %s", serverName, dest.getNodeName()));
+			ReplicationMsgSender sender = new ReplicationMsgSender(dest, msg);
+			new Thread(sender).start();
+			return;
 		}
 	}
 
@@ -224,6 +319,24 @@ public class KVServer extends Thread implements IKVServer {
 		new Thread(migrationMgr).start();
 	}
 
+
+	/**
+	 * if this coordinator is not consistent now, just don't reply. 
+	 * can't do the ack waiting at this function because the ack handling is the same thread, 
+	 * just send ReplicationMsg again and wait for someone check the consistent status later
+	 */
+	public void forceConsistency(){
+		if(this.consistent){
+			zkWatcher.setData();
+			return;
+		}else{
+			for(ReplicationMsg u : this.coordinatorBuffer.values()){
+				this.sendReplicationMsg(u);
+			}
+			return;
+		}
+	}
+
 	/**
 	 * Update the metadata repository of this KVServer
 	 */
@@ -268,6 +381,43 @@ public class KVServer extends Thread implements IKVServer {
 		assert responsibleServer != null;
 		return responsibleServer.getNodePort() == port &&
 				Objects.equals(responsibleServer.getNodeName(), this.serverName);
+	}
+
+	private String getServerHashName(){
+		return "127.0.0.1:" + Integer.toString(this.port);
+	}
+
+	/**
+	 * Is this server responsible for key (including replicas)
+	 * @param key The key to query
+	 * @return True if server is responsible, false otherwise
+	 */
+	public boolean isResponsibleForKeywithReplicas(String key){
+		if (this.metadata == null){
+			logger.error(String.format("Server %s does not have any metadata", serverName));
+			return true;
+		}
+		ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, metadata);
+		assert responsibleServer != null;
+		
+		if(responsibleServer.getNodePort() == port && Objects.equals(responsibleServer.getNodeName(), this.serverName)){
+			return true;
+		}
+		if(MetadataUtils.getServersNum(metadata) <= 1){
+			return false;
+		}
+		ECSNode pre1 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNodeWithAddress("127.0.0.1", this.port, metadata));
+		if(responsibleServer.getNodePort() == pre1.getNodePort() && Objects.equals(responsibleServer.getNodeName(), pre1.getNodeName())){
+			return true;
+		}
+		if(MetadataUtils.getServersNum(metadata) <= 2){
+			return false;
+		}
+		ECSNode pre2 = MetadataUtils.getPredecessor(metadata,  MetadataUtils.getServerNodeWithAddress(pre1.getNodeHost(), pre1.getNodePort(), metadata));
+		if(responsibleServer.getNodePort() == pre2.getNodePort() && Objects.equals(responsibleServer.getNodeName(), pre2.getNodeName())){
+			return true;
+		}
+		return false;
 	}
 
 	@Override
