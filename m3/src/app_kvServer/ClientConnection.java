@@ -216,7 +216,8 @@ public class ClientConnection implements Runnable {
 				logger.info("Received replication ack from middle replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
 				server.getAckFromMiddleReplica(key, value, message.getSeq());
 				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
-
+				break;
+				
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 				logger.error(errorMsg);
