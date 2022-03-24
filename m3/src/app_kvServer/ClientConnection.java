@@ -134,11 +134,9 @@ public class ClientConnection implements Runnable {
 
 
 		switch(message.getStatus()) {
-			case GET_WITH_REPLICA:
 			case GET:
 				try {
-					if(message.getStatus() == StatusType.GET && !server.isResponsibleForKey(message.getKey()) 
-				   	|| (message.getStatus() == StatusType.GET_WITH_REPLICA && !server.isResponsibleForKeywithReplicas(message.getKey()))){
+					if(message.getStatus() == StatusType.GET && !server.isResponsibleForKeywithReplicas(message.getKey())){
 						responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
 						Message response = new Message(server.getMetadata(), responseStatus);
 						sendMessage(response);
@@ -152,7 +150,6 @@ public class ClientConnection implements Runnable {
 				}
 				break;
 			
-			case PUT_WITH_REPLICATION:
 			case PUT:
 				if (server.isWriteLocked()) {
 					responseStatus = StatusType.SERVER_WRITE_LOCK;
@@ -174,11 +171,7 @@ public class ClientConnection implements Runnable {
 					}
 					
 					try {
-						if(message.getStatus() == StatusType.PUT){
-							server.putKV(key, null);
-						}else{
-							server.putKVinCoordinator(key, null);
-						}
+						server.putKVinCoordinator(key, null);
 						responseStatus = StatusType.DELETE_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to delete from store: Key " + message.getKey());
@@ -186,11 +179,7 @@ public class ClientConnection implements Runnable {
 					}
 				} else {
 					try {
-						if(message.getStatus() == StatusType.PUT){
-							server.putKV(key, value);
-						}else{
-							server.putKVinCoordinator(key, value);
-						}
+						server.putKVinCoordinator(key, value);
 						responseStatus = isInStorage ? StatusType.PUT_UPDATE : StatusType.PUT_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());

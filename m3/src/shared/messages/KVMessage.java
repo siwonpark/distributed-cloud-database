@@ -24,8 +24,6 @@ public interface KVMessage {
 		SERVER_NOT_RESPONSIBLE, /* Request not successful, server not responsible for key */
 		DATA_MIGRATION, /* Server is sending other server data as part of data migration process */
 
-		GET_WITH_REPLICA,
-		PUT_WITH_REPLICATION,
 		REPLICATE_TO_MIDDLE_REPLICA,
 		REPLICATE_TO_TAIL,
 		REPLICATION_MESSAGE_SEND,
