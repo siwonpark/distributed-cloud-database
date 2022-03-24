@@ -1,5 +1,5 @@
 package persistence;
-
+import static shared.PrintUtils.DELETE_STRING;
 /**
  * the data node, For data storage, could be large, have all the values
  * all the data nodes form a link list, can improve the efficiency of continuous reading
@@ -26,13 +26,13 @@ public class DataNode extends Node {
     /**
      * get the value with key in the data node
      *
-     * @return if tree didn't find the value, would return null
+     * @return if tree didn't find the value, would return DELETE_STRING
      */
     @Override
     String get(String key) {
         int pos = this.findKey(key);
         if (pos == -1) {
-            return null;
+            return DELETE_STRING;
         } else {
             return this.values[pos];
         }

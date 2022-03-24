@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import shared.HashUtils;
+import static shared.PrintUtils.DELETE_STRING;
 
 public class DataBase {
     private BTree b = null;
@@ -48,6 +49,9 @@ public class DataBase {
     }
 
     public void put(String key, String value) {
+        if(value == null){
+            value = DELETE_STRING;
+        }
         b.put(key, value);
     }
 
@@ -110,7 +114,7 @@ public class DataBase {
             for (int i = 0; i < node.number; i++) {
                 String hash = HashUtils.computeHash(node.keys[i]);
                 assert hash != null;
-                if ((getAllData || HashUtils.withinHashRange(hash, start, end)) && node.values[i] != null) {
+                if ((getAllData || HashUtils.withinHashRange(hash, start, end)) && node.values[i] != null && node.values[i] != DELETE_STRING ) {
                     ArrayList<String> tmp = new ArrayList<>();
                     tmp.add(node.keys[i]);
                     tmp.add(node.values[i]);
@@ -131,7 +135,7 @@ public class DataBase {
         int null_num = 0;
         while (node != null) {
             for (int i = 0; i < node.number; i++) {
-                if (node.values[i] != null) {
+                if (node.values[i] != DELETE_STRING && node.values[i] != null) {
                     ArrayList<String> tmp = new ArrayList<>();
                     tmp.add(node.keys[i]);
                     tmp.add(node.values[i]);

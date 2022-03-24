@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.Random;
 
 enum FileType {

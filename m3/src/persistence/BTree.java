@@ -3,8 +3,6 @@ package persistence;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-
 //TODO make BTree split according to size rather than maxNumber
 
 public class BTree {

@@ -42,7 +42,7 @@ public class ClientConnection implements Runnable {
 		this.isOpen = true;
 		this.server = server;
 	}
-	
+
 	/**
 	 * Initializes and starts the client connection. 
 	 * Loops until the connection is closed or aborted by the client.
@@ -132,7 +132,6 @@ public class ClientConnection implements Runnable {
 			return;
 		}
 
-
 		switch(message.getStatus()) {
 			case GET:
 				try {
@@ -143,6 +142,9 @@ public class ClientConnection implements Runnable {
 						return;
 					}
 					value = server.getKV(message.getKey());
+					if (value == null || value == DELETE_STRING){
+						throw new RuntimeException(String.format("No such key %s exists", key));
+					}
 					responseStatus = StatusType.GET_SUCCESS;
 				} catch (Exception e) {
 					logger.error("Unable to get value for key: " + message.getKey());
@@ -169,9 +171,8 @@ public class ClientConnection implements Runnable {
 						responseStatus = StatusType.DELETE_ERROR;
 						break;
 					}
-					
 					try {
-						server.putKVinCoordinator(key, null);
+						server.putKVinCoordinator(key, DELETE_STRING);
 						responseStatus = StatusType.DELETE_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to delete from store: Key " + message.getKey());

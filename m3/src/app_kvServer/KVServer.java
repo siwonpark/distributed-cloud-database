@@ -24,6 +24,7 @@ import java.util.HashMap;
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
 import static shared.PrintUtils.printPossibleLogLevels;
+import static shared.PrintUtils.DELETE_STRING;
 
 public class KVServer extends Thread implements IKVServer {
 
@@ -72,7 +73,7 @@ public class KVServer extends Thread implements IKVServer {
 		this.serverName = serverName;
 		this.clientConnections = new ArrayList<>();
 		
-		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName,true);
+		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName, true);
 		this.coordinatorBuffer = new HashMap<Long, ReplicationMsg>();
 		this.middleReplicaBuffer = new HashMap<Long, ReplicationMsg>();
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
@@ -112,7 +113,7 @@ public class KVServer extends Thread implements IKVServer {
 		// TODO Auto-generated method stub
 		try{
 			String value = db.get(key);
-			return value != null;
+			return value != null && value != DELETE_STRING;
 		} catch (Exception e){
 			return false;
 		}
@@ -127,12 +128,7 @@ public class KVServer extends Thread implements IKVServer {
 
 	@Override
     public String getKV(String key) throws Exception{
-		String result = db.get(key);
-		if (result == null){
-			throw new RuntimeException(String.format("No such key %s exists", key));
-		} else {
-			return result;
-		}
+		return db.get(key);
 	}
 
 	// TODO make the buffer work like sliding window to ignore old resend putKV request if the kv is already in window (not urgent)
@@ -218,7 +214,6 @@ public class KVServer extends Thread implements IKVServer {
 			logger.error("can't get the destination in sendReplicationMsg!");
 			return;
 		}else{
-			logger.info(String.format("send an replication message from server %s to server %s", serverName, dest.getNodeName()));
 			ReplicationMsgSender sender = new ReplicationMsgSender(dest, msg);
 			new Thread(sender).start();
 			return;
