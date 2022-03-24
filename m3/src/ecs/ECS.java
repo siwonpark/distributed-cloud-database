@@ -56,7 +56,6 @@ public class ECS {
             logger.error("Node " + node.getNodeName() + " failed to respond to START");
             return false;
         }
-
         return true;
     }
 
@@ -107,6 +106,36 @@ public class ECS {
         return false;
     }
 
+
+
+    public boolean InitServerWithData(ECSNode node){
+        if(MetadataUtils.getServersNum(hashRing) <= 1){// no need to move anything
+            return true;
+        }
+        if(MetadataUtils.getServersNum(hashRing) <= 3){// move all the data from another Node (replica)
+            ECSNode oneotherNode = MetadataUtils.getSuccessor(hashRing, node);
+            return  moveData(
+                        oneotherNode,
+                        node,
+                        node.getNodeHashRange()[0],
+                        node.getNodeHashRange()[0]);
+        }
+        // total servers on the ring(including new one) > 3
+        ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
+        if(!moveData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[1])){// init coordinator database
+            return false;
+        }
+        ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, node);
+        if(!moveData(predecessor, node, predecessor.getNodeHashRange()[0], predecessor.getNodeHashRange()[1])){// init middle replica
+            return false;
+        }
+        ECSNode predecessor2 = MetadataUtils.getPredecessor(hashRing, predecessor);
+        if(!moveData(predecessor2, node, predecessor2.getNodeHashRange()[0], predecessor2.getNodeHashRange()[1])){// init tail replica
+            return false;
+        }
+        return true;
+    }
+    
     public ECSNode addNode(String cacheStrategy, int cacheSize, boolean broadcastMetadata) {
         if (availableNodes.size() == 0) {
             logger.error("No available nodes to provision!");
@@ -148,22 +177,12 @@ public class ECS {
                 return null;
             }
         }
-
-        // Move data if successor exists
-        ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
-        if (successor != node) {
-            boolean result =
-                    moveData(
-                            successor,
-                            node,
-                            node.getNodeHashRange()[0],
-                            node.getNodeHashRange()[1]);
-            if (!result) {
-                logger.error("Move data failed, rolling back changes");
-                availableNodes.add(node);
-                removeNodeFromHashRing(node);
-                return null;
-            }
+        
+        if(!InitServerWithData(node)){
+            logger.error("Init Server With Moving Data failed, rolling back changes");
+            availableNodes.add(node);
+            removeNodeFromHashRing(node);
+            return null;
         }
 
         // Update metadata
@@ -205,7 +224,6 @@ public class ECS {
         if (!lockWrite(fromNode)) {
             return false;
         }
-
         // Apply move command
         logger.info("MOVING DATA from " + fromNode.getNodeName() + " to " + toNode.getNodeName());
         KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.MOVE_DATA);
@@ -219,8 +237,34 @@ public class ECS {
             logger.error("Node was not responsive, moveData stopped");
             return false;
         }
-
         return unlockWrite(fromNode);
+    }
+
+
+    /**
+     * need to use a class to store the locked servers in case the ring is changed and can't find the locked servers.
+    */
+    class ChainLocker{
+        private ECSNode coordinator, middle, tail;
+        ChainLocker(ECSNode coordinator, TreeMap<String, ECSNode> hashring){
+            this.coordinator = coordinator;
+            try{
+                this.middle = MetadataUtils.getSuccessor(hashRing, coordinator);
+                this.tail = MetadataUtils.getSuccessor(hashRing, middle);
+            } catch (Exception e) {
+                logger.error("An exception occurred while init Chain Locker");
+            }
+        }
+        @Override
+        protected void finalize() throws Throwable {
+            this.unlock();
+        }
+        public boolean lock(){
+            return (lockWrite(coordinator) && lockWrite(middle) && lockWrite(tail));
+        }
+        public boolean unlock(){
+            return (unlockWrite(coordinator) && unlockWrite(middle) && unlockWrite(tail));
+        }
     }
 
     public boolean lockWrite(ECSNode node) {
@@ -282,7 +326,37 @@ public class ECS {
         }
     }
 
+    /**
+     * when we call MoveDataAfterNodeRemoved, the nodeToRemove is still on the hashring
+    */
+    public boolean MoveDataAfterNodeRemoved(ECSNode nodeToRemove, boolean isServerAlive){
+        if(MetadataUtils.getServersNum(hashRing) <= 3){// no need to move anything, because every node has all the data
+            return true;
+        }
+        // total servers on the ring(including the node to remove) > 3
+        ECSNode successor = MetadataUtils.getSuccessor(hashRing, nodeToRemove);
+        ECSNode successor2 = MetadataUtils.getSuccessor(hashRing, successor);
+        ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, nodeToRemove);
+        if(!moveData(predecessor, successor2, predecessor.getNodeHashRange()[0], predecessor.getNodeHashRange()[1])){// init successor2's tail replica
+            return false;
+        }
+        ECSNode predecessor2 = MetadataUtils.getPredecessor(hashRing, predecessor);
+        if(!moveData(predecessor2, successor, predecessor2.getNodeHashRange()[0], predecessor2.getNodeHashRange()[1])){// init successor's tail replica
+            return false;
+        }
+        ECSNode successor3 = MetadataUtils.getSuccessor(hashRing, successor2);
+        if(!moveData(successor, successor3, nodeToRemove.getNodeHashRange()[0], nodeToRemove.getNodeHashRange()[1])){// init successor3's tail replica
+            return false;
+        }
+        return true;
+    }
+
+
     public boolean removeNode(String nodeName) {
+        return removeNode(nodeName, true);
+    }
+
+    public boolean removeNode(String nodeName, boolean isServerAlive) {
         // find node with name nodeName
         ECSNode nodeToRemove = null;
         for (ECSNode node : hashRing.values()) {
@@ -297,25 +371,17 @@ public class ECS {
             return false;
         }
 
-        removeNodeFromHashRing(nodeToRemove);
-
-        // Move data if successor exists
-        ECSNode successor = MetadataUtils.getSuccessor(hashRing, nodeToRemove);
-        if (successor != nodeToRemove) {
-            boolean result =
-                    moveData(
-                            nodeToRemove,
-                            successor,
-                            nodeToRemove.getNodeHashRange()[0],
-                            nodeToRemove.getNodeHashRange()[1]);
-            if (!result) {
-                logger.error("Move data failed, rolling back changes");
-                addNodeToHashRing(nodeToRemove);
-                return false;
-            }
+        
+        if(!MoveDataAfterNodeRemoved(nodeToRemove, isServerAlive)){
+            logger.error("Move data failed.");
+            return false;
         }
 
-        shutDown(nodeToRemove);
+        removeNodeFromHashRing(nodeToRemove);
+
+        if(isServerAlive){
+            shutDown(nodeToRemove);
+        }
         broadcastMetadataAndWait();
 
         return true;

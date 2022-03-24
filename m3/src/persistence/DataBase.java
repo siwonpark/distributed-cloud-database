@@ -103,13 +103,14 @@ public class DataBase {
      * }
      */
     public ArrayList<ArrayList<String>> getData(String start, String end) {
+        boolean getAllData = start.equals(end);//Bondary situation
         ArrayList<ArrayList<String>> ans = new ArrayList<>();
         DataNode node = (DataNode) FileOp.loadFile(b.getLeft());
         while (node != null) {
             for (int i = 0; i < node.number; i++) {
                 String hash = HashUtils.computeHash(node.keys[i]);
                 assert hash != null;
-                if (HashUtils.withinHashRange(hash, start, end) && node.values[i] != null) {
+                if ((getAllData || HashUtils.withinHashRange(hash, start, end)) && node.values[i] != null) {
                     ArrayList<String> tmp = new ArrayList<>();
                     tmp.add(node.keys[i]);
                     tmp.add(node.values[i]);
