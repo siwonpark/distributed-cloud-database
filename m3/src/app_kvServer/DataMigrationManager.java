@@ -10,6 +10,7 @@ import shared.messages.Message;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import static shared.PrintUtils.DELETE_STRING;
 
 public class DataMigrationManager implements Runnable {
     private Logger logger = Logger.getRootLogger();
@@ -78,7 +79,7 @@ public class DataMigrationManager implements Runnable {
             // Delete all the keys that were migrated, since migration was successful
             //for (ArrayList<String> keyValue : dataToMigrate) {
             //    String key = keyValue.get(0);
-            //    db.put(key, null);
+            //    db.put(key, DELETE_STRING);
             //}
             // We want to remove the keys that were migrated
             // db.batchDeleteNull();

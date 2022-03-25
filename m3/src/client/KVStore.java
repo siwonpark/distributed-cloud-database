@@ -73,29 +73,6 @@ public class KVStore implements KVCommInterface {
 			}
 		}
 	}
-
-	@Override
-	public KVMessage put(String key, String value, boolean replication) throws Exception {
-		if(!isRunning()){
-			throw new RuntimeException("KVStore not connected!");
-		}
-		// Note, this PUT operation works as DELETE if value is null.
-		logger.info(String.format("Putting value %s into key %s", key, value));
-		Message msg;
-		if(replication){
-			msg = new Message(key, value, KVMessage.StatusType.PUT_WITH_REPLICATION);
-		} else {
-			msg = new Message(key, value, KVMessage.StatusType.PUT);
-		}
-		try {
-			return retryMessageUntilSuccess(msg);
-		} catch (IOException e) {
-			for(ClientSocketListener listener : listeners) {
-				listener.handleStatus(SocketStatus.CONNECTION_LOST);
-			}
-			throw e;
-		}
-	}
 	
 	@Override
 	public KVMessage put(String key, String value) throws Exception {
@@ -116,18 +93,14 @@ public class KVStore implements KVCommInterface {
 	}
 	
 	@Override
-	public KVMessage get(String key, boolean replication) throws Exception {
+	public KVMessage get(String key) throws Exception {
 		if(!isRunning()){
 			throw new RuntimeException("KVStore not connected!");
 		}
 		logger.info(String.format("Getting key %s", key));
 
 		Message msg;
-		if(replication){
-			msg =  new Message(key, null, KVMessage.StatusType.GET_WITH_REPLICA);
-		} else{
-			msg = new Message(key, null, KVMessage.StatusType.GET);
-		}
+		msg = new Message(key, null, KVMessage.StatusType.GET);
 		try {
 			return retryMessageUntilSuccess(msg); // Pass back to client to display on command line
 		} catch (IOException e){
@@ -137,11 +110,6 @@ public class KVStore implements KVCommInterface {
 			}
 			throw e;
 		}
-	}
-
-	@Override
-	public KVMessage get(String key) throws Exception {
-		return get(key, false);
 	}
 
 	/**
