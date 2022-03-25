@@ -121,16 +121,37 @@ public class ECS {
                         node.getNodeHashRange()[0]);
         }
         // total servers on the ring(including new one) > 3
+
+        /**
+         * init node's coordinator database (don't need to delete these data on successor because these data should play as middle replica on successor) 
+         */
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
-        if(!moveData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[1])){// init coordinator database
+        if(!copyData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[1])){
             return false;
         }
+
+        /**
+         * because this range has been allocated to new node. delete some data from successor3's tail replica
+        */
+        ECSNode successor2 = MetadataUtils.getSuccessor(hashRing, successor);
+        ECSNode successor3 = MetadataUtils.getSuccessor(hashRing, successor2);
+        if(!deleteData(successor3, node.getNodeHashRange()[0], node.getNodeHashRange()[1])){
+            return false;
+        }
+        
+        /**
+         * init node's middle replica, delete successor2's tail replica
+         */
         ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, node);
-        if(!moveData(predecessor, node, predecessor.getNodeHashRange()[0], predecessor.getNodeHashRange()[1])){// init middle replica
+        if(!moveData(successor2, node, predecessor.getNodeHashRange()[0], predecessor.getNodeHashRange()[1])){
             return false;
         }
+
+        /**
+         * init node's tail replica, delete successor's tail replica
+         */
         ECSNode predecessor2 = MetadataUtils.getPredecessor(hashRing, predecessor);
-        if(!moveData(predecessor2, node, predecessor2.getNodeHashRange()[0], predecessor2.getNodeHashRange()[1])){// init tail replica
+        if(!moveData(successor, node, predecessor2.getNodeHashRange()[0], predecessor2.getNodeHashRange()[1])){
             return false;
         }
         return true;
@@ -220,24 +241,59 @@ public class ECS {
         }
     }
 
-    public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
+    public boolean dataTransfer(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd, boolean deleteOldKeys) {
         if (!lockWrite(fromNode)) {
             return false;
         }
         // Apply move command
-        logger.info("MOVING DATA from " + fromNode.getNodeName() + " to " + toNode.getNodeName());
-        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.MOVE_DATA);
+        KVAdminMessage data;
+        if(deleteOldKeys){
+            if(toNode == null){
+                logger.info("DELETING DATA from " + fromNode.getNodeName());
+                data = new KVAdminMessage(null, KVAdminMessage.OperationType.DELETE_DATA);
+            }else{
+                logger.info("MOVING DATA from " + fromNode.getNodeName() + " to " + toNode.getNodeName());
+                data = new KVAdminMessage(null, KVAdminMessage.OperationType.MOVE_DATA);
+            }
+        }else{
+            if(toNode == null){
+                logger.info("call dataTransfer in a wrong way!");
+                unlockWrite(fromNode);
+                return false;
+            }else{
+                logger.info("COPING DATA from " + fromNode.getNodeName() + " to " + toNode.getNodeName());
+                data = new KVAdminMessage(null, KVAdminMessage.OperationType.COPY_DATA);
+            }
+        }
         data.setKeyStart(keyStart);
         data.setKeyEnd(keyEnd);
-        data.setTargetNode(toNode);
+        if(toNode == null){
+            // don't want the toNode to be null, just set to random data
+            data.setTargetNode(fromNode);
+        }else{
+            data.setTargetNode(toNode);
+        }
 
         zkWatcher.setData(fromNode.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
-            logger.error("Node was not responsive, moveData stopped");
+            logger.error("Node was not responsive, data transfer stopped");
+            unlockWrite(fromNode);
             return false;
         }
         return unlockWrite(fromNode);
+    }
+
+    public boolean deleteData(ECSNode node, String keyStart, String keyEnd) {
+        return dataTransfer(node, null, keyStart, keyEnd, true);
+    }
+
+    public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
+        return dataTransfer(fromNode, toNode, keyStart, keyEnd, true);
+    }
+
+    public boolean copyData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
+        return dataTransfer(fromNode, toNode, keyStart, keyEnd, false);
     }
 
 
@@ -331,22 +387,46 @@ public class ECS {
     */
     public boolean MoveDataAfterNodeRemoved(ECSNode nodeToRemove, boolean isServerAlive){
         if(MetadataUtils.getServersNum(hashRing) <= 3){// no need to move anything, because every node has all the data
+            if(isServerAlive){
+                // delete all the data on the node to remove
+                if(!deleteData(nodeToRemove, nodeToRemove.getNodeHashRange()[0], nodeToRemove.getNodeHashRange()[0])){
+                    return false;
+                }           
+            }
             return true;
         }
         // total servers on the ring(including the node to remove) > 3
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, nodeToRemove);
         ECSNode successor2 = MetadataUtils.getSuccessor(hashRing, successor);
         ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, nodeToRemove);
-        if(!moveData(predecessor, successor2, predecessor.getNodeHashRange()[0], predecessor.getNodeHashRange()[1])){// init successor2's tail replica
-            return false;
-        }
         ECSNode predecessor2 = MetadataUtils.getPredecessor(hashRing, predecessor);
-        if(!moveData(predecessor2, successor, predecessor2.getNodeHashRange()[0], predecessor2.getNodeHashRange()[1])){// init successor's tail replica
-            return false;
-        }
         ECSNode successor3 = MetadataUtils.getSuccessor(hashRing, successor2);
-        if(!moveData(successor, successor3, nodeToRemove.getNodeHashRange()[0], nodeToRemove.getNodeHashRange()[1])){// init successor3's tail replica
-            return false;
+        if(isServerAlive){
+            // init successor3's tail replica, delete nodeToRemove's cooridnator data
+            if(!moveData(nodeToRemove, successor3, nodeToRemove.getNodeHashRange()[0], nodeToRemove.getNodeHashRange()[1])){
+                return false;
+            } 
+            // init successor2's tail replica, delete nodeToRemove's middle replica
+            if(!moveData(nodeToRemove, successor2, predecessor.getNodeHashRange()[0], predecessor.getNodeHashRange()[1])){
+                return false;
+            }
+            // init successor's tail replica, delete nodeToRemove's tail replica
+            if(!moveData(nodeToRemove, successor, predecessor2.getNodeHashRange()[0], predecessor2.getNodeHashRange()[1])){
+                return false;
+            }
+        }else{
+            // init successor3's tail replica
+            if(!copyData(successor, successor3, nodeToRemove.getNodeHashRange()[0], nodeToRemove.getNodeHashRange()[1])){
+                return false;
+            }
+            // init successor2's tail replica
+            if(!copyData(predecessor, successor2, predecessor.getNodeHashRange()[0], predecessor.getNodeHashRange()[1])){
+                return false;
+            }
+            // init successor's tail replica
+            if(!copyData(predecessor2, successor, predecessor2.getNodeHashRange()[0], predecessor2.getNodeHashRange()[1])){
+                return false;
+            }
         }
         return true;
     }

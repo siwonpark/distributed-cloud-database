@@ -43,7 +43,13 @@ public class ECSCommandHandler {
                 server.unlockWrite();
                 break;
             case MOVE_DATA:
-                server.moveData(data.getMoveRange(), data.getTargetNode());
+                server.moveData(data.getMoveRange(), data.getTargetNode(), true);
+                break;
+            case COPY_DATA:
+                server.moveData(data.getMoveRange(), data.getTargetNode(), false);
+                break;
+            case DELETE_DATA:
+                server.moveData(data.getMoveRange(), null, true);
                 break;
             case FORCE_CONSISTENCY:
                 server.forceConsistency();

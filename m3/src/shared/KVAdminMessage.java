@@ -21,6 +21,8 @@ public class KVAdminMessage implements Serializable {
         LOCK_WRITE,
         UNLOCK_WRITE,
         MOVE_DATA,
+        COPY_DATA,
+        DELETE_DATA,
         FORCE_CONSISTENCY
     }
 
