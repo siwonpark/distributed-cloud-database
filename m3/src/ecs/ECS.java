@@ -214,7 +214,7 @@ public class ECS {
             zkWatcher.watchNode(node.getNodeName());
         }
         zkWatcher.setData("metadata", data);
-
+        logger.info(String.format("There are %s nodes in the hash ring", hashRing.size()));
         if (!awaitNodes(hashRing.size(), 10000)) {
             logger.error("Did not receive acknowledgement from all nodes");
         }
