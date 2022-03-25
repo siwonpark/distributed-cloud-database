@@ -293,6 +293,7 @@ public class ECS {
         KVAdminMessage data = new KVAdminMessage(hashRing, KVAdminMessage.OperationType.METADATA);
         // Watch all child nodes
         for (ECSNode node : hashRing.values()) {
+            logger.info("Watching node " + node.getNodeName());
             zkWatcher.watchNode(node.getNodeName());
         }
         zkWatcher.setData("metadata", data);

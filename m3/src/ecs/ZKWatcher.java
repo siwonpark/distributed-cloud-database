@@ -99,9 +99,11 @@ public class ZKWatcher implements Watcher {
             else if (EventType.NodeDeleted == eventType) {
                 String[] pathParts = path.split("/");
                 String nodeName = pathParts[pathParts.length - 1];
-                logger.info("Node deleted at znode " + path);
-                awaitSignal.countDown();
-                ecs.handleServerFailure(nodeName);
+                if (ecs.getECSNode(nodeName) != null) {
+                    logger.info("Node deleted at znode " + path);
+                    awaitSignal.countDown();
+                    ecs.handleServerFailure(nodeName);
+                }
             }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
