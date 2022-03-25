@@ -87,12 +87,8 @@ public class KVClient implements IKVClient, ClientSocketListener {
             handleConnect(tokens);
         } else  if (tokens[0].equals("get")) {
             handleGet(tokens);
-        } else if (tokens[0].equals("getnr")) {
-            handleGet(tokens, false);
         } else if (tokens[0].equals("put")) {
             handlePut(tokens);
-        } else if (tokens[0].equals("putnr")) {
-            handlePut(tokens, false);
         } else if(tokens[0].equals("disconnect")) {
             disconnect();
         } else if(tokens[0].equals("logLevel")) {
@@ -127,13 +123,13 @@ public class KVClient implements IKVClient, ClientSocketListener {
      * Handle the 'put' operation from the command line interface
      * @param tokens The command line arguments
      */
-    private void handlePut(String[] tokens, boolean replication) {
+    private void handlePut(String[] tokens) {
         if(tokens.length == 3) {
             if(kvStore != null && kvStore.isRunning()){
                 String key = tokens[1];
                 String value = tokens[2];
                 try {
-                    KVMessage response = kvStore.put(key, value, replication);
+                    KVMessage response = kvStore.put(key, value);
                     printResponseToUser(response);
                 } catch (Exception e){
                     String errMsg = !value.equals(DELETE_STRING) ?
@@ -149,20 +145,17 @@ public class KVClient implements IKVClient, ClientSocketListener {
             printError("Invalid number of parameters. Use the help command to see usage instructions");
         }
     }
-    private void handlePut(String[] tokens) {
-        handlePut(tokens, true); 
-    }
 
     /**
      * Handle the 'get' operation from the command line interface
      * @param tokens The command line arguments
      */
-    private void handleGet(String[] tokens, boolean replication) {
+    private void handleGet(String[] tokens) {
         if(tokens.length == 2) {
             if(kvStore != null && kvStore.isRunning()){
                 String key = tokens[1];
                 try {
-                    KVMessage response = kvStore.get(key, replication);
+                    KVMessage response = kvStore.get(key);
                     printResponseToUser(response);
                 } catch (Exception e){
                     String errMsg = String.format("Unable to get key %s! ", key) + e;
@@ -175,10 +168,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
         } else {
             printError("Invalid number of parameters. Use the help command to see usage instructions");
         }
-    }
-
-    private void handleGet(String[] tokens) {
-        handleGet(tokens, true); 
     }
     /**
      * Handle the 'connect' command

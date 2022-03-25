@@ -25,7 +25,8 @@ public class ReplicationMsgSender implements Runnable {
         try {
             commModule.connect();
         } catch (IOException e) {
-            logger.error("Could not connect to destination server to perform replication");
+            logger.error(String.format("Could not connect to destination server to perform replication key %s, value %s and sequence %d to server port %s server name: %s\n the error is %s", 
+            rpmsg.key, rpmsg.value, rpmsg.sequence, dest.getNodePort(), dest.getNodeName(), e));
             return;
         }
         
@@ -33,15 +34,19 @@ public class ReplicationMsgSender implements Runnable {
         KVMessage.StatusType msgType;
         switch(rpmsg.type){
             case REPLICATE_MIDDLE_REPLICA:
+                logger.info(String.format("send an REPLICATE_MIDDLE_REPLICA message to server %s, k: %s, v: %s, seq: %d", dest.getNodeName(), rpmsg.key, rpmsg.value, rpmsg.sequence));
                 msgType = KVMessage.StatusType.REPLICATE_TO_MIDDLE_REPLICA;
                 break;
             case REPLICATE_TAIL:
+                logger.info(String.format("send an REPLICATE_TAIL message to server %s, k: %s, v: %s, seq: %d", dest.getNodeName(), rpmsg.key, rpmsg.value, rpmsg.sequence));
                 msgType = KVMessage.StatusType.REPLICATE_TO_TAIL;
                 break;
             case ACK_FROM_MIDDLE_REPLICA:
+                logger.info(String.format("send an ACK_FROM_MIDDLE_REPLICA message to server %s, k: %s, v: %s, seq: %d", dest.getNodeName(), rpmsg.key, rpmsg.value, rpmsg.sequence));
                 msgType = KVMessage.StatusType.REPLICATION_ACK_FROM_MIDDLE_REPLICA;
                 break;
             case ACK_FROM_TAIL:
+                logger.info(String.format("send an ACK_FROM_TAIL message to server %s, k: %s, v: %s, seq: %d", dest.getNodeName(), rpmsg.key, rpmsg.value, rpmsg.sequence));
                 msgType = KVMessage.StatusType.REPLICATION_ACK_FROM_TAIL;
                 break;
             default:
@@ -54,10 +59,11 @@ public class ReplicationMsgSender implements Runnable {
             commModule.sendMessage(msg);
             Message response = commModule.receiveMessage();
             if (response.getStatus() != KVMessage.StatusType.REPLICATION_MESSAGE_SEND) {
-                logger.error(String.format("Unable to send replication message: key %s and value %s to server port %s", rpmsg.key, rpmsg.value, dest.getNodePort()));
+                logger.error(String.format("Unable to send replication message: key %s, value %s and sequence %d to server port %s", rpmsg.key, rpmsg.value, rpmsg.sequence, dest.getNodePort()));
             }
         } catch (IOException e) {
-            logger.error("Could not connect to destination server to perform replication");
+            logger.error(String.format("Could not connect to destination server to perform replication key %s, value %s and sequence %d to server port %s server name: %s\n the error is %s", 
+            rpmsg.key, rpmsg.value, rpmsg.sequence, dest.getNodePort(), dest.getNodeName(), e));
         }
     }
 }

@@ -31,8 +31,6 @@ public interface KVCommInterface {
 	 */
 	public KVMessage put(String key, String value) throws Exception;
 
-	public KVMessage put(String key, String value, boolean replication) throws Exception;
-
 	/**
 	 * Retrieves the value for a given key from the KVServer.
 	 *
@@ -44,6 +42,4 @@ public interface KVCommInterface {
 	 *             KV server).
 	 */
 	public KVMessage get(String key) throws Exception;
-
-	public KVMessage get(String key, boolean replication) throws Exception;
 }

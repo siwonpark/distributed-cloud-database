@@ -42,7 +42,7 @@ public class ClientConnection implements Runnable {
 		this.isOpen = true;
 		this.server = server;
 	}
-	
+
 	/**
 	 * Initializes and starts the client connection. 
 	 * Loops until the connection is closed or aborted by the client.
@@ -132,19 +132,19 @@ public class ClientConnection implements Runnable {
 			return;
 		}
 
-
 		switch(message.getStatus()) {
-			case GET_WITH_REPLICA:
 			case GET:
 				try {
-					if(message.getStatus() == StatusType.GET && !server.isResponsibleForKey(message.getKey()) 
-				   	|| (message.getStatus() == StatusType.GET_WITH_REPLICA && !server.isResponsibleForKeywithReplicas(message.getKey()))){
+					if(message.getStatus() == StatusType.GET && !server.isResponsibleForKeywithReplicas(message.getKey())){
 						responseStatus = StatusType.SERVER_NOT_RESPONSIBLE;
 						Message response = new Message(server.getMetadata(), responseStatus);
 						sendMessage(response);
 						return;
 					}
 					value = server.getKV(message.getKey());
+					if (value == null || value == DELETE_STRING){
+						throw new RuntimeException(String.format("No such key %s exists", key));
+					}
 					responseStatus = StatusType.GET_SUCCESS;
 				} catch (Exception e) {
 					logger.error("Unable to get value for key: " + message.getKey());
@@ -152,7 +152,6 @@ public class ClientConnection implements Runnable {
 				}
 				break;
 			
-			case PUT_WITH_REPLICATION:
 			case PUT:
 				if (server.isWriteLocked()) {
 					responseStatus = StatusType.SERVER_WRITE_LOCK;
@@ -172,13 +171,8 @@ public class ClientConnection implements Runnable {
 						responseStatus = StatusType.DELETE_ERROR;
 						break;
 					}
-					
 					try {
-						if(message.getStatus() == StatusType.PUT){
-							server.putKV(key, null);
-						}else{
-							server.putKVinCoordinator(key, null);
-						}
+						server.putKVinCoordinator(key, DELETE_STRING);
 						responseStatus = StatusType.DELETE_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to delete from store: Key " + message.getKey());
@@ -186,11 +180,7 @@ public class ClientConnection implements Runnable {
 					}
 				} else {
 					try {
-						if(message.getStatus() == StatusType.PUT){
-							server.putKV(key, value);
-						}else{
-							server.putKVinCoordinator(key, value);
-						}
+						server.putKVinCoordinator(key, value);
 						responseStatus = isInStorage ? StatusType.PUT_UPDATE : StatusType.PUT_SUCCESS;
 					} catch (Exception e) {
 						logger.error("Unable to add to store: Key " + message.getKey() + " Value " + message.getValue());
@@ -227,7 +217,8 @@ public class ClientConnection implements Runnable {
 				logger.info("Received replication ack from middle replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
 				server.getAckFromMiddleReplica(key, value, message.getSeq());
 				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
-
+				break;
+				
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 				logger.error(errorMsg);

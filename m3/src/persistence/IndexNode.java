@@ -1,5 +1,5 @@
 package persistence;
-
+import static shared.PrintUtils.DELETE_STRING;
 /**
  * the index node, For indexing, without any values
  */
@@ -20,13 +20,13 @@ public class IndexNode extends Node {
     /**
      * get the value with key
      *
-     * @return if the tree didn't find the value, would return null
+     * @return if the tree didn't find the value, would return DELETE_STRING
      */
     @Override
     String get(String key) {
         int pos = this.findInsertPos(key);
         if (pos == this.number) {
-            return null;
+            return DELETE_STRING;
         } else {
             return FileOp.loadFile(this.children[pos]).get(key);
         }
