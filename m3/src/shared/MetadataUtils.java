@@ -3,6 +3,7 @@ package shared;
 import ecs.ECSNode;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class MetadataUtils {
@@ -30,7 +31,7 @@ public class MetadataUtils {
     public static ECSNode getServerNodeWithName(String serverName, TreeMap<String, ECSNode> metadata){
         for(Map.Entry<String, ECSNode> metadataEntry : metadata.entrySet()){
             ECSNode currNode = metadataEntry.getValue();
-            if(currNode.getNodeName() == serverName){
+            if(Objects.equals(currNode.getNodeName(), serverName)){
                 return currNode;
             }
         }
