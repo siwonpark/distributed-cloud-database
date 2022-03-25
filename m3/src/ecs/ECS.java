@@ -227,7 +227,8 @@ public class ECS {
         }
 
         removeNodeFromHashRing(nodeToRemove);
-        redistributeReplicas(nodeToRemove);
+        removeNode(nodeName, false);
+        //redistributeReplicas(nodeToRemove);
 
         // replace failed node with new node
         // TODO: decide what to do with cache strategy/size
