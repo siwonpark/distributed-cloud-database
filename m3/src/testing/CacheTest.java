@@ -3,19 +3,19 @@ package testing;
 import junit.framework.TestCase;
 import org.junit.Test;
 import persistence.DataBase;
-
+import static shared.PrintUtils.DELETE_STRING;
 public class CacheTest extends TestCase {
     @Test
     public void testLRUCache() {
         Exception ex = null;
         try {
             DataBase b = DataBase.initInstance(10, "LRU", "testLRUCache", false);
-            assertNull(b.get("3"));
+            assertEquals(b.get("3"), DELETE_STRING);
             b.put("1", "a");
             b.put("2", "b");
             assertEquals("b", b.get("2"));
             b.put("1", null);
-            assertNull(b.get("1"));
+            assertEquals(b.get("1"), DELETE_STRING);
             b.put("3", "c");
             assertEquals("c", b.get("3"));
             b.put("3", "abc");
@@ -34,12 +34,12 @@ public class CacheTest extends TestCase {
         try {
             DataBase b = DataBase.initInstance(10, "LFU", "testLFUCache", false);
             assertTrue(b!=null);
-            assertNull(b.get("3"));
+            assertEquals(b.get("3"), DELETE_STRING);
             b.put("1", "a");
             b.put("2", "b");
             assertEquals("b", b.get("2"));
             b.put("1", null);
-            assertNull(b.get("1"));
+            assertEquals(b.get("1"), DELETE_STRING);
             b.put("3", "c");
             assertEquals("c", b.get("3"));
             b.put("3", "abc");
@@ -57,12 +57,12 @@ public class CacheTest extends TestCase {
         Exception ex = null;
         try {
             DataBase b = DataBase.initInstance(10, "FIFO", "testFIFOCache", false);
-            assertNull(b.get("3"));
+            assertEquals(b.get("3"), DELETE_STRING);
             b.put("1", "a");
             b.put("2", "b");
             assertEquals("b", b.get("2"));
             b.put("1", null);
-            assertNull(b.get("1"));
+            assertEquals(b.get("1"), DELETE_STRING);
             b.put("3", "c");
             assertEquals("c", b.get("3"));
             b.put("3", "abc");

@@ -26,7 +26,7 @@ public abstract class Node {
     /**
      * Insert or update the value, recursive entry the correct child node, also deal with splitting due to insertion and save changes to disk
      *
-     * @return if the splitting happens, would return a node to be added to the parent node. Otherwise, would return null
+     * @return if the splitting happens, would return a node to be added to the parent node. Otherwise, would return DELETE_STRING
      */
     abstract String put(String key, String value);
 
@@ -36,7 +36,7 @@ public abstract class Node {
      * binary search for the key in a list
      *
      * @param key the key need to be found
-     * @return the position, if can't be find, would be null
+     * @return the position, if can't be find, would be -1
      */
     int findKey(String key) {
         if (this.number == 0)
