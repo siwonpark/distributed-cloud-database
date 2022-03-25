@@ -76,6 +76,9 @@ public class ZKWatcher implements Watcher {
         logger.info("Connection status:" + keeperState.toString());
         logger.info("Event type:" + eventType.toString());
 
+        String[] pathParts = path.split("/");
+        String nodeName = pathParts[pathParts.length - 1];
+
         if (KeeperState.SyncConnected == keeperState) {
             // Successfully connected to ZK server
             if (EventType.None == eventType) {
@@ -91,12 +94,13 @@ public class ZKWatcher implements Watcher {
             else if (EventType.NodeDataChanged == eventType) {
                 logger.info("Received acknowledgement from znode " + path);
                 awaitSignal.countDown();
+                watchNode(nodeName);
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {
                 logger.info("Node deleted at znode " + path);
                 awaitSignal.countDown();
-                handleDisconnectedNode(path);
+                ecs.handleServerFailure(nodeName);
             }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
@@ -105,12 +109,6 @@ public class ZKWatcher implements Watcher {
         } else if (KeeperState.Expired == keeperState) {
             logger.info("Session failure");
         }
-    }
-
-    private void handleDisconnectedNode(String path) {
-        String[] pathParts = path.split("/");
-        String nodeName = pathParts[pathParts.length - 1];
-        ecs.handleServerFailure(nodeName);
     }
 
     public void watchNode(String nodeName) {
