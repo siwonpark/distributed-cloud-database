@@ -143,9 +143,9 @@ public class ZKWatcher implements Watcher {
             Stat stat = zooKeeper.exists(path, false);
             zooKeeper.delete(path, stat.getVersion());
 
-            path = ACK_PATH + "/" + nodeName;
-            stat = zooKeeper.exists(path, false);
-            zooKeeper.delete(path, stat.getVersion());
+//            path = ACK_PATH + "/" + nodeName;
+//            stat = zooKeeper.exists(path, false);
+//            zooKeeper.delete(path, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to delete znode");
         }
