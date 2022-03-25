@@ -65,7 +65,7 @@ public class CommModule implements ICommModule {
     public void sendMessage(Message message) throws IOException{
         output.writeObject(message);
         output.flush();
-        logger.debug("Send message: " + message.getMessageString());
+        logger.debug(String.format("Send message to %s / %s: %s", this.address, this.port, message.getMessageString()));
     };
 
     public int getPort(){

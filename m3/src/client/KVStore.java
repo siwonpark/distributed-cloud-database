@@ -187,6 +187,7 @@ public class KVStore implements KVCommInterface {
 			}
 			host = responsibleServer.getNodeHost();
 			port = responsibleServer.getNodePort();
+			logger.info(String.format("Found responsible server %s %s", host, port));
 		}
 		if (dynamicCommModule != null) {
 			if(dynamicCommModule.getPort() == port &&
@@ -201,6 +202,7 @@ public class KVStore implements KVCommInterface {
 				}
 			}
 		}
+		logger.info(String.format("Attempting to connect dynamic comm module to %s %s", host, port));
 		dynamicCommModule = new CommModule(host, port);
 		dynamicCommModule.connect();
 	}
