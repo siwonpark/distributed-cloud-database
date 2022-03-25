@@ -226,7 +226,7 @@ public class ECS {
             return;
         }
 
-        removeNodeFromHashRing(nodeToRemove);
+        //removeNodeFromHashRing(nodeToRemove);
         removeNode(nodeName, false);
         //redistributeReplicas(nodeToRemove);
 
