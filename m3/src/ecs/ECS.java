@@ -114,18 +114,18 @@ public class ECS {
         }
         if(serverNum == 2){
             ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
-            Locker successorLock = new Locker(successor);
-            return successorLock.lock()
+            Locker successorLocker = new Locker(successor);
+            return successorLocker.lock()
                 && forceConsistency(successor) 
                 && moveData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[0]);
         }
         if(serverNum <= 3){// move all the data from oneotherNode Node (replica)
             ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
             ECSNode successor2 = MetadataUtils.getSuccessor(hashRing, successor);
-            Locker successorLock = new Locker(successor);
-            Locker successor2Lock = new Locker(successor2);
-            return successorLock.lock()
-                && successor2Lock.lock()
+            Locker successorLocker = new Locker(successor);
+            Locker successor2Locker = new Locker(successor2);
+            return successorLocker.lock()
+                && successor2Locker.lock()
                 && forceConsistency(successor) 
                 && forceConsistency(successor2) 
                 && moveData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[0]);
@@ -137,13 +137,13 @@ public class ECS {
         ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, node);
         ECSNode predecessor2 = MetadataUtils.getPredecessor(hashRing, predecessor);
         
-        Locker successorLock = new Locker(successor);
-        Locker successor2Lock = new Locker(successor2);
-        Locker successor3Lock = new Locker(successor3);
-        Locker predecessorLock = new Locker(predecessor);
-        Locker predecessor2Lock = new Locker(predecessor2);
+        Locker successorLocker = new Locker(successor);
+        Locker successor2Locker = new Locker(successor2);
+        Locker successor3Locker = new Locker(successor3);
+        Locker predecessorLocker = new Locker(predecessor);
+        Locker predecessor2Locker = new Locker(predecessor2);
 
-        if(!successorLock.lock() || !successor2Lock.lock() || !successor3Lock.lock() || !predecessorLock.lock() || !predecessor2Lock.lock()){
+        if(!successorLocker.lock() || !successor2Locker.lock() || !successor3Locker.lock() || !predecessorLocker.lock() || !predecessor2Locker.lock()){
             logger.error("can't do lockwrite before init node with data!");
             return false;
         }
@@ -316,9 +316,6 @@ public class ECS {
     }
 
 
-    /**
-     * need to use a class to store the locked servers in case the ring is changed and can't find the locked servers.
-    */
     class Locker{
         private ECSNode node;
         Locker(ECSNode node){
@@ -396,7 +393,7 @@ public class ECS {
     }
 
     /**
-     * when we call MoveDataAfterNodeRemoved, the nodeToRemove is still on the hashring
+     * when we call HandleDataAfterNodeRemoved, the nodeToRemove is still on the hashring
     */
     public boolean HandleDataAfterNodeRemoved(ECSNode nodeToRemove, boolean isServerAlive){
         if(MetadataUtils.getServersNum(hashRing) <= 3){// no need to move anything, because every node has all the data
@@ -412,11 +409,15 @@ public class ECS {
                 }
                 // delete all the data on the node to remove
                 if(!deleteData(nodeToRemove, nodeToRemove.getNodeHashRange()[0], nodeToRemove.getNodeHashRange()[0])){
+                    unlockWrite(nodeToRemove);
                     return false;
-                }           
+                }
+                return unlockWrite(nodeToRemove);
+            }else{
+                return true;
             }
-            return true;
         }
+
         // total servers on the ring(including the node to remove) > 3
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, nodeToRemove);
         ECSNode successor2 = MetadataUtils.getSuccessor(hashRing, successor);
@@ -424,29 +425,29 @@ public class ECS {
         ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, nodeToRemove);
         ECSNode predecessor2 = MetadataUtils.getPredecessor(hashRing, predecessor);
                 
-        Locker successorLock = new Locker(successor);
-        Locker successor2Lock = new Locker(successor2);
-        Locker successor3Lock = new Locker(successor3);
-        Locker predecessorLock = new Locker(predecessor);
-        Locker predecessor2Lock = new Locker(predecessor2);
+        Locker successorLocker = new Locker(successor);
+        Locker successor2Locker = new Locker(successor2);
+        Locker successor3Locker = new Locker(successor3);
+        Locker predecessorLocker = new Locker(predecessor);
+        Locker predecessor2Locker = new Locker(predecessor2);
 
-        if(!successorLock.lock() || !successor2Lock.lock() || !successor3Lock.lock() || !predecessorLock.lock() || !predecessor2Lock.lock()){
-            logger.error("can't do lockwrite before handle data after node been removed!");
+        if(!successorLocker.lock() || !successor2Locker.lock() || !successor3Locker.lock() || !predecessorLocker.lock() || !predecessor2Locker.lock()){
+            logger.error("can't do lockwrite at HandleDataAfterNodeRemoved!");
             return false;
         }
         
         if(!forceConsistency(successor) || !forceConsistency(successor2) || !forceConsistency(successor3) || !forceConsistency(predecessor) || !forceConsistency(predecessor2)){
-            logger.error("can't achieve consistency before handle data after node been removed!");
+            logger.error("can't achieve consistency at HandleDataAfterNodeRemoved!");
             return false;
         }
 
         if(isServerAlive){
             if(!lockWrite(nodeToRemove)){
-                logger.error("can't do lockwrite on node to remove before handling data after node been removed!");
+                logger.error("can't do lockwrite on node to remove at HandleDataAfterNodeRemoved!");
                 return false;
             }
             if(!forceConsistency(nodeToRemove)){
-                logger.error("can't achieve consistency on node to remove before handling data after node been removed!");
+                logger.error("can't achieve consistency on node to remove at HandleDataAfterNodeRemoved!");
                 unlockWrite(nodeToRemove);
                 return false;
             }
@@ -484,10 +485,11 @@ public class ECS {
         }
 
         if(isServerAlive){
-            unlockWrite(nodeToRemove);
+            return unlockWrite(nodeToRemove);
+        }else{
+            return true;
         }
 
-        return true;
     }
 
     
