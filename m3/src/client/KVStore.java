@@ -219,8 +219,7 @@ public class KVStore implements KVCommInterface {
 	 * @param responsibleServer The coordinator for the key
 	 * @return Either the coordinator, or one of its two successors
 	 */
-	private ECSNode randomizeReadRequestsToReplicas(ECSNode responsibleServer,
-													TreeMap<String, ECSNode> metadata){
+	private ECSNode randomizeReadRequestsToReplicas(ECSNode responsibleServer, TreeMap<String, ECSNode> metadata){
 		Random rand = new Random();
 		ECSNode randomizedNode = responsibleServer;
 		for(int i = 0; i < rand.nextInt(3); i++){
