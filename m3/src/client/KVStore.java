@@ -223,7 +223,7 @@ public class KVStore implements KVCommInterface {
 		Random rand = new Random();
 		ECSNode randomizedNode = responsibleServer;
 		for(int i = 0; i < rand.nextInt(3); i++){
-			randomizedNode = MetadataUtils.getSuccessor(metadata, responsibleServer);
+			randomizedNode = MetadataUtils.getSuccessor(metadata, randomizedNode);
 		}
 		return randomizedNode;
 	}
