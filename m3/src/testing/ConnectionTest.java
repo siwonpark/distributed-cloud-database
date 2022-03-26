@@ -229,7 +229,7 @@ public class ConnectionTest extends TestCase {
 
 			// At this point, the client should have metadata of the hash ring
 			// When we disconnect from one server, it should connect to the other
-			for(int i = 0; i < 4; i ++){
+			for(int i = 0; i < 3; i ++){
 				ArrayList<String> nodesToRemove = new ArrayList<>();
 				nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
 				ecs.removeNodes(nodesToRemove);
