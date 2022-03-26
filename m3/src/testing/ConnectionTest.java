@@ -28,7 +28,8 @@ public class ConnectionTest extends TestCase {
 	@Override
 	protected void tearDown(){
 		ecs.shutdown();
-		ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+		ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+		port = node.getNodePort();
 		ecs.start();
 	}
 	
