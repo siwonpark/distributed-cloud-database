@@ -182,12 +182,13 @@ public class ECSClient implements IECSClient {
 
 
 
-    private boolean sync(){ 
         boolean consistent = true;
         Map<String, ECSNode> nodes = getNodes();
         for (Map.Entry<String, ECSNode> entry : nodes.entrySet()) {
             ECSNode node = entry.getValue();
-            if(!ecs.forceConsistency(node)){
+            try{
+                ecs.forceConsistency(node);
+            } catch (Exception e){
                 consistent = false;
             }
         }
