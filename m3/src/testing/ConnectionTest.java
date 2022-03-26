@@ -2,18 +2,35 @@ package testing;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.TreeMap;
 
 import client.KVStore;
 
+import ecs.ECSNode;
+import ecs.IECSNode;
 import junit.framework.TestCase;
+import shared.MetadataUtils;
 import shared.messages.KVMessage;
 
 import static shared.PrintUtils.DELETE_STRING;
-import static testing.AllTests.port;
+import static testing.AllTests.*;
 
 
 public class ConnectionTest extends TestCase {
 
+	@Override
+	protected void setUp(){
+
+	}
+
+	@Override
+	protected void tearDown(){
+		ecs.shutdown();
+		ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+		ecs.start();
+	}
 	
 	public void testConnectionSuccess() {
 		
@@ -55,6 +72,39 @@ public class ConnectionTest extends TestCase {
 		}
 		
 		assertTrue(ex instanceof IllegalArgumentException);
+	}
+
+	/**
+	 * Test the graceful client error handling mechanism
+	 * For the case that there is only one server in the hash ring
+	 */
+	public void testServerDisconnectOneServer(){
+		Exception ex = null;
+		ArrayList<String> addedKeys = new ArrayList<>();
+		// start with no nodes
+		ecs.shutdown();
+
+		// add 3 nodes
+		IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+		// start service
+		ecs.start();
+		try {
+			// start kv client and connect to one node
+			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+			kvClient.connect();
+
+			// Remove the server that the client is connected to.
+			// Since the client has not put any keys, the client has no access to metadata
+			// This means that it should disconnect successfully without connecting to any other server.
+			ArrayList<String> nodesToRemove = new ArrayList<>();
+			nodesToRemove.add(addedNodes[0].getNodeName());
+			ecs.removeNodes(nodesToRemove);
+			assert(!kvClient.isRunning());
+		} catch (Exception e)  {
+			ex = e;
+		}
+		assertNull(ex);
 	}
 
 	/**
