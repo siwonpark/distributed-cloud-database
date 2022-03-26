@@ -1,19 +1,34 @@
 package testing;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.*;
 
 import client.KVStore;
 
+import ecs.ECSNode;
+import ecs.IECSNode;
 import junit.framework.TestCase;
+import shared.MetadataUtils;
 import shared.messages.KVMessage;
 
 import static shared.PrintUtils.DELETE_STRING;
-import static testing.AllTests.port;
+import static testing.AllTests.*;
 
 
 public class ConnectionTest extends TestCase {
 
+	@Override
+	protected void setUp(){
+
+	}
+
+	@Override
+	protected void tearDown(){
+		ecs.shutdown();
+		ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+		port = node.getNodePort();
+		ecs.start();
+	}
 	
 	public void testConnectionSuccess() {
 		
@@ -56,6 +71,194 @@ public class ConnectionTest extends TestCase {
 		
 		assertTrue(ex instanceof IllegalArgumentException);
 	}
+
+	/**
+	 * Test the graceful client error handling mechanism
+	 * For the case that there is only one server in the hash ring
+	 */
+	public void testServerDisconnectNoHandling(){
+		Exception ex = null;
+		ArrayList<String> addedKeys = new ArrayList<>();
+		// start with no nodes
+		ecs.shutdown();
+
+		// add 3 nodes
+		IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+		// start service
+		ecs.start();
+		try {
+			// start kv client and connect to one node
+			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+			kvClient.connect();
+
+			// Remove the server that the client is connected to.
+			// Since the client has not put any keys, the client has no access to metadata
+			// This means that it should disconnect successfully without connecting to any other server.
+			ArrayList<String> nodesToRemove = new ArrayList<>();
+			nodesToRemove.add(addedNodes[0].getNodeName());
+			ecs.removeNodes(nodesToRemove);
+			assert(!kvClient.isRunning());
+		} catch (Exception e)  {
+			ex = e;
+		}
+		assertNull(ex);
+	}
+
+
+	/**
+	 * Test the graceful client error handling mechanism
+	 * For the case that there is only one server in the hash ring
+	 */
+	public void testServerDisconnectOneServerWithHandling(){
+		Exception ex = null;
+		ArrayList<String> addedKeys = new ArrayList<>();
+		// start with no nodes
+		ecs.shutdown();
+
+		// add 3 nodes
+		IECSNode[] addedNodes = ecs.addNodes(1, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+		// start service
+		ecs.start();
+		try {
+			// start kv client and connect to one node
+			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+			kvClient.connect();
+			// Put some keys
+			kvClient.put("asdf", "asdf");
+			kvClient.put("fdsa", "fdsa");
+
+			// Remove the server that the client is connected to.
+			// Since there's only one server in the storage service, the client
+			// Should disconnect properly.
+			ArrayList<String> nodesToRemove = new ArrayList<>();
+			nodesToRemove.add(addedNodes[0].getNodeName());
+			ecs.removeNodes(nodesToRemove);
+			assert(!kvClient.isRunning());
+		} catch (Exception e)  {
+			ex = e;
+		}
+		assertNull(ex);
+	}
+
+	/**
+	 * Test the graceful client error handling mechanism
+	 * For the case that there is only one server in the hash ring
+	 */
+	public void testServerDisconnectTwoServersWithHandling(){
+		Exception ex = null;
+		// start with no nodes
+		ecs.shutdown();
+
+		// add 3 nodes
+		IECSNode[] addedNodes = ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+		// start service
+		ecs.start();
+		try {
+			// start kv client and connect to one node
+			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+			kvClient.connect();
+			// Put some keys, until we get metadata in the client
+			HashSet<String> needed =
+					new HashSet<>(
+							Arrays.asList(
+									addedNodes[0].getNodeName(),
+									addedNodes[1].getNodeName()));
+			int num = 100;
+
+			// populate datastore until all nodes responsible for at least one key
+			while (!needed.isEmpty()) {
+				ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
+				kvClient.put(String.valueOf(num), String.valueOf(num));
+				needed.remove(responsible.getNodeName());
+				num++;
+			}
+
+			// At this point, the client should have metadata of the hash ring
+			// When we disconnect from one server, it should connect to the other
+			ArrayList<String> nodesToRemove = new ArrayList<>();
+			nodesToRemove.add(addedNodes[0].getNodeName());
+			ecs.removeNodes(nodesToRemove);
+			assert(kvClient.isRunning());
+			assert(kvClient.getPort() == addedNodes[1].getNodePort());
+			assert(Objects.equals(kvClient.getHost(), addedNodes[1].getNodeHost()));
+		} catch (Exception e)  {
+			ex = e;
+		}
+		assertNull(ex);
+	}
+
+	/**
+	 * Test the graceful client error handling mechanism
+	 * For the case that there is only one server in the hash ring
+	 */
+	public void testServerDisconnectManyServersWithHandling(){
+		Exception ex = null;
+		// start with no nodes
+		ecs.shutdown();
+
+		// add 4 nodes
+		IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+		ArrayList<Integer> addedPorts = new ArrayList<>();
+		for(IECSNode node: addedNodes){
+			addedPorts.add(node.getNodePort());
+		}
+
+
+		// start service
+		ecs.start();
+		try {
+			// start kv client and connect to one node
+			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+			kvClient.connect();
+			// Put some keys, until we get metadata in the client
+			int num = 100;
+
+			// populate datastore until all nodes responsible for at least one key
+			boolean metadataUpdated = false;
+			while (!metadataUpdated) {
+				ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
+				kvClient.put(String.valueOf(num), String.valueOf(num));
+				if(!Objects.equals(responsible.getNodeName(), addedNodes[0].getNodeName())){
+					metadataUpdated = true;
+				}
+				num++;
+			}
+
+			// At this point, the client should have metadata of the hash ring
+			// When we disconnect from one server, it should connect to the other
+			for(int i = 0; i < 2; i ++){
+				int previousPort = kvClient.getPort();
+				ArrayList<String> nodesToRemove = new ArrayList<>();
+				nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
+				ecs.removeNodes(nodesToRemove);
+				assert(kvClient.isRunning());
+				assert(kvClient.getPort() != previousPort);
+				assert(addedPorts.contains(kvClient.getPort()));
+			}
+			// Now, we remove the last server in the ring, so the client finally disconnect
+			ArrayList<String> nodesToRemove = new ArrayList<>();
+			nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
+			ecs.removeNodes(nodesToRemove);
+			assert(!kvClient.isRunning());
+		} catch (Exception e)  {
+			ex = e;
+		}
+		assertNull(ex);
+	}
+
+	private String getClientConnectedNodeName(KVStore client, IECSNode[] addedNodes){
+		int clientConnectedPort = client.getPort();
+		for(IECSNode node: addedNodes){
+			if(node.getNodePort() == clientConnectedPort){
+				return node.getNodeName();
+			}
+		}
+		throw new RuntimeException("Could not find nodename of client connected server");
+	}
+
 
 	/**
 	 * Test multiple client connections
