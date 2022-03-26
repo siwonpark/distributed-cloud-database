@@ -230,10 +230,12 @@ public class ConnectionTest extends TestCase {
 			// At this point, the client should have metadata of the hash ring
 			// When we disconnect from one server, it should connect to the other
 			for(int i = 0; i < 3; i ++){
+				int previousPort = kvClient.getPort();
 				ArrayList<String> nodesToRemove = new ArrayList<>();
 				nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
 				ecs.removeNodes(nodesToRemove);
 				assert(kvClient.isRunning());
+				assert(kvClient.getPort() != previousPort);
 				assert(addedPorts.contains(kvClient.getPort()));
 			}
 			// Now, we remove the last server in the ring, so the client finally disconnect
