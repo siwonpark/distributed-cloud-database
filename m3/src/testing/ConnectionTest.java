@@ -200,7 +200,7 @@ public class ConnectionTest extends TestCase {
 		ecs.shutdown();
 
 		// add 4 nodes
-		IECSNode[] addedNodes = ecs.addNodes(4, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+		IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
 		ArrayList<Integer> addedPorts = new ArrayList<>();
 		for(IECSNode node: addedNodes){
 			addedPorts.add(node.getNodePort());
@@ -229,7 +229,7 @@ public class ConnectionTest extends TestCase {
 
 			// At this point, the client should have metadata of the hash ring
 			// When we disconnect from one server, it should connect to the other
-			for(int i = 0; i < 3; i ++){
+			for(int i = 0; i < 2; i ++){
 				int previousPort = kvClient.getPort();
 				ArrayList<String> nodesToRemove = new ArrayList<>();
 				nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
