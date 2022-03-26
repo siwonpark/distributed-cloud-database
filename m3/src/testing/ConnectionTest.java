@@ -1,10 +1,7 @@
 package testing;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.TreeMap;
+import java.util.*;
 
 import client.KVStore;
 
@@ -139,6 +136,55 @@ public class ConnectionTest extends TestCase {
 			nodesToRemove.add(addedNodes[0].getNodeName());
 			ecs.removeNodes(nodesToRemove);
 			assert(!kvClient.isRunning());
+		} catch (Exception e)  {
+			ex = e;
+		}
+		assertNull(ex);
+	}
+
+	/**
+	 * Test the graceful client error handling mechanism
+	 * For the case that there is only one server in the hash ring
+	 */
+	public void testServerDisconnectTwoServersWithHandling(){
+		Exception ex = null;
+		// start with no nodes
+		ecs.shutdown();
+
+		// add 3 nodes
+		IECSNode[] addedNodes = ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+		// start service
+		ecs.start();
+		try {
+			// start kv client and connect to one node
+			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+			kvClient.connect();
+			// Put some keys, until we get metadata in the client
+			HashSet<String> needed =
+					new HashSet<>(
+							Arrays.asList(
+									addedNodes[0].getNodeName(),
+									addedNodes[1].getNodeName()));
+			int num = 100;
+
+			// populate datastore until all nodes responsible for at least one key
+			while (!needed.isEmpty()) {
+				ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
+
+				kvClient.put(String.valueOf(num), String.valueOf(num));
+				needed.remove(responsible.getNodeName());
+				num++;
+			}
+
+			// At this point, the client should have metadata of the hash ring
+			// When we disconnect from one server, it should connect to the other
+			ArrayList<String> nodesToRemove = new ArrayList<>();
+			nodesToRemove.add(addedNodes[0].getNodeName());
+			ecs.removeNodes(nodesToRemove);
+			assert(kvClient.isRunning());
+			assert(kvClient.getPort() == addedNodes[1].getNodePort());
+			assert(Objects.equals(kvClient.getHost(), addedNodes[1].getNodeHost()));
 		} catch (Exception e)  {
 			ex = e;
 		}
