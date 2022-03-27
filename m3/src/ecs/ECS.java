@@ -458,6 +458,8 @@ public class ECS {
 
         if(isServerAlive){
             shutDown(nodeToRemove);
+        } else {
+            zkWatcher.deleteZnode(nodeName);
         }
         broadcastMetadataAndWait();
 
