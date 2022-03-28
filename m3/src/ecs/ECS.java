@@ -143,7 +143,6 @@ public class ECS {
         }
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
 
-        zkWatcher.watchNode(node.getNodeName());
         zkWatcher.create(ZKWatcher.COMMAND_PATH + "/" + node.getNodeName());
 
         spawnKVServer(node, cacheStrategy, cacheSize);
@@ -584,5 +583,8 @@ public class ECS {
 
         // Create ack node
         zkWatcher.create(ZKWatcher.ACK_PATH);
+
+        // Persistent recursive watcher on ack path
+        zkWatcher.watchPath(ZKWatcher.ACK_PATH);
     }
 }

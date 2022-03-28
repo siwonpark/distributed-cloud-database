@@ -47,11 +47,11 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void watchNode(String nodeName) {
+    public void watchPath(String path) {
         try {
-            zooKeeper.addWatch(ACK_PATH + "/" + nodeName, this, AddWatchMode.PERSISTENT);
+            zooKeeper.addWatch(path, this, AddWatchMode.PERSISTENT_RECURSIVE);
         } catch (Exception e) {
-            logger.error("Could not add watch to node " + nodeName);
+            logger.error("Could not add watcher to path");
         }
     }
 
@@ -134,11 +134,8 @@ public class ZKWatcher implements Watcher {
     public void deleteZnode(String nodeName) {
         try {
             String commandPath = COMMAND_PATH + "/" + nodeName;
-            String ackPath = ACK_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(commandPath, false);
             zooKeeper.delete(commandPath, stat.getVersion());
-
-            zooKeeper.removeWatches(ackPath, this, WatcherType.Any, true);
 
 //            path = ACK_PATH + "/" + nodeName;
 //            stat = zooKeeper.exists(path, false);
