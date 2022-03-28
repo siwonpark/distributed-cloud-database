@@ -67,9 +67,9 @@ public class ZKWatcher implements Watcher {
 
     public void watchNode(String nodeName) {
         try {
-            zooKeeper.exists(COMMAND_PATH + "/" + nodeName, this);
+            zooKeeper.addWatch(COMMAND_PATH + "/" + nodeName, this, AddWatchMode.PERSISTENT);
         } catch (Exception e) {
-            logger.error("Failed to set watcher for znode");
+            logger.error("Could not add watch to node " + nodeName);
         }
     }
 
@@ -122,7 +122,7 @@ public class ZKWatcher implements Watcher {
     public KVAdminMessage getData(String path) {
         try {
             Stat stat = zooKeeper.exists(path, false);
-            byte[] data = zooKeeper.getData(path, this, stat);
+            byte[] data = zooKeeper.getData(path, false, stat);
             return deserializeData(data);
         } catch (Exception e) {
             logger.error("Failed to get data for znode");

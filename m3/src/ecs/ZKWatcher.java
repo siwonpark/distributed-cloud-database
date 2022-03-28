@@ -47,6 +47,14 @@ public class ZKWatcher implements Watcher {
         }
     }
 
+    public void watchNode(String nodeName) {
+        try {
+            zooKeeper.addWatch(ACK_PATH + "/" + nodeName, this, AddWatchMode.PERSISTENT);
+        } catch (Exception e) {
+            logger.error("Could not add watch to node " + nodeName);
+        }
+    }
+
     public void create(String path) {
         try {
             Stat stat = zooKeeper.exists(path, false);
@@ -89,11 +97,8 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                String[] pathParts = path.split("/");
-                String nodeName = pathParts[pathParts.length - 1];
                 logger.info("Received acknowledgement from znode " + path);
                 awaitSignal.countDown();
-                watchNode(nodeName);
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {
@@ -113,21 +118,12 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void watchNode(String nodeName) {
-        try {
-            zooKeeper.exists(ACK_PATH + "/" + nodeName, this);
-        } catch (Exception e) {
-            logger.error("Failed to set watcher for znode");
-        }
-    }
-
     public void setData(String nodeName, KVAdminMessage data) {
         try {
             byte[] dataBytes = serializeData(data);
             String path = COMMAND_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            watchNode(nodeName);
 
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
@@ -137,9 +133,12 @@ public class ZKWatcher implements Watcher {
 
     public void deleteZnode(String nodeName) {
         try {
-            String path = COMMAND_PATH + "/" + nodeName;
-            Stat stat = zooKeeper.exists(path, false);
-            zooKeeper.delete(path, stat.getVersion());
+            String commandPath = COMMAND_PATH + "/" + nodeName;
+            String ackPath = ACK_PATH + "/" + nodeName;
+            Stat stat = zooKeeper.exists(commandPath, false);
+            zooKeeper.delete(commandPath, stat.getVersion());
+
+            zooKeeper.removeWatches(ackPath, this, WatcherType.Any, true);
 
 //            path = ACK_PATH + "/" + nodeName;
 //            stat = zooKeeper.exists(path, false);

@@ -292,10 +292,10 @@ public class ECS {
         logger.info("BROADCASTING METADATA");
         KVAdminMessage data = new KVAdminMessage(hashRing, KVAdminMessage.OperationType.METADATA);
         // Watch all child nodes
-        for (ECSNode node : hashRing.values()) {
-            logger.info("Watching node " + node.getNodeName());
-            zkWatcher.watchNode(node.getNodeName());
-        }
+//        for (ECSNode node : hashRing.values()) {
+//            logger.info("Watching node " + node.getNodeName());
+//            zkWatcher.watchNode(node.getNodeName());
+//        }
         zkWatcher.setData("metadata", data);
 
         if (!awaitNodes(hashRing.size(), 10000)) {
