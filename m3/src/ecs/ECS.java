@@ -560,7 +560,7 @@ public class ECS {
     private void startZKServer() {
         Runtime run = Runtime.getRuntime();
         String rootPath = System.getProperty("user.dir");
-        String script = String.format("%s/zookeeper-3.4.11/bin/zkServer.sh start", rootPath);
+        String script = String.format("%s/apache-zookeeper-3.7.0-bin/bin/zkServer.sh start", rootPath);
         try {
             run.exec(script);
         } catch (IOException e) {
