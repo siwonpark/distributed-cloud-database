@@ -4,16 +4,8 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.Watcher.Event.EventType;
-import org.apache.zookeeper.data.Stat;
-import shared.KVAdminMessage;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.concurrent.CountDownLatch;
 
 public class ZKFailureDetector implements Watcher {
-    private ZooKeeper zooKeeper;
     private ECS ecs;
     private Logger logger = Logger.getRootLogger();
 
@@ -47,12 +39,6 @@ public class ZKFailureDetector implements Watcher {
                     ecs.handleServerFailure(nodeName);
                 }
             }
-        } else if (KeeperState.Disconnected == keeperState) {
-            logger.info("And ZK Server Disconnected");
-        } else if (KeeperState.AuthFailed == keeperState) {
-            logger.info("Permission check failed");
-        } else if (KeeperState.Expired == keeperState) {
-            logger.info("Session failure");
         }
     }
 }
