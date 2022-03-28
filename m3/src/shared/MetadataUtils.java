@@ -3,6 +3,7 @@ package shared;
 import ecs.ECSNode;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class MetadataUtils {
@@ -27,26 +28,14 @@ public class MetadataUtils {
         return null;
     }
 
-    /**
-     * Parse the metadata to find the ECSNode corresponding to the server
-     *
-     * @param server The server name (ip:port)
-     * @param metadata Metadata
-     * @return The ECSNode corresponding to server
-     */
-    public static ECSNode getServerNode(String server, TreeMap<String, ECSNode> metadata)
-            throws RuntimeException {
-        String serverHash = HashUtils.computeHash(server);
-        if (metadata.containsKey(serverHash)) {
-            return metadata.get(serverHash);
-        } else {
-            throw new RuntimeException(
-                    String.format("Server Hash %s is not contained in the metadata, the server passed is %s", serverHash, server));
+    public static ECSNode getServerNodeWithName(String serverName, TreeMap<String, ECSNode> metadata){
+        for(Map.Entry<String, ECSNode> metadataEntry : metadata.entrySet()){
+            ECSNode currNode = metadataEntry.getValue();
+            if(Objects.equals(currNode.getNodeName(), serverName)){
+                return currNode;
+            }
         }
-    }
-
-    public static ECSNode getServerNodeWithAddress(String host, int port, TreeMap<String, ECSNode> metadata){
-        return getServerNode(host + ":" + port, metadata);
+        throw new RuntimeException(String.format("Server with name %s is not found in the metadata", serverName));
     }
 
     /**
