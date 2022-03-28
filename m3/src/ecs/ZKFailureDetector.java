@@ -14,7 +14,7 @@ public class ZKFailureDetector implements Watcher {
     }
 
     @Override
-    public void process(WatchedEvent event) {
+    public synchronized void process(WatchedEvent event) {
         logger.info("Watcher triggered");
         if (event == null) {
             return;
