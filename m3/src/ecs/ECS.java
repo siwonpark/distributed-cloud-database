@@ -395,6 +395,7 @@ public class ECS {
      */
     public boolean awaitNodes(int count, int timeout) {
         try {
+            logger.info("Waiting for " + count + " nodes to acknowledge");
             zkWatcher.awaitSignal = new CountDownLatch(count);
 
             boolean success = zkWatcher.awaitSignal.await(timeout, TimeUnit.MILLISECONDS);

@@ -65,6 +65,12 @@ public class ReplicationMsgSender implements Runnable {
             logger.error(String.format("Could not connect to destination server to perform replication key %s, value %s and sequence %d to server port %s server name: %s\n the error is %s", 
             rpmsg.key, rpmsg.value, rpmsg.sequence, dest.getNodePort(), dest.getNodeName(), e));
         }
+
+        try {
+            commModule.disconnect();
+        } catch (IOException e) {
+            logger.error("Could not disconnect server");
+        }
     }
 }
 

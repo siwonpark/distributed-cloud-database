@@ -101,7 +101,6 @@ public class ZKWatcher implements Watcher {
                 String nodeName = pathParts[pathParts.length - 1];
                 if (ecs.getECSNode(nodeName) != null) {
                     logger.info("Node deleted at znode " + path);
-                    awaitSignal.countDown();
                     ecs.handleServerFailure(nodeName);
                 }
             }
@@ -128,9 +127,6 @@ public class ZKWatcher implements Watcher {
             String path = COMMAND_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            if (stat == null) {
-                stat = zooKeeper.exists(path, false);
-            }
             watchNode(nodeName);
 
             zooKeeper.setData(path, dataBytes, stat.getVersion());

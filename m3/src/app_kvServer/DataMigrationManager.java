@@ -87,5 +87,10 @@ public class DataMigrationManager implements Runnable {
             zkWatcher.setData();
         }
         // If the migration failed, then we do not send ACK.
+        try {
+            commModule.disconnect();
+        } catch (IOException e) {
+            logger.error("Could not disconnect server");
+        }
     }
 }
