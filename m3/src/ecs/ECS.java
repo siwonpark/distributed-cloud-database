@@ -569,6 +569,7 @@ public class ECS {
 
     private void startZKWatcher() {
         // Connect with Zookeeper watcher client
+        ZKFailureDetector zkFailureDetector = new ZKFailureDetector(this);
         zkWatcher = new ZKWatcher(this);
         zkWatcher.connect();
 
@@ -585,6 +586,7 @@ public class ECS {
         zkWatcher.create(ZKWatcher.ACK_PATH);
 
         // Persistent recursive watcher on ack path
-        zkWatcher.watchPath(ZKWatcher.ACK_PATH);
+        zkWatcher.watchPath(ZKWatcher.ACK_PATH, zkWatcher);
+        zkWatcher.watchPath(ZKWatcher.ACK_PATH, zkFailureDetector);
     }
 }

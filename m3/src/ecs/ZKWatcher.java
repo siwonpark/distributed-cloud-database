@@ -47,9 +47,9 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void watchPath(String path) {
+    public void watchPath(String path, Watcher watcher) {
         try {
-            zooKeeper.addWatch(path, this, AddWatchMode.PERSISTENT_RECURSIVE);
+            zooKeeper.addWatch(path, watcher, AddWatchMode.PERSISTENT_RECURSIVE);
         } catch (Exception e) {
             logger.error("Could not add watcher to path");
         }
@@ -101,14 +101,14 @@ public class ZKWatcher implements Watcher {
                 awaitSignal.countDown();
             }
             // Delete node
-            else if (EventType.NodeDeleted == eventType) {
-                String[] pathParts = path.split("/");
-                String nodeName = pathParts[pathParts.length - 1];
-                if (ecs.getECSNode(nodeName) != null) {
-                    logger.info("Node deleted at znode " + path);
-                    ecs.handleServerFailure(nodeName);
-                }
-            }
+//            else if (EventType.NodeDeleted == eventType) {
+//                String[] pathParts = path.split("/");
+//                String nodeName = pathParts[pathParts.length - 1];
+//                if (ecs.getECSNode(nodeName) != null) {
+//                    logger.info("Node deleted at znode " + path);
+//                    ecs.handleServerFailure(nodeName);
+//                }
+//            }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
         } else if (KeeperState.AuthFailed == keeperState) {
