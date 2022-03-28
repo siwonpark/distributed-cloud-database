@@ -12,6 +12,7 @@ import shared.messages.Message;
 import java.io.IOException;
 import java.util.*;
 
+import static shared.messages.KVMessage.StatusType.GET;
 import static shared.messages.KVMessage.StatusType.SERVER_NOT_RESPONSIBLE;
 
 public class KVStore implements KVCommInterface {
@@ -181,6 +182,9 @@ public class KVStore implements KVCommInterface {
 			port = this.port;
 		} else {
 			ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(msg.getKey(), serverMetadata);
+			if(msg.getStatus() == GET){
+				responsibleServer = randomizeReadRequestsToReplicas(responsibleServer, serverMetadata);
+			}
 			if (responsibleServer == null) {
 				logger.error("Could not find a responsible server in the server metadata");
 				return;
@@ -205,6 +209,23 @@ public class KVStore implements KVCommInterface {
 		logger.info(String.format("Attempting to connect dynamic comm module to %s %s", host, port));
 		dynamicCommModule = new CommModule(host, port);
 		dynamicCommModule.connect();
+	}
+
+	/**
+	 * When the client issues a GET request, any replica should be able to serve it.
+	 * We don't always want to send the request to the coordinator, which is why
+	 * We can direct the request to either the coordinator, or any of its two successors.
+	 * This function randomizes which one we choose out of the three possible choices.
+	 * @param responsibleServer The coordinator for the key
+	 * @return Either the coordinator, or one of its two successors
+	 */
+	private ECSNode randomizeReadRequestsToReplicas(ECSNode responsibleServer, TreeMap<String, ECSNode> metadata){
+		Random rand = new Random();
+		ECSNode randomizedNode = responsibleServer;
+		for(int i = 0; i < rand.nextInt(3); i++){
+			randomizedNode = MetadataUtils.getSuccessor(metadata, randomizedNode);
+		}
+		return randomizedNode;
 	}
 
 	/**
