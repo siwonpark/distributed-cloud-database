@@ -6,6 +6,7 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.data.Stat;
 import shared.KVAdminMessage;
+import shared.PrintUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
+    private ECS ecs;
     private Logger logger = Logger.getRootLogger();
     static String ROOT_PATH = "/ecs";
     static String ACK_PATH = "/ecs/ack";
@@ -23,12 +25,16 @@ public class ZKWatcher implements Watcher {
     public CountDownLatch connectedSignal = new CountDownLatch(1);
     public CountDownLatch awaitSignal;
 
+    public ZKWatcher(ECS ecs) {
+        this.ecs = ecs;
+    }
+
     public ZooKeeper connect() {
         try {
             zooKeeper = new ZooKeeper(ZK_HOST + ":" + ZK_PORT, 1000, this);
             connectedSignal.await();
         } catch (Exception e) {
-            logger.error("Failed to connect to ZooKeeper server at localhost:2181");
+            logger.error("Failed to connect to ZooKeeper server at " + ZK_HOST + ":" + ZK_PORT);
         }
         return zooKeeper;
     }
@@ -56,7 +62,6 @@ public class ZKWatcher implements Watcher {
 
     @Override
     public void process(WatchedEvent event) {
-        logger.info("Watcher triggered");
         if (event == null) {
             return;
         }
@@ -67,9 +72,6 @@ public class ZKWatcher implements Watcher {
         EventType eventType = event.getType();
         // Affected path
         String path = event.getPath();
-
-        logger.info("Connection status:" + keeperState.toString());
-        logger.info("Event type:" + eventType.toString());
 
         if (KeeperState.SyncConnected == keeperState) {
             // Successfully connected to ZK server
@@ -84,13 +86,26 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
+                String[] pathParts = path.split("/");
+                String nodeName = pathParts[pathParts.length - 1];
                 logger.info("Received acknowledgement from znode " + path);
                 awaitSignal.countDown();
+                watchNode(nodeName);
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {
-                awaitSignal.countDown();
-                logger.info("node " + path + " Deleted");
+                String[] pathParts = path.split("/");
+                final String nodeName = pathParts[pathParts.length - 1];
+                if (ecs.getECSNode(nodeName) != null) {
+                    logger.info("Node deleted at znode " + path);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ecs.handleServerFailure(nodeName);
+                            System.out.print(PrintUtils.ECS_PROMPT);
+                        }
+                    }).start();
+                }
             }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
@@ -134,7 +149,10 @@ public class ZKWatcher implements Watcher {
 
             path = ACK_PATH + "/" + nodeName;
             stat = zooKeeper.exists(path, false);
-            zooKeeper.delete(path, stat.getVersion());
+            // might already be deleted as it is emphemeral node
+            if (stat != null) {
+                zooKeeper.delete(path, stat.getVersion());
+            }
         } catch (Exception e) {
             logger.error("Failed to delete znode");
         }

@@ -55,7 +55,7 @@ public class ZKWatcher implements Watcher {
         try {
             watchNode(nodeName);
             watchNode("metadata");
-            zooKeeper.create(ACK_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            zooKeeper.create(ACK_PATH + "/" + nodeName, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
 
             return true;
         } catch (Exception e) {
