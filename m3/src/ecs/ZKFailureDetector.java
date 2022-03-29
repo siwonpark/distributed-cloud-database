@@ -33,7 +33,7 @@ public class ZKFailureDetector implements Watcher {
         if (KeeperState.SyncConnected == keeperState) {
             if (EventType.NodeDeleted == eventType) {
                 String[] pathParts = path.split("/");
-                String nodeName = pathParts[pathParts.length - 1];
+                final String nodeName = pathParts[pathParts.length - 1];
                 if (ecs.getECSNode(nodeName) != null) {
                     logger.info("Node deleted at znode " + path);
                     new Thread(new Runnable() {
