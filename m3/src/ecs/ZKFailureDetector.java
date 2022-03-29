@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.Watcher.Event.EventType;
+import shared.PrintUtils;
 
 public class ZKFailureDetector implements Watcher {
     private ECS ecs;
@@ -40,6 +41,7 @@ public class ZKFailureDetector implements Watcher {
                         @Override
                         public void run() {
                             ecs.handleServerFailure(nodeName);
+                            System.out.println(PrintUtils.ECS_PROMPT);
                         }
                     }).start();
                 }
