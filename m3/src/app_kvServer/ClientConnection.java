@@ -142,7 +142,7 @@ public class ClientConnection implements Runnable {
 						return;
 					}
 					value = server.getKV(message.getKey());
-					if (value == null || value == DELETE_STRING){
+					if (value == null || value.equals(DELETE_STRING)){
 						throw new RuntimeException(String.format("No such key %s exists", key));
 					}
 					responseStatus = StatusType.GET_SUCCESS;
