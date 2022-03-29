@@ -561,6 +561,9 @@ public class ECS {
     }
 
     private void removeNodeFromHashRing(ECSNode node) {
+        if (getECSNode(node.getNodeName()) == null) {
+            return;
+        }
         // find successor and predecessor
         ECSNode successor = MetadataUtils.getSuccessor(hashRing, node);
         ECSNode predecessor = MetadataUtils.getPredecessor(hashRing, node);
