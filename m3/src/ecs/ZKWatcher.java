@@ -146,6 +146,13 @@ public class ZKWatcher implements Watcher {
             String path = COMMAND_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
             zooKeeper.delete(path, stat.getVersion());
+
+            path = ACK_PATH + "/" + nodeName;
+            stat = zooKeeper.exists(path, false);
+            // might already be deleted as it is emphemeral node
+            if (stat != null) {
+                zooKeeper.delete(path, stat.getVersion());
+            }
         } catch (Exception e) {
             logger.error("Failed to delete znode");
         }
