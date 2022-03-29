@@ -3,6 +3,7 @@ package persistence;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import shared.HashUtils;
 import static shared.PrintUtils.DELETE_STRING;
@@ -135,7 +136,7 @@ public class DataBase {
         int null_num = 0;
         while (node != null) {
             for (int i = 0; i < node.number; i++) {
-                if (node.values[i] != DELETE_STRING && node.values[i] != null) {
+                if (!Objects.equals(node.values[i], DELETE_STRING) && node.values[i] != null) {
                     ArrayList<String> tmp = new ArrayList<>();
                     tmp.add(node.keys[i]);
                     tmp.add(node.values[i]);
