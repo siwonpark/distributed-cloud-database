@@ -348,9 +348,7 @@ public class ECS {
         removeNode(nodeName, false);
         // replace failed node with new node
         // TODO: decide what to do with cache strategy/size
-        if (addNode("FIFO", 100, true) == null) {
-            broadcastMetadataAndWait();
-        }
+        addNode("FIFO", 100, true);
     }
 
 
