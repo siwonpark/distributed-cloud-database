@@ -325,6 +325,34 @@ public class ECS {
         dataTransfer(fromNode, toNode, keyStart, keyEnd, false);
     }
 
+    public ECSNode getECSNode(String nodeName) {
+        for (ECSNode node : hashRing.values()) {
+            if (node.getNodeName().equals(nodeName)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    public void handleServerFailure(String nodeName) {
+        // reconstruct service
+        // find node with name nodeName
+        ECSNode nodeToRemove = getECSNode(nodeName);
+
+        if (nodeToRemove == null) {
+            logger.error("Node does not exist");
+            return;
+        }
+
+        removeNode(nodeName, false);
+        // replace failed node with new node
+        // TODO: decide what to do with cache strategy/size
+        if (addNode("FIFO", 100, true) == null) {
+            broadcastMetadataAndWait();
+        }
+    }
+
 
     public boolean lockWrite(ECSNode node) {
         logger.info("LOCKING WRITE for " + node.getNodeName());
@@ -463,13 +491,7 @@ public class ECS {
 
     public boolean removeNode(String nodeName, boolean isServerAlive) {
         // find node with name nodeName
-        ECSNode nodeToRemove = null;
-        for (ECSNode node : hashRing.values()) {
-            if (node.getNodeName().equals(nodeName)) {
-                nodeToRemove = node;
-                break;
-            }
-        }
+        ECSNode nodeToRemove = getECSNode(nodeName);
 
         if (nodeToRemove == null) {
             logger.error("Node does not exist");
@@ -486,6 +508,8 @@ public class ECS {
 
         if(isServerAlive){
             shutDown(nodeToRemove);
+        } else {
+            zkWatcher.deleteZnode(nodeName);
         }
         broadcastMetadataAndWait();
 
@@ -595,7 +619,7 @@ public class ECS {
 
     private void startZKWatcher() {
         // Connect with Zookeeper watcher client
-        zkWatcher = new ZKWatcher();
+        zkWatcher = new ZKWatcher(this);
         zkWatcher.connect();
 
         // create root node
