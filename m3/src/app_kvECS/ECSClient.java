@@ -23,6 +23,8 @@ import static shared.PrintUtils.*;
 public class ECSClient implements IECSClient {
 
     private static Logger logger = Logger.getRootLogger();
+    
+    
     private String PROMPT = PrintUtils.ECS_PROMPT;
     private boolean stop = false;
     private BufferedReader stdin;
@@ -75,6 +77,7 @@ public class ECSClient implements IECSClient {
         }
         return success;
     }
+
 
     @Override
     public IECSNode addNode(String cacheStrategy, int cacheSize) {
@@ -182,12 +185,14 @@ public class ECSClient implements IECSClient {
 
 
 
-    private boolean sync(){ 
+    private boolean sync(){
         boolean consistent = true;
         Map<String, ECSNode> nodes = getNodes();
         for (Map.Entry<String, ECSNode> entry : nodes.entrySet()) {
             ECSNode node = entry.getValue();
-            if(!ecs.forceConsistency(node)){
+            try{
+                ecs.forceConsistency(node);
+            } catch (Exception e){
                 consistent = false;
             }
         }

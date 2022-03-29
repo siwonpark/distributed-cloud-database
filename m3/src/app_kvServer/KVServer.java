@@ -308,10 +308,10 @@ public class KVServer extends Thread implements IKVServer {
 	 * @param range The subset of this Server's data to transfer to the new server
 	 * @param server The new server to move data to
 	 */
-	public void moveData(String[] range, ECSNode server) {
+	public void moveData(String[] range, ECSNode server, boolean deleteOldKeys) {
 		logger.info(String.format("Moving data from server %s to server %s",
-				serverName, server.getNodeName()));
-		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher);
+				serverName, server == null ? "null" : server.getNodeName()));
+		DataMigrationManager migrationMgr = new DataMigrationManager(server, range, db, zkWatcher, deleteOldKeys);
 		new Thread(migrationMgr).start();
 	}
 
