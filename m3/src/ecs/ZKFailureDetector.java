@@ -36,8 +36,11 @@ public class ZKFailureDetector implements Watcher {
                 String nodeName = pathParts[pathParts.length - 1];
                 if (ecs.getECSNode(nodeName) != null) {
                     logger.info("Node deleted at znode " + path);
-                    new Thread(() -> {
-                        ecs.handleServerFailure(nodeName);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ecs.handleServerFailure(nodeName);
+                        }
                     }).start();
                 }
             }
