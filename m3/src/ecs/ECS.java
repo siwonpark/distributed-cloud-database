@@ -124,7 +124,7 @@ public class ECS {
                 
                 forceConsistency(successor);
                 
-                moveData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[0]);
+                copyData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[0]);
                 
                 return lockManager.unlockAllNodes();
             }
@@ -139,7 +139,7 @@ public class ECS {
                 forceConsistency(successor);
                 forceConsistency(successor2);
                 
-                moveData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[0]);
+                copyData(successor, node, node.getNodeHashRange()[0], node.getNodeHashRange()[0]);
                 
                 return lockManager.unlockAllNodes();
             }
