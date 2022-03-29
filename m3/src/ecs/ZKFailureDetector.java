@@ -14,7 +14,7 @@ public class ZKFailureDetector implements Watcher {
     }
 
     @Override
-    public synchronized void process(WatchedEvent event) {
+    public void process(WatchedEvent event) {
         logger.info("Watcher triggered");
         if (event == null) {
             return;
@@ -36,7 +36,9 @@ public class ZKFailureDetector implements Watcher {
                 String nodeName = pathParts[pathParts.length - 1];
                 if (ecs.getECSNode(nodeName) != null) {
                     logger.info("Node deleted at znode " + path);
-                    ecs.handleServerFailure(nodeName);
+                    new Thread(() -> {
+                        ecs.handleServerFailure(nodeName);
+                    }).start();
                 }
             }
         }
