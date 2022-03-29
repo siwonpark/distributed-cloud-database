@@ -226,15 +226,14 @@ public class ECS {
         }
 
         //removeNodeFromHashRing(nodeToRemove);
-        // removeNode(nodeName, false);
-        broadcastMetadataAndWait();
+        removeNode(nodeName, false);
         //redistributeReplicas(nodeToRemove);
 
         // replace failed node with new node
         // TODO: decide what to do with cache strategy/size
-//        if (addNode("FIFO", 100, true) == null) {
-//            broadcastMetadataAndWait();
-//        }
+        if (addNode("FIFO", 100, true) == null) {
+            broadcastMetadataAndWait();
+        }
     }
 
     private boolean redistributeReplicas(ECSNode failedNode) {
