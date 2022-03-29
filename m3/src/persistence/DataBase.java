@@ -115,7 +115,7 @@ public class DataBase {
             for (int i = 0; i < node.number; i++) {
                 String hash = HashUtils.computeHash(node.keys[i]);
                 assert hash != null;
-                if ((getAllData || HashUtils.withinHashRange(hash, start, end)) && node.values[i] != null && node.values[i] != DELETE_STRING ) {
+                if ((getAllData || HashUtils.withinHashRange(hash, start, end)) && node.values[i] != null && !Objects.equals(node.values[i], DELETE_STRING)) {
                     ArrayList<String> tmp = new ArrayList<>();
                     tmp.add(node.keys[i]);
                     tmp.add(node.values[i]);

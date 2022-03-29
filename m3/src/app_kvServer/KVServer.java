@@ -113,7 +113,7 @@ public class KVServer extends Thread implements IKVServer {
 		// TODO Auto-generated method stub
 		try{
 			String value = db.get(key);
-			return value != null && value != DELETE_STRING;
+			return value != null && !value.equals(DELETE_STRING);
 		} catch (Exception e){
 			return false;
 		}
