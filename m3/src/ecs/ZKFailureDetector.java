@@ -41,7 +41,7 @@ public class ZKFailureDetector implements Watcher {
                         @Override
                         public void run() {
                             ecs.handleServerFailure(nodeName);
-                            System.out.println(PrintUtils.ECS_PROMPT);
+                            System.out.print(PrintUtils.ECS_PROMPT);
                         }
                     }).start();
                 }
