@@ -62,7 +62,6 @@ public class ZKWatcher implements Watcher {
 
     @Override
     public void process(WatchedEvent event) {
-        logger.info("Watcher triggered");
         if (event == null) {
             return;
         }
@@ -73,9 +72,6 @@ public class ZKWatcher implements Watcher {
         EventType eventType = event.getType();
         // Affected path
         String path = event.getPath();
-
-        logger.info("Connection status:" + keeperState.toString());
-        logger.info("Event type:" + eventType.toString());
 
         if (KeeperState.SyncConnected == keeperState) {
             // Successfully connected to ZK server
