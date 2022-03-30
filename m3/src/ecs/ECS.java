@@ -363,7 +363,7 @@ public class ECS {
     public void handleServerFailure(String nodeName) {
         // reconstruct service
         // find node with name nodeName
-        logger.error("Server failed");
+        logger.info("Server " + nodeName + " failed, recovering service...");
         ECSNode nodeToRemove = getECSNode(nodeName);
 
         if (nodeToRemove == null) {
