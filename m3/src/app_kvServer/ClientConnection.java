@@ -202,7 +202,7 @@ public class ClientConnection implements Runnable {
 				break;
 
 			case REPLICATE_TO_TAIL:
-				logger.info("Received Replicate to Middle Replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
+				logger.info("Received Replicate to Tail Replica: key " + message.getKey() + " Value " + message.getValue() + " Seq " + message.getSeq());
 				server.putKVinTail(key, value, message.getSeq());
 				responseStatus = StatusType.REPLICATION_MESSAGE_SEND;
 				break;

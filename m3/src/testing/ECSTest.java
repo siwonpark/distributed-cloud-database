@@ -9,6 +9,7 @@ import java.util.*;
 import shared.HashUtils;
 import shared.MetadataUtils;
 import shared.messages.KVMessage;
+import shared.messages.Message;
 
 import static java.lang.Thread.sleep;
 import static testing.AllTests.*;
@@ -354,7 +355,8 @@ public class ECSTest extends TestCase {
             // populate datastore until each node responsible for at least 1 key
             int num = 1234;
             while (true) {
-                kvClient.put(String.valueOf(num), String.valueOf(num));
+                Message response = (Message) kvClient.put(String.valueOf(num), String.valueOf(num));
+                System.out.println(response.getMessageString());
                 addedKeys.add(String.valueOf(num));
                 if (nodeToKill.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
                     seenNodes.add(nodeToKill.getNodeName());
