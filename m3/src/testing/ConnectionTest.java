@@ -11,6 +11,7 @@ import junit.framework.TestCase;
 import shared.MetadataUtils;
 import shared.messages.KVMessage;
 
+import static java.lang.Thread.sleep;
 import static shared.PrintUtils.DELETE_STRING;
 import static testing.AllTests.*;
 
@@ -217,17 +218,13 @@ public class ConnectionTest extends TestCase {
 			int num = 100;
 
 			// populate datastore until all nodes responsible for at least one key
-			HashSet<String> needed =
-					new HashSet<>(
-							Arrays.asList(
-									addedNodes[0].getNodeName(),
-									addedNodes[1].getNodeName(),
-									addedNodes[2].getNodeName()));
-			
-			while (!needed.isEmpty()) {
+			boolean metadataUpdated = false;
+			while (!metadataUpdated) {
 				ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
 				kvClient.put(String.valueOf(num), String.valueOf(num));
-				needed.remove(responsible.getNodeName());
+				if(!Objects.equals(responsible.getNodeName(), addedNodes[0].getNodeName())){
+					metadataUpdated = true;
+				}
 				num++;
 			}
 
@@ -238,6 +235,7 @@ public class ConnectionTest extends TestCase {
 				ArrayList<String> nodesToRemove = new ArrayList<>();
 				nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
 				ecs.removeNodes(nodesToRemove);
+				sleep(3000);
 				System.out.println(kvClient.getPort());
 				assert(kvClient.isRunning());
 				assert(kvClient.getPort() != previousPort);
