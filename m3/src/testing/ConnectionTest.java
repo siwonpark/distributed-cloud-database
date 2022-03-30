@@ -223,10 +223,11 @@ public class ConnectionTest extends TestCase {
 									addedNodes[0].getNodeName(),
 									addedNodes[1].getNodeName(),
 									addedNodes[2].getNodeName()));
+			
 			while (!needed.isEmpty()) {
 				ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
 				kvClient.put(String.valueOf(num), String.valueOf(num));
-				needed.remove(responsible);
+				needed.remove(responsible.getNodeName());
 				num++;
 			}
 
