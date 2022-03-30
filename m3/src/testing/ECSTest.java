@@ -402,42 +402,45 @@ public class ECSTest extends TestCase {
     /**
      * Test that when a server fails in the service, a client gets automatically reconnected to the new node spawned
      */
-//    public void testFailureDetectionClientReconnection() {
-//        Exception ex = null;
-//
-//        // start with no nodes
-//        ecs.shutdown();
-//
-//        // add node
-//        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-//
-//        // start service
-//        ecs.start();
-//
-//        try {
-//            // start kv client
-//            KVStore kvClient = new KVStore("localhost", node.getNodePort());
-//            kvClient.connect();
-//
-//            // kill the node
-//            ecs.kill(node.getNodeName());
-//
-//            // sleep as there is delay until emphemeral node has been deleted and new node has spawned
-//            try {
-//                sleep(10000);
-//            } catch (InterruptedException ignored) {
-//            }
-//
-//            // check client reconnected to new node
-//            assertEquals(kvClient.getPort(), ecs.getNodes().values().iterator().next().getNodePort());
-//            assertEquals(kvClient.getHost(), ecs.getNodes().values().iterator().next().getNodeHost());
-//        } catch (Exception e)  {
-//            ex = e;
-//        }
-//
-//        assertNull(ex);
-//
-//        // reset node state
-//        ecs.resetAvailableNodes();
-//    }
+    public void testFailureDetectionClientReconnection() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // kill the node
+            ecs.kill(node.getNodeName());
+
+            // sleep as there is delay until emphemeral node has been deleted and new node has spawned
+            try {
+                sleep(10000);
+            } catch (InterruptedException ignored) {
+            }
+
+            // check client reconnected to new node
+            assertEquals(kvClient.getPort(), ecs.getNodes().values().iterator().next().getNodePort());
+            assertEquals(kvClient.getHost(), ecs.getNodes().values().iterator().next().getNodeHost());
+
+            // disconnect kvClient
+            kvClient.disconnect();
+        } catch (Exception e)  {
+            ex = e;
+        }
+
+        assertNull(ex);
+
+        // reset node state
+        ecs.resetAvailableNodes();
+    }
 }
