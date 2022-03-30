@@ -215,7 +215,7 @@ public class ConnectionTest extends TestCase {
 			// start kv client and connect to one node
 			KVClient kvClient = new KVClient();
 			kvClient.newConnection("localhost", addedNodes[0].getNodePort());
-			KVStore kvStore = kvClient.getStore();
+			KVStore kvStore = (KVStore) kvClient.getStore();
 
 			// Put some keys, until we get metadata in the client
 			int num = 100;
@@ -242,7 +242,7 @@ public class ConnectionTest extends TestCase {
 				System.out.println(kvStore.getPort());
 				assert(!kvStore.isRunning());
 				assert(kvStore.getPort() != previousPort);
-				assert(addedPorts.contains(kvClient.kvStore()));
+				assert(addedPorts.contains(kvStore.getPort()));
 			}
 			// Now, we remove the last server in the ring, so the client finally disconnect
 			ArrayList<String> nodesToRemove = new ArrayList<>();
