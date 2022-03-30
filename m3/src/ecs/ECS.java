@@ -104,7 +104,7 @@ public class ECS {
             logger.info("SENDING FORCE CONSISTENCY to " + node.getNodeName());
             KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.FORCE_CONSISTENCY);
             zkWatcher.setData(node.getNodeName(), data);
-            if (!awaitNodes(1, 1000)) {
+            if (!awaitNodes(1, 10000)) {
                 continue;
             }else{
                 return;
