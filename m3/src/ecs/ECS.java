@@ -28,6 +28,13 @@ public class ECS {
         availableNodes = getNodesFromConfig(configFilePath);
     }
 
+    /**
+     * Function used for testing failure detection
+     */
+    public void addToAvailableNodes(ECSNode node) {
+        availableNodes.add(node);
+    }
+
     public ArrayList<IECSNode> addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
         ArrayList<IECSNode> addedNodes = new ArrayList<>();
 
@@ -97,13 +104,31 @@ public class ECS {
             logger.info("SENDING FORCE CONSISTENCY to " + node.getNodeName());
             KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.FORCE_CONSISTENCY);
             zkWatcher.setData(node.getNodeName(), data);
-            if (!awaitNodes(1, 1000)) {
+            if (!awaitNodes(1, 10000)) {
                 continue;
             }else{
                 return;
             }
         }
         throw new RuntimeException(String.format("Consistency can't be achieve for coordinator %s", node.getNodeName()));
+    }
+
+    /**
+     * Used for testing purposes to test failure detection
+     * @param node
+     * @return
+     */
+    public boolean kill(ECSNode node) {
+        logger.info("SENDING KILL to " + node.getNodeName());
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.KILL);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Did not receive acknowledgement from all nodes");
+            return false;
+        }
+
+        return true;
     }
 
     /* the new node is on the hashring when call this*/
@@ -194,7 +219,7 @@ public class ECS {
     
     public ECSNode addNode(String cacheStrategy, int cacheSize, boolean broadcastMetadata) {
         if (availableNodes.size() == 0) {
-            logger.error("No available nodes to provision!");
+            logger.error("No available nodes to provision!, Hashring contains " + hashRing.size() + " nodes.");
             return null;
         }
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
@@ -338,6 +363,7 @@ public class ECS {
     public void handleServerFailure(String nodeName) {
         // reconstruct service
         // find node with name nodeName
+        logger.info("Server " + nodeName + " failed, recovering service...");
         ECSNode nodeToRemove = getECSNode(nodeName);
 
         if (nodeToRemove == null) {

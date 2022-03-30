@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
@@ -49,8 +50,8 @@ public class KVServer extends Thread implements IKVServer {
 
 	private DataBase db;
 
-	HashMap<Long, ReplicationMsg> coordinatorBuffer;
-	HashMap<Long, ReplicationMsg> middleReplicaBuffer;
+	ConcurrentHashMap<Long, ReplicationMsg> coordinatorBuffer;
+	ConcurrentHashMap<Long, ReplicationMsg> middleReplicaBuffer;
 	private boolean consistent = true;
 	/**
 	 * Start KV Server at given port
@@ -74,8 +75,8 @@ public class KVServer extends Thread implements IKVServer {
 		this.clientConnections = new ArrayList<>();
 		
 		this.db = DataBase.initInstance(this.cacheSize, this.strategy, this.serverName, true);
-		this.coordinatorBuffer = new HashMap<Long, ReplicationMsg>();
-		this.middleReplicaBuffer = new HashMap<Long, ReplicationMsg>();
+		this.coordinatorBuffer = new ConcurrentHashMap<Long, ReplicationMsg>();
+		this.middleReplicaBuffer = new ConcurrentHashMap<Long, ReplicationMsg>();
 		ECSCommandHandler ecsCommandHandler = new ECSCommandHandler(this);
 		this.zkWatcher = new ZKWatcher(serverName, zkHost, zkPort, ecsCommandHandler);
 		initZkWatcher();

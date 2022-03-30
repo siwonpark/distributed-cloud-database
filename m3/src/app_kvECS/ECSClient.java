@@ -118,13 +118,7 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean lockWrite(String nodeName) {
-        ECSNode nodeToLock = null;
-        for (ECSNode node : ecs.hashRing.values()) {
-            if (node.getNodeName().equals(nodeName)) {
-                nodeToLock = node;
-                break;
-            }
-        }
+        ECSNode nodeToLock = ecs.getECSNode(nodeName);
 
         if (nodeToLock == null) {
             logger.error("Node does not exist");
@@ -136,13 +130,7 @@ public class ECSClient implements IECSClient {
 
     @Override
     public boolean unlockWrite(String nodeName) {
-        ECSNode nodeToUnlock = null;
-        for (ECSNode node : ecs.hashRing.values()) {
-            if (node.getNodeName().equals(nodeName)) {
-                nodeToUnlock = node;
-                break;
-            }
-        }
+        ECSNode nodeToUnlock = ecs.getECSNode(nodeName);
 
         if (nodeToUnlock == null) {
             logger.error("Node does not exist");
@@ -150,6 +138,21 @@ public class ECSClient implements IECSClient {
         }
 
         return ecs.unlockWrite(nodeToUnlock);
+    }
+
+    public boolean kill(String nodeName) {
+        ECSNode killedNode = ecs.getECSNode(nodeName);
+
+        if (killedNode == null) {
+            logger.error("Node does not exist");
+            return false;
+        }
+
+        return ecs.kill(killedNode);
+    }
+
+    public void addToAvailableNodes(ECSNode node) {
+        ecs.addToAvailableNodes(node);
     }
 
 
@@ -182,8 +185,6 @@ public class ECSClient implements IECSClient {
             index += 1;
         }
     }
-
-
 
     private boolean sync(){
         boolean consistent = true;

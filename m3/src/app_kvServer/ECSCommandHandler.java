@@ -54,6 +54,9 @@ public class ECSCommandHandler {
             case FORCE_CONSISTENCY:
                 server.forceConsistency();
                 break;
+            case KILL:
+                server.shutDown();
+                break;
             default:
                 String errorMsg = "Request contained a status unknown to the server: " + op;
                 logger.error(errorMsg);
