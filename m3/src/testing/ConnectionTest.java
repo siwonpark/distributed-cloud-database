@@ -91,8 +91,8 @@ public class ConnectionTest extends TestCase {
 		ecs.start();
 		try {
 			// start kv client and connect to one node
-			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
-			kvClient.connect();
+			KVClient kvClient = new KVClient();
+			kvClient.handleCommand(String.format("connect localhost %s", addedNodes[0].getNodePort()));
 
 			// Remove the server that the client is connected to.
 			// Since the client has not put any keys, the client has no access to metadata
@@ -100,7 +100,8 @@ public class ConnectionTest extends TestCase {
 			ArrayList<String> nodesToRemove = new ArrayList<>();
 			nodesToRemove.add(addedNodes[0].getNodeName());
 			ecs.removeNodes(nodesToRemove);
-			assert(!kvClient.isRunning());
+			sleep(2200);
+			assert(!((KVStore) kvClient.getStore()).isRunning());
 		} catch (Exception e)  {
 			ex = e;
 		}
@@ -125,11 +126,11 @@ public class ConnectionTest extends TestCase {
 		ecs.start();
 		try {
 			// start kv client and connect to one node
-			KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
-			kvClient.connect();
+			KVClient kvClient = new KVClient();
+			kvClient.handleCommand(String.format("connect localhost %s", addedNodes[0].getNodePort()));
 			// Put some keys
-			kvClient.put("asdf", "asdf");
-			kvClient.put("fdsa", "fdsa");
+			kvClient.handleCommand("put asdf asdf");
+			kvClient.handleCommand("put asdf fdsa");
 
 			// Remove the server that the client is connected to.
 			// Since there's only one server in the storage service, the client
@@ -137,7 +138,8 @@ public class ConnectionTest extends TestCase {
 			ArrayList<String> nodesToRemove = new ArrayList<>();
 			nodesToRemove.add(addedNodes[0].getNodeName());
 			ecs.removeNodes(nodesToRemove);
-			assert(!kvClient.isRunning());
+			sleep(2200);
+			assert(!((KVStore) kvClient.getStore()).isRunning());
 		} catch (Exception e)  {
 			ex = e;
 		}
