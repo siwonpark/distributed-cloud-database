@@ -399,60 +399,60 @@ public class ECSTest extends TestCase {
         // add back node
         ecs.addToAvailableNodes(nodeToKill);
     }
-//
-//    /**
-//     * Test that when a server fails in the service, a client gets automatically reconnected to another node
-//     */
-//    public void testFailureDetectionClientReconnection() {
-//        Exception ex = null;
-//        // start with no nodes
-//        ecs.shutdown();
-//
-//        // add 2 nodes
-//        IECSNode[] addedNodes = ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
-//
-//        // start service
-//        ecs.start();
-//        try {
-//            // start kv client and connect to one node
-//            KVClient kvClient = new KVClient();
-//            kvClient.newConnection("localhost", addedNodes[0].getNodePort());
-//            KVStore kvStore = (KVStore) kvClient.getStore();
-//            // Put some keys, until we get metadata in the client
-//            HashSet<String> needed =
-//                    new HashSet<>(
-//                            Arrays.asList(
-//                                    addedNodes[0].getNodeName(),
-//                                    addedNodes[1].getNodeName()));
-//            int num = 100;
-//
-//            // populate datastore until all nodes responsible for at least one key
-//            while (!needed.isEmpty()) {
-//                ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
-//                kvStore.put(String.valueOf(num), String.valueOf(num));
-//                needed.remove(responsible.getNodeName());
-//                num++;
-//            }
-//
-//            // At this point, the client should have metadata of the hash ring
-//            // When we disconnect from one server, it should connect to the other
-//
-//            ecs.kill(addedNodes[0].getNodeName());
-//
-//            try {
-//                sleep(10000);
-//            } catch (InterruptedException ignored) {
-//            }
-//
-//            assert(kvStore.isRunning());
-//            assert(kvStore.getPort() == addedNodes[1].getNodePort());
-//            assert(Objects.equals(kvStore.getHost(), addedNodes[1].getNodeHost()));
-//        } catch (Exception e)  {
-//            ex = e;
-//        }
-//        assertNull(ex);
-//
-//        // add back node
-//        ecs.addToAvailableNodes((ECSNode) addedNodes[0]);
-//    }
+
+    /**
+     * Test that when a server fails in the service, a client gets automatically reconnected to another node
+     */
+    public void testFailureDetectionClientReconnection() {
+        Exception ex = null;
+        // start with no nodes
+        ecs.shutdown();
+
+        // add 2 nodes
+        IECSNode[] addedNodes = ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+        // start service
+        ecs.start();
+        try {
+            // start kv client and connect to one node
+            KVClient kvClient = new KVClient();
+            kvClient.newConnection("localhost", addedNodes[0].getNodePort());
+            KVStore kvStore = (KVStore) kvClient.getStore();
+            // Put some keys, until we get metadata in the client
+            HashSet<String> needed =
+                    new HashSet<>(
+                            Arrays.asList(
+                                    addedNodes[0].getNodeName(),
+                                    addedNodes[1].getNodeName()));
+            int num = 100;
+
+            // populate datastore until all nodes responsible for at least one key
+            while (!needed.isEmpty()) {
+                ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
+                kvStore.put(String.valueOf(num), String.valueOf(num));
+                needed.remove(responsible.getNodeName());
+                num++;
+            }
+
+            // At this point, the client should have metadata of the hash ring
+            // When we disconnect from one server, it should connect to the other
+
+            ecs.kill(addedNodes[0].getNodeName());
+
+            try {
+                sleep(10000);
+            } catch (InterruptedException ignored) {
+            }
+
+            assert(kvStore.isRunning());
+            assert(kvStore.getPort() == addedNodes[1].getNodePort());
+            assert(Objects.equals(kvStore.getHost(), addedNodes[1].getNodeHost()));
+        } catch (Exception e)  {
+            ex = e;
+        }
+        assertNull(ex);
+
+        // add back node
+        ecs.addToAvailableNodes((ECSNode) addedNodes[0]);
+    }
 }
