@@ -107,7 +107,7 @@ public class ECS {
     }
 
     public boolean kill(ECSNode node) {
-        logger.info("SENDING SHUTDOWN to " + node.getNodeName());
+        logger.info("SENDING KILL to " + node.getNodeName());
         KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.KILL);
         zkWatcher.setData(node.getNodeName(), data);
 
