@@ -295,35 +295,35 @@ public class ECSTest extends TestCase {
 
         assertNull(ex);
     }
-//
-//    /**
-//     * Test that the ECS detects failure correctly and spawns up a new node to replace it
-//     */
-//    public void testFailureDetection() {
-//        // start with no nodes
-//        ecs.shutdown();
-//
-//        // add node
-//        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-//
-//        // kill the node
-//        ecs.kill(node.getNodeName());
-//
-//        // sleep as there is delay until emphemeral node has been deleted and new node has spawned
-//        try {
-//            sleep(10000);
-//        } catch (InterruptedException ignored) {
-//        }
-//
-//        // check node is no longer in hash ring
-//        assertFalse(ecs.getNodes().containsKey(node.getHash()));
-//
-//        // check new node has been spawned to replace
-//        assertEquals(1, ecs.getNodes().size());
-//
-//        // add back node
-//        ecs.addToAvailableNodes(node);
-//    }
+
+    /**
+     * Test that the ECS detects failure correctly and spawns up a new node to replace it
+     */
+    public void testFailureDetection() {
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // kill the node
+        ecs.kill(node.getNodeName());
+
+        // sleep as there is delay until emphemeral node has been deleted and new node has spawned
+        try {
+            sleep(10000);
+        } catch (InterruptedException ignored) {
+        }
+
+        // check node is no longer in hash ring
+        assertFalse(ecs.getNodes().containsKey(node.getHash()));
+
+        // check new node has been spawned to replace
+        assertEquals(1, ecs.getNodes().size());
+
+        // add back node
+        ecs.addToAvailableNodes(node);
+    }
 //
 //    /**
 //     * Test that the ECS detects failure correctly and is able to recover lost data properly from a replica
