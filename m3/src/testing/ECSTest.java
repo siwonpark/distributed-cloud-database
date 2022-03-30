@@ -377,7 +377,7 @@ public class ECSTest extends TestCase {
 
             // sleep as there is delay until emphemeral node has been deleted and new node has spawned
             try {
-                sleep(10000);
+                sleep(15000);
             } catch (InterruptedException ignored) {
             }
 
