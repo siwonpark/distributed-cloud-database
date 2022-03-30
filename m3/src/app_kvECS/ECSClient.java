@@ -182,13 +182,6 @@ public class ECSClient implements IECSClient {
         }
     }
 
-    /**
-     * Testing utility to return available nodes to default state from config file
-     */
-    public void resetAvailableNodes() {
-        ecs.resetAvailableNodes();
-    }
-
     private boolean sync(){
         boolean consistent = true;
         Map<String, ECSNode> nodes = getNodes();

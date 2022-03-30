@@ -17,20 +17,14 @@ public class ECS {
     public TreeMap<String, ECSNode> hashRing = new TreeMap<>();
     private ArrayList<ECSNode> availableNodes;
     private ZKWatcher zkWatcher;
-    private String configFilePath;
     public boolean serviceRunning = false;
 
     public ECS(String configFilePath) {
-        this.configFilePath = configFilePath;
         // Start ZK server
         startZKServer();
         startZKWatcher();
 
         // Initialize nodes/metadata from config
-        availableNodes = getNodesFromConfig(configFilePath);
-    }
-
-    public void resetAvailableNodes() {
         availableNodes = getNodesFromConfig(configFilePath);
     }
 
@@ -112,6 +106,11 @@ public class ECS {
         throw new RuntimeException(String.format("Consistency can't be achieve for coordinator %s", node.getNodeName()));
     }
 
+    /**
+     * Used for testing purposes to test failure detection
+     * @param node
+     * @return
+     */
     public boolean kill(ECSNode node) {
         logger.info("SENDING KILL to " + node.getNodeName());
         KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.KILL);
@@ -121,6 +120,8 @@ public class ECS {
             logger.error("Did not receive acknowledgement from all nodes");
             return false;
         }
+
+        availableNodes.add(node);
         return true;
     }
 

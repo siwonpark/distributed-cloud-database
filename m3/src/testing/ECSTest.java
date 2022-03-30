@@ -319,9 +319,6 @@ public class ECSTest extends TestCase {
 
         // check new node has been spawned to replace
         assertEquals(1, ecs.getNodes().size());
-
-        // reset node state
-        ecs.resetAvailableNodes();
     }
 
     /**
@@ -394,9 +391,6 @@ public class ECSTest extends TestCase {
         }
 
         assertNull(ex);
-
-        // reset node state
-        ecs.resetAvailableNodes();
     }
 
     /**
@@ -449,6 +443,5 @@ public class ECSTest extends TestCase {
             ex = e;
         }
         assertNull(ex);
-        ecs.resetAvailableNodes();
     }
 }
