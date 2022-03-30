@@ -199,7 +199,7 @@ public class ConnectionTest extends TestCase {
 		// start with no nodes
 		ecs.shutdown();
 
-		// add 4 nodes
+		// add 3 nodes
 		IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
 		ArrayList<Integer> addedPorts = new ArrayList<>();
 		for(IECSNode node: addedNodes){
