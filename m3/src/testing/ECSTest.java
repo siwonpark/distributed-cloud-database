@@ -358,8 +358,10 @@ public class ECSTest extends TestCase {
                 addedKeys.add(String.valueOf(num));
                 if (nodeToKill.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
                     seenNodes.add(nodeToKill.getNodeName());
+                    System.out.println(nodeToKill.getNodeName() + " is responsible for " + (num));
                 } else {
                     seenNodes.add(node.getNodeName());
+                    System.out.println(node.getNodeName() + " is responsible for " + (num));
                 }
 
                 if (seenNodes.size() == 2) {
