@@ -248,54 +248,54 @@ public class ECSTest extends TestCase {
 //
 //        assertNull(ex);
 //    }
-//
-//    /**
-//     * Test that if server is writeLocked client can't put keys into it
-//     */
-//    public void testWriteLocked() {
-//        Exception ex = null;
-//
-//        // start with no nodes
-//        ecs.shutdown();
-//
-//        // add node
-//        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-//
-//        // start server
-//        ecs.start();
-//
-//        try {
-//            // start kv client
-//            KVStore kvClient = new KVStore("localhost", node.getNodePort());
-//            kvClient.connect();
-//
-//            KVMessage response = kvClient.put("prelock", "prelock");
-//            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
-//
-//            // lock writes to server
-//            ecs.lockWrite(node.getNodeName());
-//
-//            // try adding key
-//            response = kvClient.put("lock", "lock");
-//            assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
-//
-//            // get should not be locked
-//            response = kvClient.get("prelock");
-//            assertEquals(KVMessage.StatusType.GET_SUCCESS, response.getStatus());
-//            assertEquals("prelock", response.getValue());
-//
-//            // unlock writes to server
-//            ecs.unlockWrite(node.getNodeName());
-//            response = kvClient.put("lock", "lock");
-//            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
-//        } catch (Exception e) {
-//            ex = e;
-//        }
-//
-//
-//        assertNull(ex);
-//    }
-//
+
+    /**
+     * Test that if server is writeLocked client can't put keys into it
+     */
+    public void testWriteLocked() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            KVMessage response = kvClient.put("prelock", "prelock");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+
+            // lock writes to server
+            ecs.lockWrite(node.getNodeName());
+
+            // try adding key
+            response = kvClient.put("lock", "lock");
+            assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
+
+            // get should not be locked
+            response = kvClient.get("prelock");
+            assertEquals(KVMessage.StatusType.GET_SUCCESS, response.getStatus());
+            assertEquals("prelock", response.getValue());
+
+            // unlock writes to server
+            ecs.unlockWrite(node.getNodeName());
+            response = kvClient.put("lock", "lock");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
     /**
      * Test that the ECS detects failure correctly and spawns up a new node to replace it
      */
