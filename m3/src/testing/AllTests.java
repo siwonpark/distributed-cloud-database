@@ -50,7 +50,7 @@ public class AllTests {
         clientSuite.addTestSuite(DataBasePutGetTest.class);
         clientSuite.addTestSuite(CacheTest.class);
         clientSuite.addTestSuite(DataBaseReBootTest.class);
-		// clientSuite.addTestSuite(ConnectionTest.class);
+		clientSuite.addTestSuite(ConnectionTest.class);
 		clientSuite.addTestSuite(InteractionTest.class);
 		clientSuite.addTestSuite(AdditionalTest.class);
 		clientSuite.addTestSuite(CLITest.class);
