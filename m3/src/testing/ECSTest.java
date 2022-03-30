@@ -351,7 +351,7 @@ public class ECSTest extends TestCase {
             HashSet<String> seenNodes = new HashSet<>();
 
             // populate datastore until each node responsible for at least 1 key
-            int num = 100;
+            int num = 1234;
             while (true) {
                 kvClient.put(String.valueOf(num), String.valueOf(num));
                 addedKeys.add(String.valueOf(num));
@@ -403,63 +403,110 @@ public class ECSTest extends TestCase {
      * Test that when a server fails in the service, a client gets automatically reconnected to another node
      */
     public void testFailureDetectionClientReconnection() {
+//        Exception ex = null;
+//
+//        // start with no nodes
+//        ecs.shutdown();
+//
+//        // add node
+//        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+//        ECSNode node2 = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+//
+//        // start service
+//        ecs.start();
+//
+//        try {
+//            // start kv client
+//            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+//            kvClient.connect();
+//
+//            // populate datastore until each node responsible for at least 1 key
+//            HashSet<String> seenNodes = new HashSet<>();
+//            int num = 1328;
+//            while (true) {
+//                kvClient.put(String.valueOf(num), String.valueOf(num));
+//                if (node.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
+//                    seenNodes.add(node.getNodeName());
+//                } else {
+//                    seenNodes.add(node2.getNodeName());
+//                }
+//
+//                if (seenNodes.size() == 2) {
+//                    break;
+//                }
+//
+//                num++;
+//            }
+//
+//            // kill the node the client is connected to
+//            ecs.kill(node.getNodeName());
+//
+//            // sleep as there is delay until emphemeral node has been deleted and new node has spawned
+//            try {
+//                sleep(10000);
+//            } catch (InterruptedException ignored) {
+//            }
+//
+//            // check client reconnected to other node
+//            assertEquals(kvClient.getPort(), node2.getNodePort());
+//            assertEquals(kvClient.getHost(), node2.getNodeHost());
+//
+//            // disconnect kvClient
+//            kvClient.disconnect();
+//        } catch (Exception e)  {
+//            ex = e;
+//        }
+//
+//        assertNull(ex);
+//
+//        // reset node state
+//        ecs.resetAvailableNodes();
         Exception ex = null;
-
         // start with no nodes
         ecs.shutdown();
 
-        // add node
-        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-        ECSNode node2 = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        // add 3 nodes
+        IECSNode[] addedNodes = ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
 
         // start service
         ecs.start();
-
         try {
-            // start kv client
-            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            // start kv client and connect to one node
+            KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
             kvClient.connect();
-
-            // populate datastore until each node responsible for at least 1 key
-            HashSet<String> seenNodes = new HashSet<>();
+            // Put some keys, until we get metadata in the client
+            HashSet<String> needed =
+                    new HashSet<>(
+                            Arrays.asList(
+                                    addedNodes[0].getNodeName(),
+                                    addedNodes[1].getNodeName()));
             int num = 100;
-            while (true) {
+
+            // populate datastore until all nodes responsible for at least one key
+            while (!needed.isEmpty()) {
+                ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
                 kvClient.put(String.valueOf(num), String.valueOf(num));
-                if (node.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
-                    seenNodes.add(node.getNodeName());
-                } else {
-                    seenNodes.add(node2.getNodeName());
-                }
-
-                if (seenNodes.size() == 2) {
-                    break;
-                }
-
+                needed.remove(responsible.getNodeName());
                 num++;
             }
 
-            // kill the node the client is connected to
-            ecs.kill(node.getNodeName());
+            // At this point, the client should have metadata of the hash ring
+            // When we disconnect from one server, it should connect to the other
 
-            // sleep as there is delay until emphemeral node has been deleted and new node has spawned
+            ecs.kill(addedNodes[0].getNodeName());
+
             try {
                 sleep(10000);
             } catch (InterruptedException ignored) {
             }
 
-            // check client reconnected to other node
-            assertEquals(kvClient.getPort(), node2.getNodePort());
-            assertEquals(kvClient.getHost(), node2.getNodeHost());
-
-            // disconnect kvClient
-            kvClient.disconnect();
+            assert(kvClient.isRunning());
+            assert(kvClient.getPort() == addedNodes[1].getNodePort());
+            assert(Objects.equals(kvClient.getHost(), addedNodes[1].getNodeHost()));
         } catch (Exception e)  {
             ex = e;
         }
-
         assertNull(ex);
-
-        // reset node state
         ecs.resetAvailableNodes();
     }
 }
