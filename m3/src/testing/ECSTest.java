@@ -318,14 +318,14 @@ public class ECSTest extends TestCase {
         }
 
         // check node is no longer in hash ring
-        assertNull(ecs.getNodes().get(node.getHash()));
+        assertFalse(ecs.getNodes().containsKey(node.getHash()));
 
         // check new node has been spawned to replace
         assertEquals(1, ecs.getNodes().size());
     }
 
     /**
-     * Test that the ECS detects failure correctly and spawns up a new node to replace it
+     * Test that the ECS detects failure correctly and is able to recover lost data properly from a replica
      */
     public void testFailureDetectionDataTransfer() {
         ArrayList<String> addedKeys = new ArrayList<>();
@@ -392,6 +392,48 @@ public class ECSTest extends TestCase {
                 assertEquals(key, kvClient.get(key).getValue());
             }
 
+        } catch (Exception e)  {
+            ex = e;
+        }
+
+        assertNull(ex);
+    }
+
+    /**
+     * Test that when a server fails in the service, a client gets automatically reconnected to the new node spawned
+     */
+    public void testFailureDetectionClientReconnection() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // reset node state
+        ecs.resetAvailableNodes();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // kill the node
+            ecs.kill(node.getNodeName());
+
+            // sleep as there is delay until emphemeral node has been deleted and new node has spawned
+            try {
+                sleep(10000);
+            } catch (InterruptedException ignored) {
+            }
+
+            // check client reconnected to new node
+            assertEquals(kvClient.getPort(), ecs.getNodes().values().iterator().next().getNodePort());
+            assertEquals(kvClient.getHost(), ecs.getNodes().values().iterator().next().getNodeHost());
         } catch (Exception e)  {
             ex = e;
         }
