@@ -1,5 +1,6 @@
 package testing;
 
+import app_kvClient.KVClient;
 import client.KVStore;
 import ecs.ECSNode;
 import ecs.IECSNode;
@@ -407,15 +408,16 @@ public class ECSTest extends TestCase {
         // start with no nodes
         ecs.shutdown();
 
-        // add 3 nodes
+        // add 2 nodes
         IECSNode[] addedNodes = ecs.addNodes(2, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
 
         // start service
         ecs.start();
         try {
             // start kv client and connect to one node
-            KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
-            kvClient.connect();
+            KVClient kvClient = new KVClient();
+            kvClient.newConnection("localhost", addedNodes[0].getNodePort());
+            KVStore kvStore = (KVStore) kvClient.getStore();
             // Put some keys, until we get metadata in the client
             HashSet<String> needed =
                     new HashSet<>(
@@ -427,7 +429,7 @@ public class ECSTest extends TestCase {
             // populate datastore until all nodes responsible for at least one key
             while (!needed.isEmpty()) {
                 ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
-                kvClient.put(String.valueOf(num), String.valueOf(num));
+                kvStore.put(String.valueOf(num), String.valueOf(num));
                 needed.remove(responsible.getNodeName());
                 num++;
             }
@@ -442,9 +444,9 @@ public class ECSTest extends TestCase {
             } catch (InterruptedException ignored) {
             }
 
-            assert(kvClient.isRunning());
-            assert(kvClient.getPort() == addedNodes[1].getNodePort());
-            assert(Objects.equals(kvClient.getHost(), addedNodes[1].getNodeHost()));
+            assert(kvStore.isRunning());
+            assert(kvStore.getPort() == addedNodes[1].getNodePort());
+            assert(Objects.equals(kvStore.getHost(), addedNodes[1].getNodeHost()));
         } catch (Exception e)  {
             ex = e;
         }
