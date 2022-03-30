@@ -151,6 +151,10 @@ public class ECSClient implements IECSClient {
         return ecs.kill(killedNode);
     }
 
+    public void addToAvailableNodes(ECSNode node) {
+        ecs.addToAvailableNodes(node);
+    }
+
 
     /**
      * Return the currently managed nodes of the ECS server,

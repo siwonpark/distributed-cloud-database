@@ -28,6 +28,13 @@ public class ECS {
         availableNodes = getNodesFromConfig(configFilePath);
     }
 
+    /**
+     * Function used for testing failure detection
+     */
+    public void addToAvailableNodes(ECSNode node) {
+        availableNodes.add(node);
+    }
+
     public ArrayList<IECSNode> addNodes(int numberOfNodes, String cacheStrategy, int cacheSize) {
         ArrayList<IECSNode> addedNodes = new ArrayList<>();
 
@@ -121,7 +128,6 @@ public class ECS {
             return false;
         }
 
-        availableNodes.add(node);
         return true;
     }
 

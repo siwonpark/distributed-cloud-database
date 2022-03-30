@@ -319,6 +319,9 @@ public class ECSTest extends TestCase {
 
         // check new node has been spawned to replace
         assertEquals(1, ecs.getNodes().size());
+
+        // add back node
+        ecs.addToAvailableNodes(node);
     }
 
     /**
@@ -391,6 +394,9 @@ public class ECSTest extends TestCase {
         }
 
         assertNull(ex);
+
+        // add back node
+        ecs.addToAvailableNodes(nodeToKill);
     }
 
     /**
@@ -443,5 +449,8 @@ public class ECSTest extends TestCase {
             ex = e;
         }
         assertNull(ex);
+
+        // add back node
+        ecs.addToAvailableNodes((ECSNode) addedNodes[0]);
     }
 }
