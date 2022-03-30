@@ -216,14 +216,29 @@ public class ConnectionTest extends TestCase {
 			// Put some keys, until we get metadata in the client
 			int num = 100;
 
+//			// populate datastore until all nodes responsible for at least one key
+//			boolean metadataUpdated = false;
+//			while (!metadataUpdated) {
+//				ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num),
+//						(TreeMap<String, ECSNode>) ecs.getNodes());
+//				kvClient.put(String.valueOf(num), String.valueOf(num));
+//				if(!Objects.equals(responsible.getNodeName(), addedNodes[0].getNodeName())){
+//					metadataUpdated = true;
+//				}
+//				num++;
+//			}
+
+			HashSet<String> needed =
+					new HashSet<>(
+							Arrays.asList(
+									addedNodes[0].getNodeName(),
+									addedNodes[1].getNodeName()));
+
 			// populate datastore until all nodes responsible for at least one key
-			boolean metadataUpdated = false;
-			while (!metadataUpdated) {
+			while (!needed.isEmpty()) {
 				ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
 				kvClient.put(String.valueOf(num), String.valueOf(num));
-				if(!Objects.equals(responsible.getNodeName(), addedNodes[0].getNodeName())){
-					metadataUpdated = true;
-				}
+				needed.remove(responsible.getNodeName());
 				num++;
 			}
 
