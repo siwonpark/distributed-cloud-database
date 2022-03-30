@@ -420,8 +420,23 @@ public class ECSTest extends TestCase {
             KVStore kvClient = new KVStore("localhost", node.getNodePort());
             kvClient.connect();
 
-            // populate db
-            kvClient.put("hefnwef", "fwkelnflwe");
+            // populate datastore until each node responsible for at least 1 key
+            HashSet<String> seenNodes = new HashSet<>();
+            int num = 100;
+            while (true) {
+                kvClient.put(String.valueOf(num), String.valueOf(num));
+                if (node.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
+                    seenNodes.add(node.getNodeName());
+                } else {
+                    seenNodes.add(node2.getNodeName());
+                }
+
+                if (seenNodes.size() == 2) {
+                    break;
+                }
+
+                num++;
+            }
 
             // kill the node the client is connected to
             ecs.kill(node.getNodeName());
