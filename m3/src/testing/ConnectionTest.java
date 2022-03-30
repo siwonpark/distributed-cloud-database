@@ -254,6 +254,7 @@ public class ConnectionTest extends TestCase {
 			ArrayList<String> nodesToRemove = new ArrayList<>();
 			nodesToRemove.add(getClientConnectedNodeName(kvStore, addedNodes));
 			ecs.removeNodes(nodesToRemove);
+			sleep(2000);
 			assert(!kvStore.isRunning());
 		} catch (Exception e)  {
 			ex = e;
