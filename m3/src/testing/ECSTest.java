@@ -293,4 +293,24 @@ public class ECSTest extends TestCase {
 
         assertNull(ex);
     }
+
+    /**
+     * Test that the ECS detects failure correctly and spawns up a new node to replace it
+     */
+    public void testFailureDetection() {
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // kill the node
+        ecs.kill(node.getNodeName());
+
+        // check node is no longer in hash ring
+        assertNull(ecs.getNodes().get(node.getHash()));
+
+        // check new node has been spawned to replace
+        assertEquals(1, ecs.getNodes().size());
+    }
 }
