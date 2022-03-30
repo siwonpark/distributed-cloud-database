@@ -106,6 +106,18 @@ public class ECS {
         throw new RuntimeException(String.format("Consistency can't be achieve for coordinator %s", node.getNodeName()));
     }
 
+    public boolean kill(ECSNode node) {
+        logger.info("SENDING SHUTDOWN to " + node.getNodeName());
+        KVAdminMessage data = new KVAdminMessage(null, KVAdminMessage.OperationType.KILL);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Did not receive acknowledgement from all nodes");
+            return false;
+        }
+        return true;
+    }
+
     /* the new node is on the hashring when call this*/
     public boolean InitServerWithData(ECSNode node){
         int serverNum = MetadataUtils.getServersNum(hashRing);

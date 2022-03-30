@@ -30,6 +30,7 @@ public class ECSCommandHandler {
             case STOP:
                 server.stopServer();
                 break;
+            case KILL:
             case SHUT_DOWN:
                 server.shutDown();
                 break;

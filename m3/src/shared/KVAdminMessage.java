@@ -23,7 +23,9 @@ public class KVAdminMessage implements Serializable {
         MOVE_DATA,
         COPY_DATA,
         DELETE_DATA,
-        FORCE_CONSISTENCY
+        FORCE_CONSISTENCY,
+        //testing purposes
+        KILL
     }
 
     public KVAdminMessage(TreeMap<String, ECSNode> metadata, OperationType status) {
