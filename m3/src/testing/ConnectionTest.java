@@ -238,7 +238,6 @@ public class ConnectionTest extends TestCase {
 				ArrayList<String> nodesToRemove = new ArrayList<>();
 				nodesToRemove.add(getClientConnectedNodeName(kvStore, addedNodes));
 				ecs.removeNodes(nodesToRemove);
-				sleep(3000);
 				System.out.println(kvStore.getPort());
 				assert(!kvStore.isRunning());
 				assert(kvStore.getPort() != previousPort);
