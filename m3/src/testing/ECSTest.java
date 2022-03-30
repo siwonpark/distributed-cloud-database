@@ -9,6 +9,7 @@ import shared.HashUtils;
 import shared.MetadataUtils;
 import shared.messages.KVMessage;
 
+import static java.lang.Thread.sleep;
 import static testing.AllTests.*;
 
 
@@ -306,6 +307,12 @@ public class ECSTest extends TestCase {
 
         // kill the node
         ecs.kill(node.getNodeName());
+
+        // sleep as there is delay until emphemeral node has been deleted
+        try {
+            sleep(3000);
+        } catch (InterruptedException ignored) {
+        }
 
         // check node is no longer in hash ring
         assertNull(ecs.getNodes().get(node.getHash()));
