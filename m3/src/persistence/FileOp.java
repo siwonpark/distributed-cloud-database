@@ -281,6 +281,7 @@ public class FileOp {
             }
         }
         if (dirFile.delete()) {
+            System.out.println("DELTED");
             return true;
         } else {
             return false;
