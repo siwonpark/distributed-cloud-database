@@ -348,22 +348,26 @@ public class ECSTest extends TestCase {
             KVStore kvClient = new KVStore("localhost", nodeToKill.getNodePort());
             kvClient.connect();
 
-            // Put some keys, until we get metadata in the client
-            HashSet<String> needed =
-                    new HashSet<>(
-                            Arrays.asList(
-                                    node.getNodeName(),
-                                    nodeToKill.getNodeName()));
-            int num = 1012;
+            HashSet<String> seenNodes = new HashSet<>();
 
-            // populate datastore until all nodes responsible for at least one key
-            while (!needed.isEmpty()) {
-                ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
+            // populate datastore until each node responsible for at least 1 key
+            int num = 1234;
+            while (true) {
                 kvClient.put(String.valueOf(num), String.valueOf(num));
                 addedKeys.add(String.valueOf(num));
-                needed.remove(responsible.getNodeName());
+                if (nodeToKill.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
+                    seenNodes.add(nodeToKill.getNodeName());
+                } else {
+                    seenNodes.add(node.getNodeName());
+                }
+
+                if (seenNodes.size() == 2) {
+                    break;
+                }
+
                 num++;
             }
+
             // disconnect kvClient
             kvClient.disconnect();
 
