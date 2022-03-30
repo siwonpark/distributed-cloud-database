@@ -302,6 +302,9 @@ public class ECSTest extends TestCase {
         // start with no nodes
         ecs.shutdown();
 
+        // reset node state
+        ecs.resetAvailableNodes();
+
         // add node
         ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
 
@@ -330,6 +333,9 @@ public class ECSTest extends TestCase {
 
         // start with no nodes
         ecs.shutdown();
+
+        // reset node state
+        ecs.resetAvailableNodes();
 
         // add node
         ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);

@@ -17,14 +17,20 @@ public class ECS {
     public TreeMap<String, ECSNode> hashRing = new TreeMap<>();
     private ArrayList<ECSNode> availableNodes;
     private ZKWatcher zkWatcher;
+    private String configFilePath;
     public boolean serviceRunning = false;
 
     public ECS(String configFilePath) {
+        this.configFilePath = configFilePath;
         // Start ZK server
         startZKServer();
         startZKWatcher();
 
         // Initialize nodes/metadata from config
+        availableNodes = getNodesFromConfig(configFilePath);
+    }
+
+    public void resetAvailableNodes() {
         availableNodes = getNodesFromConfig(configFilePath);
     }
 
