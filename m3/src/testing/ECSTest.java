@@ -372,9 +372,6 @@ public class ECSTest extends TestCase {
             // disconnect kvClient
             kvClient.disconnect();
 
-            // wait for replication
-            sleep(5000);
-
             // kill the node
             ecs.kill(nodeToKill.getNodeName());
 
