@@ -388,6 +388,7 @@ public class ECSTest extends TestCase {
             // check that we can still get all keys we added
             for (String key: addedKeys) {
                 System.out.println(kvClient.get(key).getKey());
+                System.out.println(kvClient.get(key).getValue());
                 assertEquals(key, kvClient.get(key).getValue());
             }
 
