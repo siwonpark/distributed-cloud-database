@@ -193,61 +193,61 @@ public class ECSTest extends TestCase {
 //
 //        assertNull(ex);
 //    }
-//
-//    /**
-//     * Test that even if there are multiple responsible servers, each key can be retrieved by one client connected to
-//     * a single node using the client-server retry mechanism
-//     */
-//    public void testClientServerRetry() {
-//        Exception ex = null;
-//        ArrayList<String> addedKeys = new ArrayList<>();
-//
-//        // start with no nodes
-//        ecs.shutdown();
-//
-//        // add 3 nodes
-//        IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
-//
-//        // start service
-//        ecs.start();
-//
-//        try {
-//            // start kv client and connect to one node
-//            KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
-//            kvClient.connect();
-//
-//            HashSet<String> needed =
-//                    new HashSet<>(
-//                            Arrays.asList(
-//                                    addedNodes[0].getNodeName(),
-//                                    addedNodes[1].getNodeName(),
-//                                    addedNodes[2].getNodeName()));
-//            int num = 100;
-//
-//            // populate datastore until all nodes responsible for at least one key
-//            while (!needed.isEmpty()) {
-//                ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
-//
-//                kvClient.put(String.valueOf(num), String.valueOf(num));
-//                addedKeys.add(String.valueOf(num));
-//
-//                needed.remove(responsible.getNodeName());
-//
-//                num++;
-//            }
-//
-//            // check that we can still get all keys we added even when not connected to the other servers
-//            for (String key: addedKeys) {
-//                assertEquals(key, kvClient.get(key).getValue());
-//            }
-//
-//        } catch (Exception e)  {
-//            ex = e;
-//        }
-//
-//
-//        assertNull(ex);
-//    }
+
+    /**
+     * Test that even if there are multiple responsible servers, each key can be retrieved by one client connected to
+     * a single node using the client-server retry mechanism
+     */
+    public void testClientServerRetry() {
+        Exception ex = null;
+        ArrayList<String> addedKeys = new ArrayList<>();
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add 3 nodes
+        IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client and connect to one node
+            KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+            kvClient.connect();
+
+            HashSet<String> needed =
+                    new HashSet<>(
+                            Arrays.asList(
+                                    addedNodes[0].getNodeName(),
+                                    addedNodes[1].getNodeName(),
+                                    addedNodes[2].getNodeName()));
+            int num = 100;
+
+            // populate datastore until all nodes responsible for at least one key
+            while (!needed.isEmpty()) {
+                ECSNode responsible = MetadataUtils.getResponsibleServerForKey(String.valueOf(num), (TreeMap<String, ECSNode>) ecs.getNodes());
+
+                kvClient.put(String.valueOf(num), String.valueOf(num));
+                addedKeys.add(String.valueOf(num));
+
+                needed.remove(responsible.getNodeName());
+
+                num++;
+            }
+
+            // check that we can still get all keys we added even when not connected to the other servers
+            for (String key: addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+        } catch (Exception e)  {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
 
     /**
      * Test that if server is writeLocked client can't put keys into it
