@@ -337,10 +337,10 @@ public class ECSTest extends TestCase {
         ecs.shutdown();
 
         // add node
-        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, 0);
 
         // add node to kill
-        ECSNode nodeToKill = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        ECSNode nodeToKill = (ECSNode) ecs.addNode(CACHE_STRATEGY, 0);
 
         // start service
         ecs.start();
@@ -357,6 +357,7 @@ public class ECSTest extends TestCase {
             while (true) {
                 Message response = (Message) kvClient.put(String.valueOf(num), String.valueOf(num));
                 System.out.println(response.getMessageString());
+                sleep(200);
                 addedKeys.add(String.valueOf(num));
                 if (nodeToKill.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
                     seenNodes.add(nodeToKill.getNodeName());
