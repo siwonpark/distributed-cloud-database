@@ -320,4 +320,76 @@ public class ECSTest extends TestCase {
         // check new node has been spawned to replace
         assertEquals(1, ecs.getNodes().size());
     }
+
+    /**
+     * Test that the ECS detects failure correctly and spawns up a new node to replace it
+     */
+    public void testFailureDetectionDataTransfer() {
+        ArrayList<String> addedKeys = new ArrayList<>();
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // add node to kill
+        ECSNode nodeToKill = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", nodeToKill.getNodePort());
+            kvClient.connect();
+
+            HashSet<String> seenNodes = new HashSet<>();
+
+            // populate datastore until each node responsible for at least 1 key
+            int num = 0;
+            while (true) {
+                kvClient.put(String.valueOf(num), String.valueOf(num));
+                addedKeys.add(String.valueOf(num));
+                if (nodeToKill.isResponsibleForKey(HashUtils.computeHash(String.valueOf(num)))) {
+                    seenNodes.add(nodeToKill.getNodeName());
+                } else {
+                    seenNodes.add(node.getNodeName());
+                }
+
+                if (seenNodes.size() == 2) {
+                    break;
+                }
+
+                num++;
+            }
+
+            // disconnect kvClient
+            kvClient.disconnect();
+
+            // kill the node
+            ecs.kill(nodeToKill.getNodeName());
+
+            // sleep as there is delay until emphemeral node has been deleted and new node has spawned
+            try {
+                sleep(10000);
+            } catch (InterruptedException ignored) {
+            }
+
+            // reconnect to node
+            kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // check that we can still get all keys we added
+            for (String key: addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+        } catch (Exception e)  {
+            ex = e;
+        }
+
+        assertNull(ex);
+    }
 }
