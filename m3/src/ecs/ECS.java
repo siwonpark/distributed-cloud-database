@@ -219,7 +219,7 @@ public class ECS {
     
     public ECSNode addNode(String cacheStrategy, int cacheSize, boolean broadcastMetadata) {
         if (availableNodes.size() == 0) {
-            logger.error("No available nodes to provision!");
+            logger.error("No available nodes to provision!, Hashring contains " + hashRing.size() + " nodes.");
             return null;
         }
         ECSNode node = availableNodes.remove(availableNodes.size() - 1);
