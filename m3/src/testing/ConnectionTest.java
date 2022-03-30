@@ -234,14 +234,13 @@ public class ConnectionTest extends TestCase {
 				ArrayList<String> nodesToRemove = new ArrayList<>();
 				nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
 				ecs.removeNodes(nodesToRemove);
-				System.out.println(nodesToRemove.get(0));
+				System.out.println(kvClient.getPort());
 				assert(kvClient.isRunning());
 				assert(kvClient.getPort() != previousPort);
 				assert(addedPorts.contains(kvClient.getPort()));
 			}
 			// Now, we remove the last server in the ring, so the client finally disconnect
 			ArrayList<String> nodesToRemove = new ArrayList<>();
-			System.out.println(nodesToRemove.get(0));
 			nodesToRemove.add(getClientConnectedNodeName(kvClient, addedNodes));
 			ecs.removeNodes(nodesToRemove);
 			assert(!kvClient.isRunning());
