@@ -144,7 +144,7 @@ public class ConnectionTest extends TestCase {
 
 	/**
 	 * Test the graceful client error handling mechanism
-	 * For the case that there is only one server in the hash ring
+	 * For the case that there are two servers in the hash ring
 	 */
 	public void testServerDisconnectTwoServersWithHandling(){
 		Exception ex = null;
@@ -192,7 +192,7 @@ public class ConnectionTest extends TestCase {
 
 	/**
 	 * Test the graceful client error handling mechanism
-	 * For the case that there is only one server in the hash ring
+	 * For the case that there are three servers in the hash ring
 	 */
 	public void testServerDisconnectManyServersWithHandling(){
 		Exception ex = null;

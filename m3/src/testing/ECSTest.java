@@ -351,7 +351,7 @@ public class ECSTest extends TestCase {
             HashSet<String> seenNodes = new HashSet<>();
 
             // populate datastore until each node responsible for at least 1 key
-            int num = 0;
+            int num = 100;
             while (true) {
                 kvClient.put(String.valueOf(num), String.valueOf(num));
                 addedKeys.add(String.valueOf(num));
@@ -400,7 +400,7 @@ public class ECSTest extends TestCase {
     }
 
     /**
-     * Test that when a server fails in the service, a client gets automatically reconnected to the new node spawned
+     * Test that when a server fails in the service, a client gets automatically reconnected to another node
      */
     public void testFailureDetectionClientReconnection() {
         Exception ex = null;
@@ -410,6 +410,7 @@ public class ECSTest extends TestCase {
 
         // add node
         ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        ECSNode node2 = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
 
         // start service
         ecs.start();
@@ -419,7 +420,10 @@ public class ECSTest extends TestCase {
             KVStore kvClient = new KVStore("localhost", node.getNodePort());
             kvClient.connect();
 
-            // kill the node
+            // populate db
+            kvClient.put("hefnwef", "fwkelnflwe");
+
+            // kill the node the client is connected to
             ecs.kill(node.getNodeName());
 
             // sleep as there is delay until emphemeral node has been deleted and new node has spawned
@@ -428,9 +432,9 @@ public class ECSTest extends TestCase {
             } catch (InterruptedException ignored) {
             }
 
-            // check client reconnected to new node
-            assertEquals(kvClient.getPort(), ecs.getNodes().values().iterator().next().getNodePort());
-            assertEquals(kvClient.getHost(), ecs.getNodes().values().iterator().next().getNodeHost());
+            // check client reconnected to other node
+            assertEquals(kvClient.getPort(), node2.getNodePort());
+            assertEquals(kvClient.getHost(), node2.getNodeHost());
 
             // disconnect kvClient
             kvClient.disconnect();
