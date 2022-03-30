@@ -62,7 +62,7 @@ public class ClientConnection implements Runnable {
 				} catch (IOException ioe) {
 					logger.error("Error! Connection lost!");
 					isOpen = false;
-				}				
+				}
 			}
 			
 		} catch (IOException ioe) {
