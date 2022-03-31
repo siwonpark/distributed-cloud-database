@@ -614,10 +614,11 @@ public class ECSTest extends TestCase {
             KVStore kvClient = new KVStore("localhost", node.getNodePort());
             kvClient.connect();
 
-            int num = 20;
+            int num = 10;
 
             while (num != 0) {
                 kvClient.put(String.valueOf(num), String.valueOf(num));
+                sleep(200);
                 addedKeys.add(String.valueOf(num));
                 num--;
             }
