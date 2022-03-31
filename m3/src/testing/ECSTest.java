@@ -455,4 +455,225 @@ public class ECSTest extends TestCase {
         // add back node
         ecs.addToAvailableNodes((ECSNode) addedNodes[0]);
     }
+
+    /**
+     * test if replica is consistent when client perform put kv.
+     */
+    public void testReplicaConsistent() {
+        Exception ex = null;
+        ArrayList<String> addedKeys = new ArrayList<>();
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add 3 nodes
+        IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client and connect to one node
+            KVStore kvClient = new KVStore("localhost", addedNodes[0].getNodePort());
+            kvClient.connect();
+
+            int num = 20;
+
+            while (num != 0) {
+                kvClient.put(String.valueOf(num), String.valueOf(num));
+                addedKeys.add(String.valueOf(num));
+                num--;
+            }
+
+            try {
+                sleep(2000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue()); // random get values from different servers
+            }
+
+        } catch (Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
+    /**
+     * test if the replica is correct when ecs perform removeNode
+     */
+    public void testReplicaWhenRemoveNode() {
+        Exception ex = null;
+        ArrayList<String> addedKeys = new ArrayList<>();
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add 5 nodes
+        IECSNode[] addedNodes = ecs.addNodes(5, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+
+        assertEquals(addedNodes.length, 5);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client and connect to one node
+            KVStore kvClient = new KVStore("localhost", addedNodes[4].getNodePort());
+            kvClient.connect();
+
+            int num = 20;
+
+            while (num != 0) {
+                kvClient.put(String.valueOf(num), String.valueOf(num));
+                addedKeys.add(String.valueOf(num));
+                num--;
+            }
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            ArrayList<String> nodesToRemove = new ArrayList<>();
+            nodesToRemove.add(addedNodes[0].getNodeName());
+            ecs.removeNodes(nodesToRemove);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+            nodesToRemove = new ArrayList<>();
+            nodesToRemove.add(addedNodes[1].getNodeName());
+            ecs.removeNodes(nodesToRemove);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+            nodesToRemove = new ArrayList<>();
+            nodesToRemove.add(addedNodes[2].getNodeName());
+            ecs.removeNodes(nodesToRemove);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+            nodesToRemove = new ArrayList<>();
+            nodesToRemove.add(addedNodes[3].getNodeName());
+            ecs.removeNodes(nodesToRemove);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+        } catch (Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
+    /**
+     * test if the replica is correct when ecs perform addNode
+     */
+    public void testReplicaWhenAddNode() {
+        Exception ex = null;
+        ArrayList<String> addedKeys = new ArrayList<>();
+
+        // start with no nodes
+        ecs.shutdown();
+
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start service
+        ecs.start();
+
+        try {
+            // start kv client and connect to one node
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            int num = 20;
+
+            while (num != 0) {
+                kvClient.put(String.valueOf(num), String.valueOf(num));
+                addedKeys.add(String.valueOf(num));
+                num--;
+            }
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+            try {
+                sleep(1000);
+            } catch (InterruptedException ignored) {
+            }
+
+            for (String key : addedKeys) {
+                assertEquals(key, kvClient.get(key).getValue());
+            }
+
+        } catch (Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
 }
