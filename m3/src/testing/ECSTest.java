@@ -511,16 +511,16 @@ public class ECSTest extends TestCase {
         ecs.shutdown();
 
         // add 5 nodes
-        IECSNode[] addedNodes = ecs.addNodes(5, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
+        IECSNode[] addedNodes = ecs.addNodes(3, CACHE_STRATEGY, CACHE_SIZE).toArray(new IECSNode[0]);
 
-        assertEquals(addedNodes.length, 5);
+        assertEquals(addedNodes.length, 3);
 
         // start service
         ecs.start();
 
         try {
             // start kv client and connect to one node
-            KVStore kvClient = new KVStore("localhost", addedNodes[4].getNodePort());
+            KVStore kvClient = new KVStore("localhost", addedNodes[2].getNodePort());
             kvClient.connect();
 
             int num = 20;
@@ -561,33 +561,6 @@ public class ECSTest extends TestCase {
             for (String key : addedKeys) {
                 assertEquals(key, kvClient.get(key).getValue());
             }
-
-            nodesToRemove = new ArrayList<>();
-            nodesToRemove.add(addedNodes[2].getNodeName());
-            ecs.removeNodes(nodesToRemove);
-
-            try {
-                sleep(1000);
-            } catch (InterruptedException ignored) {
-            }
-
-            for (String key : addedKeys) {
-                assertEquals(key, kvClient.get(key).getValue());
-            }
-
-            nodesToRemove = new ArrayList<>();
-            nodesToRemove.add(addedNodes[3].getNodeName());
-            ecs.removeNodes(nodesToRemove);
-
-            try {
-                sleep(1000);
-            } catch (InterruptedException ignored) {
-            }
-
-            for (String key : addedKeys) {
-                assertEquals(key, kvClient.get(key).getValue());
-            }
-
         } catch (Exception e) {
             ex = e;
         }
@@ -648,29 +621,6 @@ public class ECSTest extends TestCase {
             for (String key : addedKeys) {
                 assertEquals(key, kvClient.get(key).getValue());
             }
-
-            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-
-            try {
-                sleep(1000);
-            } catch (InterruptedException ignored) {
-            }
-
-            for (String key : addedKeys) {
-                assertEquals(key, kvClient.get(key).getValue());
-            }
-
-            ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
-
-            try {
-                sleep(1000);
-            } catch (InterruptedException ignored) {
-            }
-
-            for (String key : addedKeys) {
-                assertEquals(key, kvClient.get(key).getValue());
-            }
-
         } catch (Exception e) {
             ex = e;
         }
