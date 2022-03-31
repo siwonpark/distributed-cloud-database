@@ -15,7 +15,7 @@ import java.io.IOException;
 
 public class AllTests {
     public static final String CACHE_STRATEGY = "FIFO";
-    public static final int CACHE_SIZE = 5;
+    public static final int CACHE_SIZE = 50;
     public static ECSClient ecs;
     public static int port;
     private static Logger logger = Logger.getRootLogger();
