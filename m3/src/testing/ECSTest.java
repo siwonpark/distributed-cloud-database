@@ -20,7 +20,9 @@ import static testing.AllTests.*;
 public class ECSTest extends TestCase {
 
     @Override
-    protected void setUp(){
+    protected void setUp() throws InterruptedException {
+        ecs.shutdown();
+        sleep(2000);
         File ecsConfigFile = new File("src/testing/ecs.config");
         ecs = new ECSClient(ecsConfigFile);
         ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
