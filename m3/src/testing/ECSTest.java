@@ -1,10 +1,13 @@
 package testing;
 
 import app_kvClient.KVClient;
+import app_kvECS.ECSClient;
 import client.KVStore;
 import ecs.ECSNode;
 import ecs.IECSNode;
 import junit.framework.TestCase;
+
+import java.io.File;
 import java.util.*;
 import shared.HashUtils;
 import shared.MetadataUtils;
@@ -17,8 +20,13 @@ import static testing.AllTests.*;
 public class ECSTest extends TestCase {
 
     @Override
-    protected void setUp(){
-
+    protected void setUp() throws InterruptedException {
+        ecs.shutdown();
+        File ecsConfigFile = new File("src/testing/ecs.config");
+        ecs = new ECSClient(ecsConfigFile);
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        port = node.getNodePort();
+        ecs.start();
     }
 
     @Override
@@ -587,7 +595,7 @@ public class ECSTest extends TestCase {
             KVStore kvClient = new KVStore("localhost", node.getNodePort());
             kvClient.connect();
 
-            int num = 20;
+            int num = 10;
 
             while (num != 0) {
                 kvClient.put(String.valueOf(num), String.valueOf(num));
