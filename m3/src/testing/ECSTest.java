@@ -1,10 +1,13 @@
 package testing;
 
 import app_kvClient.KVClient;
+import app_kvECS.ECSClient;
 import client.KVStore;
 import ecs.ECSNode;
 import ecs.IECSNode;
 import junit.framework.TestCase;
+
+import java.io.File;
 import java.util.*;
 import shared.HashUtils;
 import shared.MetadataUtils;
@@ -18,7 +21,11 @@ public class ECSTest extends TestCase {
 
     @Override
     protected void setUp(){
-
+        File ecsConfigFile = new File("src/testing/ecs.config");
+        ecs = new ECSClient(ecsConfigFile);
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        port = node.getNodePort();
+        ecs.start();
     }
 
     @Override
