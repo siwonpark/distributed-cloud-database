@@ -120,6 +120,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
             if (this.isInTransaction) {
                 System.out.println("Already currently in a transaction!");
             } else {
+                System.out.println("Transaction initiated.");
                 this.isInTransaction = true;
             }
         } else {
@@ -165,6 +166,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                     String value = tokens[2];
                     newOperation = new Message(key, value, status);
                     this.currTransaction.add(newOperation);
+                    System.out.println("Operation added to transaction.");
                 } else {
                     printError("Invalid number of parameters. Use the help command to see usage instructions");
                 }
@@ -173,12 +175,14 @@ public class KVClient implements IKVClient, ClientSocketListener {
                     String key = tokens[1];
                     newOperation = new Message(key, null, status);
                     this.currTransaction.add(newOperation);
+                    System.out.println("Operation added to transaction.");
                 } else{
                     printError("Invalid number of parameters. Use the help command to see usage instructions");
                 }
             } else {
                 logger.error(String.format("An invalid status code of %s has been attempted " +
                         "to be added to the current transaction", status));
+                printError("An internal error has occurred. Operation was not added to transaction");
             }
         } else {
             printError("Not connected!");
