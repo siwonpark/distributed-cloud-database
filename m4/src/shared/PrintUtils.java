@@ -41,6 +41,9 @@ public class PrintUtils {
         sb.append("commit");
         sb.append("\t\t Commit the current transaction \n");
 
+        sb.append("transactionStatus");
+        sb.append("\t\t Print the current transaction status \n");
+
         sb.append("help");
         sb.append("\t\t\t Prints this help message");
 

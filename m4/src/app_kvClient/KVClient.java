@@ -102,6 +102,8 @@ public class KVClient implements IKVClient, ClientSocketListener {
             initTransaction();
         } else if(tokens[0].equals("commit")) {
             commitTransaction();
+        } else if(tokens[0].equals("transactionStatus")) {
+            printTransactionStatus();
         } else {
             printError("Unknown command");
             printHelp();
@@ -125,6 +127,19 @@ public class KVClient implements IKVClient, ClientSocketListener {
             }
         } else {
             printError("Not Connected!");
+        }
+    }
+
+    private void printTransactionStatus(){
+        System.out.printf(
+                "Currently In Transaction: %s%n\n", this.isInTransaction);
+        System.out.printf("The size of the current transaction is: %s", this.currTransaction.size());
+
+        if(this.currTransaction.size() > 0) {
+            System.out.println("The contents of the current operation are:");
+            for (Message op : this.currTransaction) {
+                System.out.println("\t\t" + op.getMessageString());
+            }
         }
     }
 
