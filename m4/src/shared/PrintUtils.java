@@ -7,7 +7,7 @@ public class PrintUtils {
 
 
     public static final String PROMPT = "KVClient> ";
-    public static final String TRANSACTION_PROMPT = "KVClient> [In Transaction]";
+    public static final String TRANSACTION_PROMPT = "KVClient [In Transaction]> ";
     public static final String ECS_PROMPT = "ECSClient> ";
     // Handout and piazza specifies the String "null" to delete
     public static final String DELETE_STRING = "null";
