@@ -52,7 +52,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
     public void run() {
         while(!stop) {
             stdin = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print(PROMPT);
+            System.out.print(getPrompt());
 
             try {
 
@@ -106,6 +106,10 @@ public class KVClient implements IKVClient, ClientSocketListener {
             printError("Unknown command");
             printHelp();
         }
+    }
+
+    private String getPrompt(){
+        return this.isInTransaction? TRANSACTION_PROMPT : PROMPT;
     }
 
     /**
@@ -307,13 +311,13 @@ public class KVClient implements IKVClient, ClientSocketListener {
 
         if(status == SocketStatus.CONNECTED) {
         } else if (status == SocketStatus.DISCONNECTED) {
-            System.out.print(PROMPT);
+            System.out.print(getPrompt());
             System.out.println("Connection terminated: "
                     + serverAddress + " / " + serverPort);
         } else if (status == SocketStatus.CONNECTION_LOST) {
             System.out.println("Connection lost: "
                     + serverAddress + " / " + serverPort);
-            System.out.print(PROMPT);
+            System.out.print(getPrompt());
             heartbeat.stopProbing();
             kvStore = null;
         }
