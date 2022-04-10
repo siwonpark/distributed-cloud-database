@@ -7,6 +7,7 @@ public class PrintUtils {
 
 
     public static final String PROMPT = "KVClient> ";
+    public static final String TRANSACTION_PROMPT = "KVClient [In Transaction]> ";
     public static final String ECS_PROMPT = "ECSClient> ";
     // Handout and piazza specifies the String "null" to delete
     public static final String DELETE_STRING = "null";
@@ -32,6 +33,16 @@ public class PrintUtils {
         sb.append("logLevel");
         sb.append("\t\t Changes the logLevel \n");
         sb.append("\t\t\t ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF \n");
+
+        sb.append("initTransaction");
+        sb.append("\t\t Initiate a transaction, which are a set of operations that" +
+                " will be committed with ACID protocols \n");
+
+        sb.append("commit");
+        sb.append("\t\t Commit the current transaction \n");
+
+        sb.append("transactionStatus");
+        sb.append("\t\t Print the current transaction status \n");
 
         sb.append("help");
         sb.append("\t\t\t Prints this help message");
@@ -151,6 +162,12 @@ public class PrintUtils {
                 break;
             case SERVER_STOPPED:
                 printError("Client requests are currently not being processed by the server");
+                break;
+            case COMMIT_SUCCESS:
+                // TODO: handle successful commit response
+                break;
+            case COMMIT_FAILURE:
+                // TODO: handle commit failure response
                 break;
             default:
                 break;

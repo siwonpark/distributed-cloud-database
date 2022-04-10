@@ -10,10 +10,7 @@ import shared.messages.KVMessage;
 import shared.messages.Message;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import static shared.messages.KVMessage.StatusType.SERVER_NOT_RESPONSIBLE;
 
@@ -104,6 +101,28 @@ public class KVStore implements KVCommInterface {
 		Message msg = new Message(key, null, KVMessage.StatusType.GET);
 		try {
 			return retryMessageUntilSuccess(msg); // Pass back to client to display on command line
+		} catch (IOException e){
+			// Inform listeners that connection was lost
+			for(ClientSocketListener listener : listeners) {
+				listener.handleStatus(SocketStatus.CONNECTION_LOST);
+			}
+			throw e;
+		}
+	}
+
+	public KVMessage commit(ArrayList<Message> operations) throws Exception {
+		if(!isRunning()){
+			throw new RuntimeException("KVStore not connected!");
+		}
+
+		logger.info(String.format("Committing transaction of size %s", operations.size()));
+		Message msg = new Message(operations, KVMessage.StatusType.COMMIT_TRANSACTION);
+		try {
+			// We don't need to connect to a particular server, so don't
+			// Need retryMessageUntilSuccess
+			commModule.sendMessage(msg);
+			Message response = commModule.receiveMessage();
+			return response; // Pass back to client to display on command line
 		} catch (IOException e){
 			// Inform listeners that connection was lost
 			for(ClientSocketListener listener : listeners) {
