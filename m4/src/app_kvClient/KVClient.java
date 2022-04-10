@@ -132,8 +132,8 @@ public class KVClient implements IKVClient, ClientSocketListener {
 
     private void printTransactionStatus(){
         System.out.printf(
-                "Currently In Transaction: %s%n\n", this.isInTransaction);
-        System.out.printf("The size of the current transaction is: %s", this.currTransaction.size());
+                "Currently In Transaction: %s%n", this.isInTransaction);
+        System.out.printf("The size of the current transaction is: %s\n\n", this.currTransaction.size());
 
         if(this.currTransaction.size() > 0) {
             System.out.println("The contents of the current operation are:");
