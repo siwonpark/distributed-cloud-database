@@ -2,6 +2,7 @@ package shared.messages;
 
 import ecs.ECSNode;
 
+import java.util.ArrayList;
 import java.util.TreeMap;
 
 public interface KVMessage {
@@ -22,23 +23,27 @@ public interface KVMessage {
 		SERVER_STOPPED, /* Server is stopped, no requests are processed */
 		SERVER_WRITE_LOCK, /* Server locked for write, only get possible */
 		SERVER_NOT_RESPONSIBLE, /* Request not successful, server not responsible for key */
-		DATA_MIGRATION /* Server is sending other server data as part of data migration process */
+		DATA_MIGRATION, /* Server is sending other server data as part of data migration process */
+		COMMIT_TRANSACTION, /* This message is part of a transaction command */
+		COMMIT_SUCCESS, /* The transaction commit succeeded */
+		COMMIT_FAILURE, /* The transaction commit failed */
+
 	}
 
 	/**
-	 * @return the key that is associated with this message, 
+	 * @return the key that is associated with this message,
 	 * 		null if not key is associated.
 	 */
 	public String getKey();
-	
+
 	/**
-	 * @return the value that is associated with this message, 
+	 * @return the value that is associated with this message,
 	 * 		null if not value is associated.
 	 */
 	public String getValue();
-	
+
 	/**
-	 * @return a status string that is used to identify request types, 
+	 * @return a status string that is used to identify request types,
 	 * response types and error types associated to the message.
 	 */
 	public StatusType getStatus();
@@ -48,7 +53,13 @@ public interface KVMessage {
 	 * Null if no server data is associated
 	 */
 	public TreeMap<String, ECSNode> getServerMetadata();
-	
+
+	/**
+	 * @return The operations related to this commit related message
+	 * Null if no operations / this is not a commit msg
+	 */
+	public ArrayList<Message> getOperations();
+
 }
 
 

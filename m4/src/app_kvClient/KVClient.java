@@ -7,11 +7,13 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import shared.PrintUtils;
 import shared.messages.KVMessage;
+import shared.messages.Message;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.*;
@@ -28,6 +30,8 @@ public class KVClient implements IKVClient, ClientSocketListener {
     private int serverPort;
     private KVStore kvStore;
     private Heartbeat heartbeat;
+    private boolean isInTransaction = false;
+    private ArrayList<Message> currTransaction = new ArrayList<>();
 
 
     @Override
@@ -77,18 +81,102 @@ public class KVClient implements IKVClient, ClientSocketListener {
         } else if (tokens[0].equals("connect")){
             handleConnect(tokens);
         } else  if (tokens[0].equals("get")) {
-            handleGet(tokens);
+            if(this.isInTransaction) {
+                addToTransaction(tokens, KVMessage.StatusType.GET);
+            } else{
+                handleGet(tokens);
+            }
         } else if (tokens[0].equals("put")) {
-            handlePut(tokens);
+            if(this.isInTransaction){
+                addToTransaction(tokens, KVMessage.StatusType.PUT);
+            } else{
+                handlePut(tokens);
+            }
         } else if(tokens[0].equals("disconnect")) {
             disconnect();
         } else if(tokens[0].equals("logLevel")) {
             handleLogLevel(tokens);
         } else if(tokens[0].equals("help")) {
             printHelp();
+        } else if(tokens[0].equals("initTransaction")) {
+            initTransaction();
+        } else if(tokens[0].equals("commit")) {
+            commitTransaction();
         } else {
             printError("Unknown command");
             printHelp();
+        }
+    }
+
+    /**
+     * Inititate a transaction
+     */
+    public void initTransaction(){
+        if (kvStore != null && kvStore.isRunning()) {
+            if (this.isInTransaction) {
+                System.out.println("Already currently in a transaction!");
+            } else {
+                this.isInTransaction = true;
+            }
+        } else {
+            printError("Not Connected!");
+        }
+    }
+
+    /**
+     * commit the current transaction
+     */
+    public void commitTransaction(){
+        if (!this.isInTransaction){
+            printError("Not currently in a transaction! Please type help for usage");
+        } else if(this.currTransaction.isEmpty()){
+            printError("No operations to commit!");
+            this.isInTransaction = false;
+        } else {
+            if (kvStore != null && kvStore.isRunning()) {
+                try {
+                    KVMessage response = kvStore.commit(this.currTransaction);
+                    printResponseToUser(response);
+                } catch (Exception e) {
+                    String errMsg = String.format("Unable to commit transaction of size %s! ",
+                            this.currTransaction.size()) + e;
+                    printError(errMsg);
+                } finally {
+                    this.isInTransaction = false;
+                }
+            } else {
+                printError("Not Connected!");
+            }
+        }
+        this.currTransaction.clear();
+    }
+
+    public void addToTransaction(String[] tokens, KVMessage.StatusType status){
+        if(kvStore != null && kvStore.isRunning()){
+            Message newOperation;
+            if (status == KVMessage.StatusType.PUT){
+                if(tokens.length == 3) {
+                    String key = tokens[1];
+                    String value = tokens[2];
+                    newOperation = new Message(key, value, status);
+                    this.currTransaction.add(newOperation);
+                } else {
+                    printError("Invalid number of parameters. Use the help command to see usage instructions");
+                }
+            } else if (status == KVMessage.StatusType.GET){
+                if (tokens.length == 2){
+                    String key = tokens[1];
+                    newOperation = new Message(key, null, status);
+                    this.currTransaction.add(newOperation);
+                } else{
+                    printError("Invalid number of parameters. Use the help command to see usage instructions");
+                }
+            } else {
+                logger.error(String.format("An invalid status code of %s has been attempted " +
+                        "to be added to the current transaction", status));
+            }
+        } else {
+            printError("Not connected!");
         }
     }
 

@@ -33,6 +33,13 @@ public class PrintUtils {
         sb.append("\t\t Changes the logLevel \n");
         sb.append("\t\t\t ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF \n");
 
+        sb.append("initTransaction");
+        sb.append("\t\t Initiate a transaction, which are a set of operations that" +
+                " will be committed with ACID protocols \n");
+
+        sb.append("commit");
+        sb.append("\t\t Commit the current transaction \n");
+
         sb.append("help");
         sb.append("\t\t\t Prints this help message");
 
@@ -151,6 +158,12 @@ public class PrintUtils {
                 break;
             case SERVER_STOPPED:
                 printError("Client requests are currently not being processed by the server");
+                break;
+            case COMMIT_SUCCESS:
+                // TODO: handle successful commit response
+                break;
+            case COMMIT_FAILURE:
+                // TODO: handle commit failure response
                 break;
             default:
                 break;
