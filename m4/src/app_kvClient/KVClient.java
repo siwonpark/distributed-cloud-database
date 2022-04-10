@@ -146,6 +146,7 @@ public class KVClient implements IKVClient, ClientSocketListener {
                 }
             } else {
                 printError("Not Connected!");
+                this.isInTransaction = false;
             }
         }
         this.currTransaction.clear();
