@@ -25,7 +25,7 @@ public class ZKWatcher implements Watcher {
     static String COMMAND_PATH = "/ecs/command";
     static String OPERATIONS_PATH = "/ecs/operations";
     public CountDownLatch connectedSignal = new CountDownLatch(1);
-    public CountDownLatch commitedSignal = new CountDownLatch(1);
+    public CountDownLatch commitedSignal;
     public boolean transactionSuccess = false;
 
     public ZKWatcher(String nodeName, String zkHost, int zkPort, ECSCommandHandler ecsCommandHandler) {
