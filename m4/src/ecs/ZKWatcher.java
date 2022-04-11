@@ -71,6 +71,33 @@ public class ZKWatcher implements Watcher {
         }
     }
 
+    public void setOperationsStatus(Boolean success) {
+        try {
+            byte[] dataBytes;
+            if(success == true){
+                dataBytes = serializeData(new KVAdminMessage(null, KVAdminMessage.OperationType.COMMIT_SUCCESS));
+            } else {
+                dataBytes = serializeData(new KVAdminMessage(null, KVAdminMessage.OperationType.COMMIT_FAILED));
+            }
+            String path = OPERATIONS_PATH;
+            zooKeeper.setData(path, dataBytes, -1);
+        } catch (Exception e) {
+            logger.error("Failed to set operations for ecs");
+        }
+    }
+
+    public ArrayList<Message> getOperations() {
+        try {
+            Stat stat = zooKeeper.exists(OPERATIONS_PATH, false);
+            byte[] data = zooKeeper.getData(OPERATIONS_PATH, this, stat);
+            return deserializeOperations(data);
+        } catch (Exception e) {
+            logger.error("Failed to get operations");
+            logger.error(e.getMessage());
+            return null;
+        }
+    }
+
     @Override
     public void process(WatchedEvent event) {
         logger.info("Watcher triggered");
@@ -101,11 +128,15 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                if(path == OPERATIONS_PATH){
-                    
+                if(path.equals(OPERATIONS_PATH)){
+                    ArrayList<Message> operations = getOperations();
+                    // TODO handle operations
+                    // if success call setOperationsStatus(true)
+                    // if failed call setOperationsStatus(false)
+                }else{
+                    logger.info("Received acknowledgement from znode " + path);
+                    awaitSignal.countDown();
                 }
-                logger.info("Received acknowledgement from znode " + path);
-                awaitSignal.countDown();
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {
@@ -139,7 +170,6 @@ public class ZKWatcher implements Watcher {
                 stat = zooKeeper.exists(path, false);
             }
             watchNode(nodeName);
-
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");

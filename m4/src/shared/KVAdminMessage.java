@@ -21,7 +21,9 @@ public class KVAdminMessage implements Serializable {
         METADATA,
         LOCK_WRITE,
         UNLOCK_WRITE,
-        MOVE_DATA
+        MOVE_DATA,
+        COMMIT_SUCCESS,
+        COMMIT_FAILED
     }
 
     public KVAdminMessage(TreeMap<String, ECSNode> metadata, OperationType status) {

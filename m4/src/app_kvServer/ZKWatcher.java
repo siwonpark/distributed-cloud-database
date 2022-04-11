@@ -100,10 +100,16 @@ public class ZKWatcher implements Watcher {
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
                 KVAdminMessage data = getData(path);
+                if(path.equals(OPERATIONS_PATH)){
+                    if(data.getOperationType() == KVAdminMessage.OperationType.COMMIT_SUCCESS){
 
-                logger.info("Received operation: " + data.getOperationType().toString());
+                    }else{
 
-                ecsCommandHandler.handleCommand(data);
+                    }   
+                }else{
+                    logger.info("Received operation: " + data.getOperationType().toString());
+                    ecsCommandHandler.handleCommand(data);
+                }
             }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
@@ -130,20 +136,22 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    // make the zookeeper.setData wait until the path is empty
-    public void setData(ArrayList<Message> operations) {
+    // TODO make the zookeeper.setData wait until the path is empty
+    public boolean setOperations(ArrayList<Message> operations) {
         try {
             byte[] dataBytes = serializeOperations(operations);
             String path = OPERATIONS_PATH;
-
+            
             Stat stat = zooKeeper.exists(path, false);
             if (stat == null) {
                 stat = zooKeeper.exists(path, false);
             }
             watchNode(nodeName);
             zooKeeper.setData(path, dataBytes, stat.getVersion());
+            return true;
         } catch (Exception e) {
             logger.error("Failed to set operations for ecs");
+            return false;
         }
     }
 
