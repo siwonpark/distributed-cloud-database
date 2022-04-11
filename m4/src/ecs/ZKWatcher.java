@@ -5,8 +5,7 @@ import org.apache.zookeeper.*;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.data.Stat;
-import org.apache.zookeeper.server.quorum.QuorumCnxManager.Message;
-
+import shared.messages.Message;
 import shared.KVAdminMessage;
 
 import java.io.ByteArrayOutputStream;
