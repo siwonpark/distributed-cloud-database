@@ -300,7 +300,6 @@ public class KVServer extends Thread implements IKVServer {
 							+ client.getInetAddress().getHostName()
 							+  " on port " + client.getPort());
 				} catch (IOException e) {
-
 					logger.error("Error! " +
 							"Unable to establish connection. \n", e);
 				}
