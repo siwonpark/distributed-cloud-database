@@ -70,7 +70,7 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void setOperationsStatus(Boolean success) {
+    public void setOperationsStatus(String Nodename, Boolean success) {
         try {
             byte[] dataBytes;
             if(success == true){
@@ -78,7 +78,7 @@ public class ZKWatcher implements Watcher {
             } else {
                 dataBytes = serializeData(new KVAdminMessage(null, KVAdminMessage.OperationType.COMMIT_FAILED));
             }
-            String path = OPERATIONS_PATH;
+            String path = OPERATIONS_PATH + "/" + Nodename;
             zooKeeper.setData(path, dataBytes, -1);
         } catch (Exception e) {
             logger.error("Failed to set operations for ecs");
@@ -130,8 +130,8 @@ public class ZKWatcher implements Watcher {
                 if(path.startsWith(OPERATIONS_PATH)){
                     ArrayList<Message> operations = getOperations(path);
                     // TODO handle operations
-                    // if success call setOperationsStatus(true)
-                    // if failed call setOperationsStatus(false)
+                    // if success call setOperationsStatus(nodeName, true)
+                    // if failed call setOperationsStatus(nodeName, false)
                 }else{
                     logger.info("Received acknowledgement from znode " + path);
                     awaitSignal.countDown();

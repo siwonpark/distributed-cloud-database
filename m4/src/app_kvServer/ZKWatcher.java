@@ -109,14 +109,16 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
-                    KVAdminMessage data = getData(path);
-                    if(data.getOperationType() == KVAdminMessage.OperationType.COMMIT_SUCCESS){
-                        transactionSuccess = true;
-                    }else{
-                        transactionSuccess = false;                            
-                    }   
-                    commitedSignal.countDown();
+                if(path.startsWith(OPERATIONS_PATH)){
+                    if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
+                        KVAdminMessage data = getData(path);
+                        if(data.getOperationType() == KVAdminMessage.OperationType.COMMIT_SUCCESS){
+                            transactionSuccess = true;
+                        }else{
+                            transactionSuccess = false;                            
+                        } 
+                        commitedSignal.countDown();
+                    }
                 }else{
                     KVAdminMessage data = getData(path);
                     logger.info("Received operation: " + data.getOperationType().toString());
