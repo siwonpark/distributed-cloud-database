@@ -7,6 +7,7 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.data.Stat;
 import shared.KVAdminMessage;
 import shared.messages.Message;
+
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.ArrayList;
@@ -77,12 +78,8 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void watchOperations() {
-        try {
+    public void watchOperations() throws Exception{
             zooKeeper.exists(OPERATIONS_PATH + "/" + nodeName, this);
-        } catch (Exception e) {
-            logger.error("Failed to set watcher for znode");
-        }
     }
     
     @Override
@@ -112,6 +109,7 @@ public class ZKWatcher implements Watcher {
                 if(path.startsWith(OPERATIONS_PATH)){
                     if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
                         KVAdminMessage data = getData(path);
+
                         if(data.getOperationType() == KVAdminMessage.OperationType.COMMIT_SUCCESS){
                             transactionSuccess = true;
                         }else{
@@ -122,6 +120,7 @@ public class ZKWatcher implements Watcher {
                 }else{
                     KVAdminMessage data = getData(path);
                     logger.info("Received operation: " + data.getOperationType().toString());
+
                     ecsCommandHandler.handleCommand(data);
                 }
             }
@@ -164,6 +163,7 @@ public class ZKWatcher implements Watcher {
             return true;
         } catch (Exception e) {
             logger.error("Failed to set operations for ecs");
+            logger.error(e);
             return false;
         }
     }

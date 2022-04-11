@@ -129,7 +129,10 @@ public class ZKWatcher implements Watcher {
             else if (EventType.NodeDataChanged == eventType) {
                 if(path.startsWith(OPERATIONS_PATH)){
                     ArrayList<Message> operations = getOperations(path);
+                    String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
+                    
                     // TODO handle operations
+
                     // if success call setOperationsStatus(nodeName, true)
                     // if failed call setOperationsStatus(nodeName, false)
                 }else{
@@ -177,6 +180,7 @@ public class ZKWatcher implements Watcher {
                 stat = zooKeeper.exists(path, false);
             }
             watchNode(nodeName);
+            
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
@@ -190,6 +194,10 @@ public class ZKWatcher implements Watcher {
             zooKeeper.delete(path, stat.getVersion());
 
             path = ACK_PATH + "/" + nodeName;
+            stat = zooKeeper.exists(path, false);
+            zooKeeper.delete(path, stat.getVersion());
+
+            path = OPERATIONS_PATH + "/" + nodeName;
             stat = zooKeeper.exists(path, false);
             zooKeeper.delete(path, stat.getVersion());
         } catch (Exception e) {
