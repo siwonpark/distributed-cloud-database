@@ -7,7 +7,7 @@ import shared.messages.Message;
 
 import java.io.*;
 import java.net.Socket;
-
+import java.util.ArrayList;
 import static shared.PrintUtils.DELETE_STRING;
 
 
@@ -189,6 +189,9 @@ public class ClientConnection implements Runnable {
 			case HEARTBEAT:
 				logger.debug("Received heartbeat request from client");
 				responseStatus = StatusType.HEARTBEAT;
+				break;
+			case COMMIT_TRANSACTION:
+				ArrayList<Message> operations = message.getOperations();
 				break;
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();

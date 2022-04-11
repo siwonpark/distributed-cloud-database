@@ -6,9 +6,10 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.data.Stat;
 import shared.KVAdminMessage;
-
+import shared.messages.Message;
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.ArrayList;
 
 import static java.lang.Thread.sleep;
 
@@ -22,6 +23,7 @@ public class ZKWatcher implements Watcher {
     static String ROOT_PATH = "/ecs";
     static String ACK_PATH = "/ecs/ack";
     static String COMMAND_PATH = "/ecs/command";
+    static String OPERATIONS_PATH = "/ecs/operations";
     public CountDownLatch connectedSignal = new CountDownLatch(1);
 
     public ZKWatcher(String nodeName, String zkHost, int zkPort, ECSCommandHandler ecsCommandHandler) {
@@ -116,6 +118,32 @@ public class ZKWatcher implements Watcher {
             zooKeeper.setData(path, new byte[stat.getVersion()], stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
+        }
+    }
+    
+    public byte[] serializeOperations(ArrayList<Message> operations) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(operations);
+            out.flush();
+            return bos.toByteArray();
+        }
+    }
+
+    // make the zookeeper.setData wait until the path is empty
+    public void setData(ArrayList<Message> operations) {
+        try {
+            byte[] dataBytes = serializeOperations(operations);
+            String path = OPERATIONS_PATH;
+
+            Stat stat = zooKeeper.exists(path, false);
+            if (stat == null) {
+                stat = zooKeeper.exists(path, false);
+            }
+            watchNode(nodeName);
+            zooKeeper.setData(path, dataBytes, stat.getVersion());
+        } catch (Exception e) {
+            logger.error("Failed to set operations for ecs");
         }
     }
 

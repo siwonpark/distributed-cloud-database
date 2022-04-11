@@ -4,7 +4,8 @@ import ecs.ECSNode;
 
 import java.io.*;
 import java.util.TreeMap;
-
+import java.util.ArrayList;
+import shared.messages.Message;
 public class KVAdminMessage implements Serializable {
     private TreeMap<String, ECSNode> metadata;
     private OperationType status;
@@ -26,6 +27,12 @@ public class KVAdminMessage implements Serializable {
     public KVAdminMessage(TreeMap<String, ECSNode> metadata, OperationType status) {
         this.metadata = metadata;
         this.status = status;
+    }
+	
+	private ArrayList<Message> operations;
+
+    public KVAdminMessage(ArrayList<Message> operations) {
+        this.operations = operations;
     }
 
     public void setKeyStart(String keyStart) {

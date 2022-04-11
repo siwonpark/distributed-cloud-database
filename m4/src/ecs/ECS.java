@@ -415,6 +415,9 @@ public class ECS {
         // Create command node
         zkWatcher.create(ZKWatcher.COMMAND_PATH);
 
+        // Create operations node
+        zkWatcher.create(ZKWatcher.OPERATIONS_PATH);
+
         // Create metadata node
         zkWatcher.create(ZKWatcher.COMMAND_PATH + "/metadata");
 
