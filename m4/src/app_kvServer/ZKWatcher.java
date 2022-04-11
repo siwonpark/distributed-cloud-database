@@ -25,6 +25,8 @@ public class ZKWatcher implements Watcher {
     static String COMMAND_PATH = "/ecs/command";
     static String OPERATIONS_PATH = "/ecs/operations";
     public CountDownLatch connectedSignal = new CountDownLatch(1);
+    public CountDownLatch commitedSignal = new CountDownLatch(1);
+    public boolean transactionSuccess = false;
 
     public ZKWatcher(String nodeName, String zkHost, int zkPort, ECSCommandHandler ecsCommandHandler) {
         this.nodeName = nodeName;
@@ -75,6 +77,14 @@ public class ZKWatcher implements Watcher {
         }
     }
 
+    public void watchOperations() {
+        try {
+            zooKeeper.exists(OPERATIONS_PATH + "/" + nodeName, this);
+        } catch (Exception e) {
+            logger.error("Failed to set watcher for znode");
+        }
+    }
+    
     @Override
     public void process(WatchedEvent event) {
         logger.info("Watch triggered");
@@ -99,14 +109,16 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                KVAdminMessage data = getData(path);
-                if(path.equals(OPERATIONS_PATH)){
+                if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
+                    KVAdminMessage data = getData(path);
                     if(data.getOperationType() == KVAdminMessage.OperationType.COMMIT_SUCCESS){
-
+                        transactionSuccess = true;
                     }else{
-
+                        transactionSuccess = false;                            
                     }   
+                    commitedSignal.countDown();
                 }else{
+                    KVAdminMessage data = getData(path);
                     logger.info("Received operation: " + data.getOperationType().toString());
                     ecsCommandHandler.handleCommand(data);
                 }
@@ -136,17 +148,16 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    // TODO make the zookeeper.setData wait until the path is empty
     public boolean setOperations(ArrayList<Message> operations) {
         try {
             byte[] dataBytes = serializeOperations(operations);
-            String path = OPERATIONS_PATH;
+            String path = OPERATIONS_PATH + "/" + nodeName;
             
             Stat stat = zooKeeper.exists(path, false);
             if (stat == null) {
                 stat = zooKeeper.exists(path, false);
             }
-            watchNode(nodeName);
+            watchOperations();
             zooKeeper.setData(path, dataBytes, stat.getVersion());
             return true;
         } catch (Exception e) {

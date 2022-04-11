@@ -86,10 +86,10 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public ArrayList<Message> getOperations() {
+    public ArrayList<Message> getOperations(String path) {
         try {
-            Stat stat = zooKeeper.exists(OPERATIONS_PATH, false);
-            byte[] data = zooKeeper.getData(OPERATIONS_PATH, this, stat);
+            Stat stat = zooKeeper.exists(path, false);
+            byte[] data = zooKeeper.getData(path, this, stat);
             return deserializeOperations(data);
         } catch (Exception e) {
             logger.error("Failed to get operations");
@@ -128,8 +128,8 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                if(path.equals(OPERATIONS_PATH)){
-                    ArrayList<Message> operations = getOperations();
+                if(path.startsWith(OPERATIONS_PATH)){
+                    ArrayList<Message> operations = getOperations(path);
                     // TODO handle operations
                     // if success call setOperationsStatus(true)
                     // if failed call setOperationsStatus(false)
@@ -155,6 +155,14 @@ public class ZKWatcher implements Watcher {
     public void watchNode(String nodeName) {
         try {
             zooKeeper.exists(ACK_PATH + "/" + nodeName, this);
+        } catch (Exception e) {
+            logger.error("Failed to set watcher for znode");
+        }
+    }
+
+    public void watchOperations(String nodeName) {
+        try {
+            zooKeeper.exists(OPERATIONS_PATH + "/" + nodeName, this);
         } catch (Exception e) {
             logger.error("Failed to set watcher for znode");
         }

@@ -101,6 +101,9 @@ public class ECS {
         zkWatcher.watchNode(node.getNodeName());
         zkWatcher.create(ZKWatcher.COMMAND_PATH + "/" + node.getNodeName());
 
+        zkWatcher.create(ZKWatcher.OPERATIONS_PATH + "/" + node.getNodeName());
+        zkWatcher.watchOperations(node.getNodeName());
+
         spawnKVServer(node, cacheStrategy, cacheSize);
 
         // Wait for KVServer to create znode, if awaitNode is false, adding failed
@@ -417,7 +420,7 @@ public class ECS {
 
         // Create operations node
         zkWatcher.create(ZKWatcher.OPERATIONS_PATH);
-
+        
         // Create metadata node
         zkWatcher.create(ZKWatcher.COMMAND_PATH + "/metadata");
 

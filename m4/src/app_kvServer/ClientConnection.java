@@ -190,10 +190,17 @@ public class ClientConnection implements Runnable {
 				logger.debug("Received heartbeat request from client");
 				responseStatus = StatusType.HEARTBEAT;
 				break;
-			// case COMMIT_TRANSACTION:
-			// 	ArrayList<Message> operations = message.getOperations();
 
-			// 	break;
+			case COMMIT_TRANSACTION:
+				ArrayList<Message> operations = message.getOperations();
+				Boolean success = server.handleOperations(operations);
+				if(success){
+					responseStatus = StatusType.COMMIT_SUCCESS;
+				}else{
+					responseStatus = StatusType.COMMIT_FAILURE;
+				}
+				break;
+				
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 				logger.error(errorMsg);

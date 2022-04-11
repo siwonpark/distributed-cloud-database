@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
 import static shared.PrintUtils.printPossibleLogLevels;
+import shared.messages.Message;
 
 public class KVServer extends Thread implements IKVServer {
 
@@ -270,6 +271,17 @@ public class KVServer extends Thread implements IKVServer {
 				Objects.equals(responsibleServer.getNodeName(), this.serverName);
 	}
 
+	public Boolean handleOperations(ArrayList<Message> operations){
+		zkWatcher.setOperations(operations);
+		try{
+			this.zkWatcher.commitedSignal.await();
+			return zkWatcher.transactionSuccess;
+		} catch(Exception e){
+			logger.error(e);
+			return false;
+		}
+	}
+
 	@Override
     public void run(){
 		isRunning = initializeServer();
@@ -286,6 +298,7 @@ public class KVServer extends Thread implements IKVServer {
 							+ client.getInetAddress().getHostName()
 							+  " on port " + client.getPort());
 				} catch (IOException e) {
+
 					logger.error("Error! " +
 							"Unable to establish connection. \n", e);
 				}
