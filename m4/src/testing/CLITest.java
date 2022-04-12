@@ -66,6 +66,8 @@ public class CLITest extends TestCase{
 
     /**
      * Test the error cases of the commit CLI operation
+     * I.e. If there are no operations to commit
+     * Or if we are not currently in a transaction
      */
     public void testCommitTransactionCli(){
         String cmd = "commit";
@@ -77,15 +79,14 @@ public class CLITest extends TestCase{
         Exception ex = null;
         try {
             app.newConnection("localhost", port);
+            app.handleCommand("initTransaction");
             app.handleCommand(cmd);
             String EXPECTED_OUTPUT2 = "Error! No operations to commit!";
             String output2 = testOut.toString();
-            System.out.println(output2);
-            assertTrue(output2.startsWith(EXPECTED_OUTPUT2));
+            assertTrue(output2.contains(EXPECTED_OUTPUT2));
         } catch(Exception e) {
             ex = e;
         }
-
         assertNull(ex);
     }
 
