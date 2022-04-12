@@ -58,6 +58,7 @@ public class CLITest extends TestCase{
         String EXPECTED_OUTPUT = "Error! Not connected!";
         app.handleCommand(cmd);
         String output = testOut.toString();
+        System.out.println(output);
         assertTrue(output.contains(EXPECTED_OUTPUT));
     }
 
