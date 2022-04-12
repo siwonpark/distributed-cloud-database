@@ -92,6 +92,35 @@ public class CLITest extends TestCase{
 
 
     /**
+     * Test that once we are in a transaction,
+     * Subsequent commands get added to the transaction
+     */
+    public void testTransaction(){
+        Exception ex = null;
+        String EXPECTED_OUTPUT = "The size of the current transaction is: 3";
+        String EXPECTED_OUTPUT2 = "The size of the current transaction is: 5";
+        try {
+            app.newConnection("localhost", port);
+            app.handleCommand("initTransaction");
+            app.handleCommand("put 10 10 ");
+            app.handleCommand("get 10");
+            app.handleCommand("put 20 5");
+            app.handleCommand("transactionStatus");
+            String output = testOut.toString();
+            assertTrue(output.contains(EXPECTED_OUTPUT));
+
+            app.handleCommand("get 50");
+            app.handleCommand("put 50 52");
+            assertTrue(output.contains(EXPECTED_OUTPUT2));
+        } catch(Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
+
+
+    /**
      * Test the CLI when inputting an invalid parameters for put
      */
     public void testInvalidPutParameters(){
