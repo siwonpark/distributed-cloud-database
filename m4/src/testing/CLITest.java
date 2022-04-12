@@ -80,6 +80,7 @@ public class CLITest extends TestCase{
             app.handleCommand(cmd);
             String EXPECTED_OUTPUT2 = "Error! No operations to commit!";
             String output2 = testOut.toString();
+            System.out.println(output2);
             assertTrue(output2.startsWith(EXPECTED_OUTPUT2));
         } catch(Exception e) {
             ex = e;
