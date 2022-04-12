@@ -102,7 +102,7 @@ public class CLITest extends TestCase{
         try {
             app.newConnection("localhost", port);
             app.handleCommand("initTransaction");
-            app.handleCommand("put 10 10 ");
+            app.handleCommand("put 10 10");
             app.handleCommand("get 10");
             app.handleCommand("put 20 5");
             app.handleCommand("transactionStatus");
@@ -111,7 +111,9 @@ public class CLITest extends TestCase{
 
             app.handleCommand("get 50");
             app.handleCommand("put 50 52");
-            assertTrue(output.contains(EXPECTED_OUTPUT2));
+            app.handleCommand("transactionStatus");
+            String output2 = testOut.toString();
+            assertTrue(output2.contains(EXPECTED_OUTPUT2));
         } catch(Exception e) {
             ex = e;
         }
