@@ -51,6 +51,17 @@ public class CLITest extends TestCase{
     }
 
     /**
+     * Test that a transaction cannot be started without being connected to a server
+     */
+    public void testTransactionCli(){
+        String cmd = "initTransaction";
+        String EXPECTED_OUTPUT = "Error! Not connected!";
+        app.handleCommand(cmd);
+        String output = testOut.toString();
+        assertTrue(output.contains(EXPECTED_OUTPUT));
+    }
+
+    /**
      * Test the CLI when inputting an invalid parameters for put
      */
     public void testInvalidPutParameters(){
