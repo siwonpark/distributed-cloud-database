@@ -90,7 +90,6 @@ public class CLITest extends TestCase{
         assertNull(ex);
     }
 
-
     /**
      * Test that once we are in a transaction,
      * Subsequent commands get added to the transaction
@@ -114,6 +113,38 @@ public class CLITest extends TestCase{
             app.handleCommand("transactionStatus");
             String output2 = testOut.toString();
             assertTrue(output2.contains(EXPECTED_OUTPUT2));
+        } catch(Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
+    /**
+     * Test that committing transactions clears the current transaction
+     * (isInTransaction = false), and clears existing operations within the current
+     * Transaction
+     */
+    public void testCommitClearsTransactions(){
+        Exception ex = null;
+        String EXPECTED_OUTPUT = "The size of the current transaction is: 3";
+        String EXPECTED_OUTPUT2 = "The size of the current transaction is: 0";
+        try {
+            app.newConnection("localhost", port);
+            app.handleCommand("initTransaction");
+            assertTrue(app.currentlyInTransaction());
+            app.handleCommand("put 10 10");
+            app.handleCommand("get 10");
+            app.handleCommand("put 20 5");
+            app.handleCommand("transactionStatus");
+            String output = testOut.toString();
+            assertTrue(output.contains(EXPECTED_OUTPUT));
+
+            app.handleCommand("disconnect");
+            app.handleCommand("commit");
+            app.handleCommand("transactionStatus");
+            String output2 = testOut.toString();
+            assertTrue(output2.contains(EXPECTED_OUTPUT2));
+            assertFalse(app.currentlyInTransaction());
         } catch(Exception e) {
             ex = e;
         }
