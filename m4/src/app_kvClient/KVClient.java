@@ -151,7 +151,6 @@ public class KVClient implements IKVClient, ClientSocketListener {
             printError("Not currently in a transaction! Please type help for usage");
         } else if(this.currTransaction.isEmpty()){
             printError("No operations to commit!");
-            this.isInTransaction = false;
         } else {
             if (kvStore != null && kvStore.isRunning()) {
                 try {
@@ -161,15 +160,22 @@ public class KVClient implements IKVClient, ClientSocketListener {
                     String errMsg = String.format("Unable to commit transaction of size %s! ",
                             this.currTransaction.size()) + e;
                     printError(errMsg);
-                } finally {
-                    this.isInTransaction = false;
                 }
             } else {
                 printError("Not Connected!");
-                this.isInTransaction = false;
             }
         }
+        this.isInTransaction = false;
         this.currTransaction.clear();
+    }
+
+    /**
+     * Is this KVClient currently accumulating operations in
+     * a transaction?
+     * @return Boolean true or false, depending on if the client is in a transaction
+     */
+    public boolean currentlyInTransaction(){
+        return this.isInTransaction;
     }
 
     public void addToTransaction(String[] tokens, KVMessage.StatusType status){
