@@ -1,9 +1,12 @@
 package testing;
 
+import client.KVStore;
 import junit.framework.TestCase;
 import app_kvClient.KVClient;
 
 import java.io.*;
+
+import static testing.AllTests.port;
 
 
 public class CLITest extends TestCase{
@@ -49,6 +52,106 @@ public class CLITest extends TestCase{
         String output2 = testOut.toString();
         assertTrue(output2.startsWith(EXPECTED_OUTPUT));
     }
+
+    /**
+     * Test that a transaction cannot be started without being connected to a server
+     */
+    public void testInitTransactionCli(){
+        String cmd = "initTransaction";
+        String EXPECTED_OUTPUT = "Error! Not Connected!";
+        app.handleCommand(cmd);
+        String output = testOut.toString();
+        assertTrue(output.startsWith(EXPECTED_OUTPUT));
+    }
+
+    /**
+     * Test the error cases of the commit CLI operation
+     * I.e. If there are no operations to commit
+     * Or if we are not currently in a transaction
+     */
+    public void testCommitTransactionCli(){
+        String cmd = "commit";
+        String EXPECTED_OUTPUT = "Error! Not currently in a transaction!";
+        app.handleCommand(cmd);
+        String output = testOut.toString();
+        assertTrue(output.startsWith(EXPECTED_OUTPUT));
+
+        Exception ex = null;
+        try {
+            app.newConnection("localhost", port);
+            app.handleCommand("initTransaction");
+            app.handleCommand(cmd);
+            String EXPECTED_OUTPUT2 = "Error! No operations to commit!";
+            String output2 = testOut.toString();
+            assertTrue(output2.contains(EXPECTED_OUTPUT2));
+        } catch(Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
+    /**
+     * Test that once we are in a transaction,
+     * Subsequent commands get added to the transaction
+     */
+    public void testTransaction(){
+        Exception ex = null;
+        String EXPECTED_OUTPUT = "The size of the current transaction is: 3";
+        String EXPECTED_OUTPUT2 = "The size of the current transaction is: 5";
+        try {
+            app.newConnection("localhost", port);
+            app.handleCommand("initTransaction");
+            app.handleCommand("put 10 10");
+            app.handleCommand("get 10");
+            app.handleCommand("put 20 5");
+            app.handleCommand("transactionStatus");
+            String output = testOut.toString();
+            assertTrue(output.contains(EXPECTED_OUTPUT));
+
+            app.handleCommand("get 50");
+            app.handleCommand("put 50 52");
+            app.handleCommand("transactionStatus");
+            String output2 = testOut.toString();
+            assertTrue(output2.contains(EXPECTED_OUTPUT2));
+        } catch(Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
+    /**
+     * Test that committing transactions clears the current transaction
+     * (isInTransaction = false), and clears existing operations within the current
+     * Transaction
+     */
+    public void testCommitClearsTransactions(){
+        Exception ex = null;
+        String EXPECTED_OUTPUT = "The size of the current transaction is: 3";
+        String EXPECTED_OUTPUT2 = "The size of the current transaction is: 0";
+        try {
+            app.newConnection("localhost", port);
+            app.handleCommand("initTransaction");
+            assertTrue(app.currentlyInTransaction());
+            app.handleCommand("put 10 10");
+            app.handleCommand("get 10");
+            app.handleCommand("put 20 5");
+            app.handleCommand("transactionStatus");
+            String output = testOut.toString();
+            assertTrue(output.contains(EXPECTED_OUTPUT));
+
+            app.handleCommand("disconnect");
+            app.handleCommand("commit");
+            app.handleCommand("transactionStatus");
+            String output2 = testOut.toString();
+            assertTrue(output2.contains(EXPECTED_OUTPUT2));
+            assertFalse(app.currentlyInTransaction());
+        } catch(Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
+
 
     /**
      * Test the CLI when inputting an invalid parameters for put

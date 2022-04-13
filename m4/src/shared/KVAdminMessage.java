@@ -11,6 +11,8 @@ public class KVAdminMessage implements Serializable {
     private String keyStart;
     private String keyEnd;
     private ECSNode targetNode;
+    private String key;
+    private String value;
 
     public enum OperationType {
         INIT,
@@ -22,15 +24,25 @@ public class KVAdminMessage implements Serializable {
         UNLOCK_WRITE,
         MOVE_DATA,
         COMMIT_SUCCESS,
-        COMMIT_FAILED
+        COMMIT_FAILED,
+        PUT,
+        GET,
+        PUT_SUCCESS,
+        GET_SUCCESS
     }
 
     public KVAdminMessage(TreeMap<String, ECSNode> metadata, OperationType status) {
         this.metadata = metadata;
         this.status = status;
     }
-	
-    public void setKeyStart(String keyStart) {
+
+    public KVAdminMessage(String key, String value, OperationType status) {
+        this.key = key;
+        this.value = value;
+        this.status = status;
+    }
+
+  public void setKeyStart(String keyStart) {
         this.keyStart = keyStart;
     }
 
@@ -52,6 +64,14 @@ public class KVAdminMessage implements Serializable {
 
     public OperationType getOperationType(){
         return this.status;
+    }
+
+    public String getKey(){
+        return this.key;
+    }
+
+    public String getValue(){
+        return this.value;
     }
 
     public TreeMap<String, ECSNode> getMetadata(){

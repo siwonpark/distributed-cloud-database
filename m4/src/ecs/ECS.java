@@ -236,6 +236,31 @@ public class ECS {
         return true;
     }
 
+    public boolean put(ECSNode node, String key, String value) {
+        logger.info("PUT " + key + " : " + value + " in " + node.getNodeName());
+        KVAdminMessage data = new KVAdminMessage(key, value, KVAdminMessage.OperationType.PUT);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("put failed");
+            return false;
+        }
+
+        return true;
+    }
+
+    public String get(ECSNode node, String key) throws Exception{
+        logger.info("GET " + key + " from " + node.getNodeName());
+        KVAdminMessage data = new KVAdminMessage(key, null, KVAdminMessage.OperationType.GET);
+        zkWatcher.setData(node.getNodeName(), data);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node was not responsive to unlock write");
+            throw new Exception("get failed");
+        }
+        return zkWatcher.value;
+    }
+
     /**
      * Sets up `count` servers with the ECS (in this case Zookeeper)
      *

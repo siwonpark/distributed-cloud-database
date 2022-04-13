@@ -7,6 +7,7 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.data.Stat;
 import shared.messages.Message;
 import shared.KVAdminMessage;
+import shared.KVAdminMessage.OperationType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
@@ -27,6 +28,9 @@ public class ZKWatcher implements Watcher {
     static int ZK_PORT = 2200;
     public CountDownLatch connectedSignal = new CountDownLatch(1);
     public CountDownLatch awaitSignal;
+
+    // use this to pass value from server when ecs calls get
+    public String value;
 
     public ZooKeeper connect() {
         try {
@@ -121,27 +125,36 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                if(path.startsWith(OPERATIONS_PATH)){
-                    ArrayList<Message> operations = getOperations(path);
-                    String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
-                    // TODO handle operations
+                KVAdminMessage data = getData(path);
+                if(data == null){
+                    if(path.startsWith(OPERATIONS_PATH)){
+                        ArrayList<Message> operations = getOperations(path);
+                        String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
+                        // TODO handle operations
 
-                    /**
-                     * how to send replys back to server?
-                     * 
-                     * call setReplys(nodeName, replys) to send replys to server
-                     * 
-                     * replys is a Message new with an ArrayList of Message and a StatusType,
-                     * if failed the StatusType should be StatusType.COMMIT_FAILURE 
-                     *      and ArrayList could be empty
-                     * if success the StatusType should be StatusType.COMMIT_SUCCESS 
-                     *      each Message in a ArrayList should be new by "public Message(String key, String value, StatusType status)" and corresponds to the element in the opertaions arraylist
-                    */
-
-
-                }else{
-                    logger.info("Received acknowledgement from znode " + path);
-                    awaitSignal.countDown();
+                        /**
+                         * how to send replys back to server?
+                         * 
+                         * call setReplys(nodeName, replys) to send replys to server
+                         * 
+                         * replys is a Message new with an ArrayList of Message and a StatusType,
+                         * if failed the StatusType should be StatusType.COMMIT_FAILURE 
+                         *      and ArrayList could be empty
+                         * if success the StatusType should be StatusType.COMMIT_SUCCESS 
+                         *      each Message in a ArrayList should be new by "public Message(String key, String value, StatusType status)" and corresponds to the element in the opertaions arraylist
+                        */
+                    }else{
+                        logger.info("Received acknowledgement from znode " + path);
+                        awaitSignal.countDown();
+                    }
+                } else {
+                    if(data.getOperationType() == OperationType.GET_SUCCESS){
+                        logger.info("Received get success from znode " + path);
+                        this.value = data.getValue();
+                        awaitSignal.countDown();
+                    }else{
+                        logger.error("contained a status wrong to the ecs " + path);
+                    }
                 }
             }
             // Delete node
@@ -198,6 +211,29 @@ public class ZKWatcher implements Watcher {
             zooKeeper.setData(path, dataBytes, -1);
         } catch (Exception e) {
             logger.error("Failed to set operations for ecs");
+        }
+    }
+
+    public KVAdminMessage deserializeData(byte[] data) throws IOException, ClassNotFoundException {
+        if (data.length == 0) {
+            logger.error("Byte array received from get was empty");
+            return null;
+        }
+        try( ByteArrayInputStream bis = new ByteArrayInputStream(data);
+             ObjectInputStream in = new ObjectInputStream(bis)) {
+            return (KVAdminMessage) in.readObject();
+        }
+    }
+
+    public KVAdminMessage getData(String path) {
+        try {
+            Stat stat = zooKeeper.exists(path, false);
+            byte[] data = zooKeeper.getData(path, this, stat);
+            return deserializeData(data);
+        } catch (Exception e) {
+            logger.error("Failed to get data for znode");
+            logger.error(e.getMessage());
+            return null;
         }
     }
 
