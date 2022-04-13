@@ -8,6 +8,7 @@ import shared.messages.Message;
 import java.io.*;
 import java.net.Socket;
 
+import java.util.ArrayList;
 import static shared.PrintUtils.DELETE_STRING;
 
 
@@ -95,6 +96,12 @@ public class ClientConnection implements Runnable {
 	 * @throws IOException
 	 */
 	public void handleRequest(Message message) throws IOException {
+		if (message.getStatus() == StatusType.COMMIT_TRANSACTION) {
+			ArrayList<Message> operations = message.getOperations();
+			Message replys2operations = server.handleOperations(operations);
+			sendMessage(replys2operations);
+			return;
+		}
 		StatusType responseStatus;
 		String key = message.getKey();
 		String value = message.getValue();
@@ -130,7 +137,7 @@ public class ClientConnection implements Runnable {
 					value.length(), MAX_VALUE_BYTES);
 			sendFailure(errorMsg);
 			return;
-		}
+		} 
 
 
 		switch(message.getStatus()) {
@@ -190,6 +197,7 @@ public class ClientConnection implements Runnable {
 				logger.debug("Received heartbeat request from client");
 				responseStatus = StatusType.HEARTBEAT;
 				break;
+				
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 				logger.error(errorMsg);

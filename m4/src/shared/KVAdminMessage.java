@@ -23,6 +23,8 @@ public class KVAdminMessage implements Serializable {
         LOCK_WRITE,
         UNLOCK_WRITE,
         MOVE_DATA,
+        COMMIT_SUCCESS,
+        COMMIT_FAILED,
         PUT,
         GET,
         PUT_SUCCESS,
@@ -40,7 +42,7 @@ public class KVAdminMessage implements Serializable {
         this.status = status;
     }
 
-    public void setKeyStart(String keyStart) {
+  public void setKeyStart(String keyStart) {
         this.keyStart = keyStart;
     }
 
