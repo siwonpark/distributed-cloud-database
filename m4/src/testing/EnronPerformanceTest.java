@@ -2,18 +2,14 @@ package testing;
 
 import app_kvECS.ECSClient;
 import client.KVStore;
-import ecs.ECSNode;
 import ecs.IECSNode;
 import junit.framework.TestCase;
 import org.apache.log4j.Logger;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Test performance of storage service
@@ -30,7 +26,7 @@ public class EnronPerformanceTest extends TestCase {
 
     public final int[] numClients = {1, 5, 20, 50, 100};
     public final int[] numServers = {1, 5, 20, 50, 100};
-    public final int NUM_OPS = 10000;
+    public final int NUM_PUTS = 10000;
     public final int NUM_CLIENTS = 1;
     public final int NUM_SERVERS = 1;
     public final int CACHE_SIZE = 20;
@@ -79,7 +75,7 @@ public class EnronPerformanceTest extends TestCase {
         File configFile = new File("src/testing/performancetest.config");
         ECSClient ecs = new ECSClient(configFile);
         ArrayList<KVStore> clients = new ArrayList<>();
-        HashMap<String, String> enronData = loadEnronData(NUM_OPS + 500);
+        HashMap<String, String> enronData = loadEnronData(NUM_PUTS + 500);
         ArrayList<String> keys = new ArrayList<>(enronData.keySet());
         ArrayList<String> putKeys = new ArrayList<>();
         ArrayList<Thread> threads = new ArrayList<>();
@@ -90,7 +86,7 @@ public class EnronPerformanceTest extends TestCase {
         int currOp = 0;
         int numPuts = 0;
         int numGets = 0;
-        int opsPerClient = NUM_OPS / NUM_CLIENTS;
+        int opsPerClient = NUM_PUTS / NUM_CLIENTS;
 
         long startTime = System.nanoTime();
         ArrayList<IECSNode> nodesAdded = (ArrayList<IECSNode>)
@@ -123,7 +119,7 @@ public class EnronPerformanceTest extends TestCase {
         long durationMillis = TimeUnit.NANOSECONDS.toMillis(durationNanos);
         String result = String.format("The server did %d iterations (%d puts, %d gets) in %d milliseconds" +
                         "This is a latency of %d ms per operation",
-                NUM_OPS + GETS_PER_PUT * NUM_OPS , NUM_OPS, GETS_PER_PUT * NUM_OPS, durationMillis, durationMillis / NUM_OPS);
+                NUM_PUTS + GETS_PER_PUT * NUM_PUTS, NUM_PUTS, GETS_PER_PUT * NUM_PUTS, durationMillis, durationMillis / NUM_PUTS);
         logger.info(result);
 
         startTime = System.nanoTime();
