@@ -6,10 +6,13 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.data.Stat;
 import shared.KVAdminMessage;
+import shared.KVAdminMessage.OperationType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 import java.util.concurrent.CountDownLatch;
 
 public class ZKWatcher implements Watcher {
@@ -22,6 +25,9 @@ public class ZKWatcher implements Watcher {
     static int ZK_PORT = 2200;
     public CountDownLatch connectedSignal = new CountDownLatch(1);
     public CountDownLatch awaitSignal;
+
+    // use this to pass value from server when ecs calls get
+    public String value;
 
     public ZooKeeper connect() {
         try {
@@ -84,8 +90,19 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                logger.info("Received acknowledgement from znode " + path);
-                awaitSignal.countDown();
+                KVAdminMessage data = getData(path);
+                if(data == null){
+                    logger.info("Received acknowledgement from znode " + path);
+                    awaitSignal.countDown();
+                } else {
+                    if(data.getOperationType() == OperationType.GET_SUCCESS){
+                        logger.info("Received get success from znode " + path);
+                        this.value = data.getValue();
+                        awaitSignal.countDown();
+                    }else{
+                        logger.error("contained a status wrong to the ecs " + path);
+                    }
+                }
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {
@@ -123,6 +140,29 @@ public class ZKWatcher implements Watcher {
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
+        }
+    }
+
+    public KVAdminMessage deserializeData(byte[] data) throws IOException, ClassNotFoundException {
+        if (data.length == 0) {
+            logger.error("Byte array received from get was empty");
+            return null;
+        }
+        try( ByteArrayInputStream bis = new ByteArrayInputStream(data);
+             ObjectInputStream in = new ObjectInputStream(bis)) {
+            return (KVAdminMessage) in.readObject();
+        }
+    }
+
+    public KVAdminMessage getData(String path) {
+        try {
+            Stat stat = zooKeeper.exists(path, false);
+            byte[] data = zooKeeper.getData(path, this, stat);
+            return deserializeData(data);
+        } catch (Exception e) {
+            logger.error("Failed to get data for znode");
+            logger.error(e.getMessage());
+            return null;
         }
     }
 

@@ -98,7 +98,7 @@ public class ZKWatcher implements Watcher {
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
                 KVAdminMessage data = getData(path);
-
+                
                 logger.info("Received operation: " + data.getOperationType().toString());
 
                 ecsCommandHandler.handleCommand(data);
