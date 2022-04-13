@@ -210,6 +210,24 @@ public class KVServer extends Thread implements IKVServer {
 		zkWatcher.setData();
 	}
 
+	public void putKVbyECS(String key, String value) {
+		try{
+			putKV(key, value);
+			zkWatcher.setData();
+		} catch (Exception e){
+			logger.error("putKVbyECS failed, do nothing and don't send any ack back");
+		}
+	}
+
+	public void getKVbyECS(String key) {
+		try{
+			String value = getKV(key);
+			zkWatcher.setGetData(value);
+		} catch (Exception e){
+			logger.error("getKVbyECS failed, do nothing and don't send any ack back");
+		}
+	}
+
 	/**
 	 * Transfer a subset (range) of the KVServer’s data to another KVServer
 	 * (reallocation before removing this server or adding a new KVServer to the ring);

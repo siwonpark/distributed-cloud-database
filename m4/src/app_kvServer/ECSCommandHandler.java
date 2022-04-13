@@ -45,6 +45,12 @@ public class ECSCommandHandler {
             case MOVE_DATA:
                 server.moveData(data.getMoveRange(), data.getTargetNode());
                 break;
+            case PUT:
+                server.putKVbyECS(data.getKey(), data.getValue());
+                break;
+            case GET:
+                server.getKVbyECS(data.getKey());
+                break;
             default:
                 String errorMsg = "Request contained a status unknown to the server: " + op;
                 logger.error(errorMsg);
