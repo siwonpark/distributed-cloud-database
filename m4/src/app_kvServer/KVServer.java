@@ -23,6 +23,8 @@ import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.printError;
 import static shared.PrintUtils.printPossibleLogLevels;
 import shared.messages.Message;
+import shared.messages.KVMessage.StatusType;
+
 import java.util.concurrent.CountDownLatch;
 
 public class KVServer extends Thread implements IKVServer {
@@ -272,15 +274,15 @@ public class KVServer extends Thread implements IKVServer {
 				Objects.equals(responsibleServer.getNodeName(), this.serverName);
 	}
 
-	public Boolean handleOperations(ArrayList<Message> operations){
+	public Message handleOperations(ArrayList<Message> operations){
 		zkWatcher.setOperations(operations);
 		try{
 			this.zkWatcher.commitedSignal = new CountDownLatch(1);
 			this.zkWatcher.commitedSignal.await();
-			return zkWatcher.transactionSuccess;
+			return zkWatcher.transactionReplys;
 		} catch(Exception e){
 			logger.error(e);
-			return false;
+			return new Message(new ArrayList<>(), StatusType.COMMIT_FAILURE);
 		}
 	}
 

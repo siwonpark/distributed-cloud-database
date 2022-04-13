@@ -27,7 +27,7 @@ public class ZKWatcher implements Watcher {
     static String OPERATIONS_PATH = "/ecs/operations";
     public CountDownLatch connectedSignal = new CountDownLatch(1);
     public CountDownLatch commitedSignal;
-    public boolean transactionSuccess = false;
+    public Message transactionReplys;
 
     public ZKWatcher(String nodeName, String zkHost, int zkPort, ECSCommandHandler ecsCommandHandler) {
         this.nodeName = nodeName;
@@ -81,7 +81,7 @@ public class ZKWatcher implements Watcher {
     public void watchOperations() throws Exception{
             zooKeeper.exists(OPERATIONS_PATH + "/" + nodeName, this);
     }
-    
+
     @Override
     public void process(WatchedEvent event) {
         logger.info("Watch triggered");
@@ -108,13 +108,7 @@ public class ZKWatcher implements Watcher {
             else if (EventType.NodeDataChanged == eventType) {
                 if(path.startsWith(OPERATIONS_PATH)){
                     if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
-                        KVAdminMessage data = getData(path);
-
-                        if(data.getOperationType() == KVAdminMessage.OperationType.COMMIT_SUCCESS){
-                            transactionSuccess = true;
-                        }else{
-                            transactionSuccess = false;                            
-                        } 
+                        transactionReplys = getReplys();
                         commitedSignal.countDown();
                     }
                 }else{
@@ -140,12 +134,36 @@ public class ZKWatcher implements Watcher {
         }
     }
     
+    public Message getReplys() {
+        try {
+            String path = OPERATIONS_PATH + "/" + nodeName;
+            Stat stat = zooKeeper.exists(path, false);
+            byte[] data = zooKeeper.getData(path, this, stat);
+            return deserializeReplys(data);
+        } catch (Exception e) {
+            logger.error("Failed to get operations");
+            logger.error(e.getMessage());
+            return null;
+        }
+    }
+
     public byte[] serializeOperations(ArrayList<Message> operations) throws IOException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 ObjectOutputStream out = new ObjectOutputStream(bos)) {
             out.writeObject(operations);
             out.flush();
             return bos.toByteArray();
+        }
+    }
+
+    public Message deserializeReplys(byte[] data) throws IOException, ClassNotFoundException {
+        if (data.length == 0) {
+            logger.error("Byte array received from get was empty");
+            return null;
+        }
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
+                ObjectInputStream in = new ObjectInputStream(bis)) {
+            return (Message) in.readObject();
         }
     }
 

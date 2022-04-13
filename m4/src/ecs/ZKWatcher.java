@@ -47,6 +47,15 @@ public class ZKWatcher implements Watcher {
         }
     }
 
+    public byte[] serializeReplys(Message data) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(data);
+            out.flush();
+            return bos.toByteArray();
+        }
+    }
+
     public ArrayList<Message> deserializeOperations(byte[] data) throws IOException, ClassNotFoundException {
         if (data.length == 0) {
             logger.error("Byte array received from get was empty");
@@ -67,21 +76,6 @@ public class ZKWatcher implements Watcher {
             }
         } catch (Exception e) {
             logger.error("Failed to create z-node");
-        }
-    }
-
-    public void setOperationsStatus(String Nodename, Boolean success) {
-        try {
-            byte[] dataBytes;
-            if(success == true){
-                dataBytes = serializeData(new KVAdminMessage(null, KVAdminMessage.OperationType.COMMIT_SUCCESS));
-            } else {
-                dataBytes = serializeData(new KVAdminMessage(null, KVAdminMessage.OperationType.COMMIT_FAILED));
-            }
-            String path = OPERATIONS_PATH + "/" + Nodename;
-            zooKeeper.setData(path, dataBytes, -1);
-        } catch (Exception e) {
-            logger.error("Failed to set operations for ecs");
         }
     }
 
@@ -130,11 +124,21 @@ public class ZKWatcher implements Watcher {
                 if(path.startsWith(OPERATIONS_PATH)){
                     ArrayList<Message> operations = getOperations(path);
                     String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
-                    
                     // TODO handle operations
 
-                    // if success call setOperationsStatus(nodeName, true)
-                    // if failed call setOperationsStatus(nodeName, false)
+                    /**
+                     * how to send replys back to server?
+                     * 
+                     * call setReplys(nodeName, replys) to send replys to server
+                     * 
+                     * replys is a Message new with an ArrayList of Message and a StatusType,
+                     * if failed the StatusType should be StatusType.COMMIT_FAILURE 
+                     *      and ArrayList could be empty
+                     * if success the StatusType should be StatusType.COMMIT_SUCCESS 
+                     *      each Message in a ArrayList should be new by "public Message(String key, String value, StatusType status)" and corresponds to the element in the opertaions arraylist
+                    */
+
+
                 }else{
                     logger.info("Received acknowledgement from znode " + path);
                     awaitSignal.countDown();
@@ -184,6 +188,16 @@ public class ZKWatcher implements Watcher {
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
+        }
+    }
+    
+    public void setReplys(String Nodename, Message replys) {
+        try {
+            byte[] dataBytes = serializeReplys(replys);
+            String path = OPERATIONS_PATH + "/" + Nodename;
+            zooKeeper.setData(path, dataBytes, -1);
+        } catch (Exception e) {
+            logger.error("Failed to set operations for ecs");
         }
     }
 

@@ -96,6 +96,12 @@ public class ClientConnection implements Runnable {
 	 * @throws IOException
 	 */
 	public void handleRequest(Message message) throws IOException {
+		if (message.getStatus() == StatusType.COMMIT_TRANSACTION) {
+			ArrayList<Message> operations = message.getOperations();
+			Message replys2operations = server.handleOperations(operations);
+			sendMessage(replys2operations);
+			return;
+		}
 		StatusType responseStatus;
 		String key = message.getKey();
 		String value = message.getValue();
@@ -131,7 +137,7 @@ public class ClientConnection implements Runnable {
 					value.length(), MAX_VALUE_BYTES);
 			sendFailure(errorMsg);
 			return;
-		}
+		} 
 
 
 		switch(message.getStatus()) {
@@ -190,16 +196,6 @@ public class ClientConnection implements Runnable {
 			case HEARTBEAT:
 				logger.debug("Received heartbeat request from client");
 				responseStatus = StatusType.HEARTBEAT;
-				break;
-
-			case COMMIT_TRANSACTION:
-				ArrayList<Message> operations = message.getOperations();
-				Boolean success = server.handleOperations(operations);
-				if(success){
-					responseStatus = StatusType.COMMIT_SUCCESS;
-				}else{
-					responseStatus = StatusType.COMMIT_FAILURE;
-				}
 				break;
 				
 			default:
