@@ -133,6 +133,9 @@ public class ZKWatcher implements Watcher {
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
                 KVAdminMessage data = getData(path);
+                if (data == null) {
+                    logger.error("null data");
+                }
                 if (path.startsWith(OPERATIONS_PATH)){
                     switch (data.getOperationType()) {
                         case GET_FAILED:
@@ -202,9 +205,6 @@ public class ZKWatcher implements Watcher {
             String path = COMMAND_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            if (stat == null) {
-                stat = zooKeeper.exists(path, false);
-            }
             watchNode(nodeName);
             
             zooKeeper.setData(path, dataBytes, stat.getVersion());
