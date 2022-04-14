@@ -228,7 +228,7 @@ public class KVServer extends Thread implements IKVServer {
 			String value = getKV(key);
 			zkWatcher.setGetData(value, OperationType.GET_SUCCESS);
 		} catch (Exception e){
-			logger.error("getKVbyECS failed, inform ecs of failure");
+			logger.error(e.getMessage());
 			zkWatcher.setGetData(null, OperationType.GET_FAILED);
 		}
 	}
