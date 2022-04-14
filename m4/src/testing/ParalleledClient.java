@@ -47,6 +47,9 @@ public class ParalleledClient implements Runnable{
         ArrayList<String> putKeys = new ArrayList<>();
 
         putKeys.add("AnInitialKey");
+        int getsPerPut = caller == null ? 0 : caller.GETS_PER_PUT;
+        int numPuts = caller == null ? this.keys.size() : caller.NUM_PUTS;
+
 
         // Create the array list of operations to batch
         ArrayList<Message> operations = new ArrayList<>();
@@ -54,8 +57,8 @@ public class ParalleledClient implements Runnable{
             String value = data.get(key);
             operations.add(new Message(key, value, KVMessage.StatusType.PUT));
             putKeys.add(key);
-            for(int j = 0; j < caller.GETS_PER_PUT; j++ ) {
-                int random = rand.nextInt(caller.NUM_PUTS);
+            for(int j = 0; j < getsPerPut; j++ ) {
+                int random = rand.nextInt(numPuts);
                 String keyToGet = putKeys.get(random % putKeys.size());
                 operations.add(new Message(keyToGet, null, KVMessage.StatusType.GET));
             }
@@ -70,6 +73,8 @@ public class ParalleledClient implements Runnable{
             durationNanos += duration;
         }
 
-        caller.incrementDuration(durationNanos);
+        if (caller != null) {
+            caller.incrementDuration(durationNanos);
+        }
     }
 }
