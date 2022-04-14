@@ -2,6 +2,9 @@ package shared;
 
 import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
+import shared.messages.Message;
+
+import java.util.ArrayList;
 
 public class PrintUtils {
 
@@ -39,13 +42,13 @@ public class PrintUtils {
                 " will be committed with ACID protocols \n");
 
         sb.append("commit");
-        sb.append("\t\t Commit the current transaction \n");
+        sb.append("\t\t\t Commit the current transaction \n");
 
         sb.append("transactionStatus");
-        sb.append("\t\t Print the current transaction status \n");
+        sb.append("\t Print the current transaction status \n");
 
         sb.append("help");
-        sb.append("\t\t\t Prints this help message");
+        sb.append("\t\t\t Prints this help message\n");
 
         sb.append("quit");
         sb.append("\t\t\t Exits the program");
@@ -121,6 +124,17 @@ public class PrintUtils {
     public static void printPossibleLogLevels() {
         System.out.println("Possible log levels are:");
         System.out.println("ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
+    }
+
+    /**
+     * Print the result of a transaction success to the user command line
+     * @param operationResponses The responses for each operation in the commit
+     */
+    public static void printCommitSuccessToUser(ArrayList<Message> operationResponses){
+        for(Message response: operationResponses) {
+            printResponseToUser(response);
+        }
+        printSuccess("Commit Successful!");
     }
 
     /**

@@ -1,6 +1,8 @@
 package testing;
 
 import client.KVStore;
+import shared.messages.KVMessage;
+import shared.messages.Message;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,38 +41,35 @@ public class ParalleledClient implements Runnable{
             e.printStackTrace();
         }
         int currOp = 0;
-        long startTime;
+        long startTime = 0;
         long duration;
         long durationNanos = 0;
         ArrayList<String> putKeys = new ArrayList<>();
 
         putKeys.add("AnInitialKey");
 
-
+        // Create the array list of operations to batch
+        ArrayList<Message> operations = new ArrayList<>();
         for(String key: keys){
             String value = data.get(key);
-            startTime = System.nanoTime();
-            try {
-                client.put(key, value);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            operations.add(new Message(key, value, KVMessage.StatusType.PUT));
             putKeys.add(key);
-            duration = System.nanoTime() - startTime;
-            durationNanos += duration;
             for(int j = 0; j < caller.GETS_PER_PUT; j++ ) {
-                int random = rand.nextInt(caller.NUM_OPS);
+                int random = rand.nextInt(caller.NUM_PUTS);
                 String keyToGet = putKeys.get(random % putKeys.size());
-                startTime = System.nanoTime();
-                try {
-                    client.get(keyToGet);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                duration = System.nanoTime() - startTime;
-                durationNanos += duration;
+                operations.add(new Message(keyToGet, null, KVMessage.StatusType.GET));
             }
         }
+        try {
+            startTime = System.nanoTime();
+            client.commit(operations);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            duration = System.nanoTime() - startTime;
+            durationNanos += duration;
+        }
+
         caller.incrementDuration(durationNanos);
     }
 }
