@@ -14,7 +14,6 @@ import java.io.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.ArrayList;
 
-import static java.lang.Thread.sleep;
 
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
@@ -81,7 +80,7 @@ public class ZKWatcher implements Watcher {
     }
 
     public void watchOperations() throws Exception{
-            zooKeeper.exists(OPERATIONS_PATH + "/" + nodeName, this);
+        zooKeeper.exists(OPERATIONS_PATH + "/" + nodeName, this);
     }
 
     @Override
@@ -182,7 +181,13 @@ public class ZKWatcher implements Watcher {
             String path = OPERATIONS_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
             byte[] data = zooKeeper.getData(path, this, stat);
-            return deserializeReplys(data);
+            // return deserializeReplys(data);
+            KVAdminMessage msg = deserializeData(data);
+            return new Message(
+                    msg.getOperations(),
+                    msg.getOperationType() == OperationType.COMMIT_SUCCESS
+                            ? KVMessage.StatusType.COMMIT_SUCCESS
+                            : KVMessage.StatusType.COMMIT_FAILURE);
         } catch (Exception e) {
             logger.error("Failed to get operations");
             logger.error(e.getMessage());
@@ -190,35 +195,35 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public byte[] serializeOperations(ArrayList<Message> operations) throws IOException {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream out = new ObjectOutputStream(bos)) {
-            out.writeObject(operations);
-            out.flush();
-            return bos.toByteArray();
-        }
-    }
+//    public byte[] serializeOperations(ArrayList<Message> operations) throws IOException {
+//        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//                ObjectOutputStream out = new ObjectOutputStream(bos)) {
+//            out.writeObject(operations);
+//            out.flush();
+//            return bos.toByteArray();
+//        }
+//    }
 
-    public Message deserializeReplys(byte[] data) throws IOException, ClassNotFoundException {
-        if (data.length == 0) {
-            logger.error("Byte array received from get was empty");
-            return null;
-        }
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
-                ObjectInputStream in = new ObjectInputStream(bis)) {
-            return (Message) in.readObject();
-        }
-    }
+//    public Message deserializeReplys(byte[] data) throws IOException, ClassNotFoundException {
+//        if (data.length == 0) {
+//            logger.error("Byte array received from get was empty");
+//            return null;
+//        }
+//        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
+//                ObjectInputStream in = new ObjectInputStream(bis)) {
+//            return (Message) in.readObject();
+//        }
+//    }
 
     public boolean setOperations(ArrayList<Message> operations) {
         try {
-            byte[] dataBytes = serializeOperations(operations);
+            KVAdminMessage message = new KVAdminMessage(null, null, OperationType.SEND_OPERATIONS);
+            message.setOperations(operations);
+            byte[] dataBytes = serializeData(message);
             String path = OPERATIONS_PATH + "/" + nodeName;
             
             Stat stat = zooKeeper.exists(path, false);
-            if (stat == null) {
-                stat = zooKeeper.exists(path, false);
-            }
+
             watchOperations();
             zooKeeper.setData(path, dataBytes, stat.getVersion());
             return true;

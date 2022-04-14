@@ -208,7 +208,7 @@ public class ECS {
         }
         ArrayList<Message> replies = new ArrayList<>();
         ArrayList<Message> rollbackMessages = new ArrayList<>();
-        StatusType commitStatus = StatusType.COMMIT_SUCCESS;
+        OperationType commitStatus = OperationType.COMMIT_SUCCESS;
 
         logger.info("Locking writes for all participating servers");
         for (Message operation : operations) {
@@ -244,7 +244,7 @@ public class ECS {
                 replies.add(reply);
             } catch (Exception e) {
                 logger.error("Error processing operation");
-                commitStatus = StatusType.COMMIT_FAILURE;
+                commitStatus = OperationType.COMMIT_FAILED;
 
                 StatusType statusType = operation.getStatus() == StatusType.GET ? StatusType.GET_ERROR : StatusType.PUT_ERROR;
                 reply = new Message(operation.getKey(), operation.getValue(), statusType);
@@ -277,9 +277,10 @@ public class ECS {
             }
         }
 
-        Message allReplies = new Message(replies, commitStatus);
+        KVAdminMessage allReplies = new KVAdminMessage(null, null, commitStatus);
+        allReplies.setOperations(replies);
 
-        zkWatcher.setReplys(initialNodeName, allReplies);
+        zkWatcher.setReplies(initialNodeName, allReplies);
 
         if (!awaitNodes(1, 10000)) {
             logger.error("Node was not responsive to lock write");

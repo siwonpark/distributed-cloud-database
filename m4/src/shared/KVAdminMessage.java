@@ -1,8 +1,11 @@
 package shared;
 
 import ecs.ECSNode;
+import shared.messages.KVMessage;
+import shared.messages.Message;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.TreeMap;
 
 public class KVAdminMessage implements Serializable {
@@ -13,6 +16,7 @@ public class KVAdminMessage implements Serializable {
     private ECSNode targetNode;
     private String key;
     private String value;
+    private ArrayList<Message> operations;
 
     public enum OperationType {
         INIT,
@@ -31,7 +35,8 @@ public class KVAdminMessage implements Serializable {
         GET,
         PUT_SUCCESS,
         GET_FAILED,
-        GET_SUCCESS
+        GET_SUCCESS,
+        SEND_OPERATIONS
     }
 
     public KVAdminMessage(TreeMap<String, ECSNode> metadata, OperationType status) {
@@ -43,6 +48,10 @@ public class KVAdminMessage implements Serializable {
         this.key = key;
         this.value = value;
         this.status = status;
+    }
+
+    public void setOperations(ArrayList<Message> operations) {
+        this.operations = operations;
     }
 
     public void setKeyStart(String keyStart) {
@@ -67,6 +76,10 @@ public class KVAdminMessage implements Serializable {
 
     public OperationType getOperationType() {
         return this.status;
+    }
+
+    public ArrayList<Message> getOperations() {
+        return this.operations;
     }
 
     public String getKey() {
