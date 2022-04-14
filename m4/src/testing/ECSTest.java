@@ -322,7 +322,7 @@ public class ECSTest extends TestCase {
             // define transaction
             ArrayList<Message> operations = new ArrayList<>();
 
-            for (int i = 0; i < 25; i++) {
+            for (int i = 0; i < 100; i++) {
                 operations.add(new Message(Integer.toString(i), Integer.toString(i), KVMessage.StatusType.PUT));
             }
 
@@ -368,10 +368,11 @@ public class ECSTest extends TestCase {
             }
 
             // commit large transaction
-            kvClient.commit(operations);
+            KVMessage response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_SUCCESS, response.getStatus());
 
             // try adding key with other client should get write lock
-            KVMessage response = kvClient.put("checkLock2", "checkLock2");
+            response = kvClient.put("checkLock2", "checkLock2");
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
         } catch (Exception e) {
             ex = e;
