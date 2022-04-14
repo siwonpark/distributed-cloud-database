@@ -171,7 +171,7 @@ public class PrintUtils {
                 printSuccess("Retrieved value \"" + value + "\" from the database.");
                 break;
             case GET_ERROR:
-                printError("There is no entry with key: \"" + key + "\" in the database.");
+                System.out.println("There is no entry with key: \"" + key + "\" in the database.");
                 break;
             case PUT_UPDATE:
                 if(Objects.equals(value, DELETE_STRING) || value == null){
