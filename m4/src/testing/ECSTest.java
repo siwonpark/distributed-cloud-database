@@ -10,6 +10,7 @@ import shared.MetadataUtils;
 import shared.messages.KVMessage;
 import shared.messages.Message;
 
+import static java.lang.Thread.sleep;
 import static testing.AllTests.*;
 
 
@@ -333,6 +334,8 @@ public class ECSTest extends TestCase {
             ParalleledClient paralleledClient = new ParalleledClient(kvClient, null, data, keys);
             Thread clientThread = new Thread(paralleledClient);
             clientThread.start();
+
+            sleep(50);
 
             // try adding key with other client should get write lock
             KVMessage response = kvClient2.put("checkLock", "checkLock");
