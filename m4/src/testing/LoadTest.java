@@ -63,7 +63,7 @@ public class LoadTest extends TestCase {
         while (i < ITERATIONS) {
             // Put in some values
             response = kvClient.put(String.valueOf(i), String.valueOf(i));
-            assertSame(response.getStatus(), StatusType.PUT_SUCCESS);
+            assertTrue(response.getStatus() == StatusType.PUT_SUCCESS || response.getStatus() == StatusType.PUT_UPDATE);
             i += 1;
         }
 

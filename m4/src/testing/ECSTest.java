@@ -8,7 +8,9 @@ import java.util.*;
 import shared.HashUtils;
 import shared.MetadataUtils;
 import shared.messages.KVMessage;
+import shared.messages.Message;
 
+import static java.lang.Thread.sleep;
 import static testing.AllTests.*;
 
 
@@ -286,6 +288,257 @@ public class ECSTest extends TestCase {
             ecs.unlockWrite(node.getNodeName());
             response = kvClient.put("lock", "lock");
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    /**
+     * To keep transactions atomic we test that we lock the participating servers appropriately
+     */
+    public void testTransactionAtomicLock() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        ECSNode node2 = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // start another kv client
+            KVStore kvClient2 = new KVStore("localhost", node2.getNodePort());
+            kvClient2.connect();
+
+            // define transaction
+            HashMap<String, String> data = new HashMap<>();
+            ArrayList<String> keys = new ArrayList<>();
+
+            for (int i = 0; i < 50; i++) {
+                data.put(Integer.toString(i), Integer.toString(i));
+                keys.add(Integer.toString(i));
+            }
+
+            // commit large transaction
+            ParalleledClient paralleledClient = new ParalleledClient(kvClient, null, data, keys);
+            Thread clientThread = new Thread(paralleledClient);
+            clientThread.start();
+
+            // let thread start the transaction process
+            sleep(100);
+
+            // try adding key with other client should get write lock
+            KVMessage response = kvClient2.put("checkLock", "checkLock");
+            assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
+
+            clientThread.join();
+
+            kvClient.disconnect();
+            kvClient2.disconnect();
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    /**
+     * Test that server is unlocked after transaction and ready to accept more requests
+     */
+    public void testTransactionUnlockedAfter() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            for (int i = 0; i < 10; i++) {
+                operations.add(new Message(Integer.toString(i), Integer.toString(i), KVMessage.StatusType.PUT));
+            }
+
+            // commit transaction
+            KVMessage response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_SUCCESS, response.getStatus());
+
+            // try adding key with other client should get write lock
+            response = kvClient.put("checkLock2", "checkLock2");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+
+            kvClient.disconnect();
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    /**
+     * If transaction contains a new key, and it fails, the key should be deleted during the rollback
+     */
+    public void testTransactionRollbackWithNewKey() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            // test key doesn't exist
+            KVMessage response = kvClient.get("new");
+            assertEquals(KVMessage.StatusType.GET_ERROR, response.getStatus());
+
+            operations.add(new Message("new", "value", KVMessage.StatusType.PUT));
+
+            // add key too long
+            operations.add(new Message("quwbfjkqwbfqwbmkdjkqwbdjkqwbdjqbwdkqbwkdbqjwd", "value", KVMessage.StatusType.PUT));
+
+            // commit transaction
+            response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_FAILURE, response.getStatus());
+
+            // check that key has been rolled back
+            response = kvClient.get("new");
+            assertEquals(KVMessage.StatusType.GET_ERROR, response.getStatus());
+
+            kvClient.disconnect();
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    /**
+     * If transaction contains an existing key, and it fails, the key should be rolled back to it's old value
+     */
+    public void testTransactionRollbackWithExistingKey() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            KVMessage response = kvClient.put("existing", "oldvalue");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+
+            operations.add(new Message("existing", "newvalue", KVMessage.StatusType.PUT));
+
+            // add key too long
+            operations.add(new Message("quwbfjkqwbfqwbmkdjkqwbdjkqwbdjqbwdkqbwkdbqjwd", "value", KVMessage.StatusType.PUT));
+
+            // commit transaction
+            response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_FAILURE, response.getStatus());
+
+            // check that key has been rolled back
+            response = kvClient.get("existing");
+            assertEquals("oldvalue", response.getValue());
+
+            kvClient.disconnect();
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    /**
+     * General test to see that all operations are returned with the right statuscode
+     */
+    public void testTransactionResponse() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            operations.add(new Message("key1", "value1", KVMessage.StatusType.PUT));
+            operations.add(new Message("key1", null, KVMessage.StatusType.GET));
+            operations.add(new Message("key2", "value1", KVMessage.StatusType.PUT));
+            operations.add(new Message("key2", "value2", KVMessage.StatusType.PUT));
+            operations.add(new Message("key2", null, KVMessage.StatusType.GET));
+            operations.add(new Message("key3", null, KVMessage.StatusType.GET));
+
+            // commit transaction
+            KVMessage response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_SUCCESS, response.getStatus());
+
+            // check response
+            assertEquals(6, response.getOperations().size());
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getOperations().get(0).getStatus());
+            assertEquals("value1", response.getOperations().get(1).getValue());
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getOperations().get(2).getStatus());
+            assertEquals(KVMessage.StatusType.PUT_UPDATE, response.getOperations().get(3).getStatus());
+            assertEquals("value2", response.getOperations().get(4).getValue());
+            assertNull(response.getOperations().get(5).getValue());
+
+            kvClient.disconnect();
         } catch (Exception e) {
             ex = e;
         }

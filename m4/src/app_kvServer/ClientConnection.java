@@ -26,8 +26,8 @@ public class ClientConnection implements Runnable {
 	private boolean isOpen;
 	private static final int BUFFER_SIZE = 1024;
 	private static final int DROP_SIZE = 128 * BUFFER_SIZE;
-	private static final int MAX_KEY_BYTES = 20; // 20 Bytes
-	private static final int MAX_VALUE_BYTES = 1000 * 120; // 1kByte
+	public static final int MAX_KEY_BYTES = 20; // 20 Bytes
+	public static final int MAX_VALUE_BYTES = 1000 * 120; // 1kByte
 
 	private Socket clientSocket;
 	private ObjectInputStream input;
@@ -63,7 +63,7 @@ public class ClientConnection implements Runnable {
 				} catch (IOException ioe) {
 					logger.error("Error! Connection lost!");
 					isOpen = false;
-				}				
+				}
 			}
 			
 		} catch (IOException ioe) {
