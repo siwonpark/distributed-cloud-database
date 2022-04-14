@@ -69,10 +69,51 @@ KVClient [In Transaction]> commit
 # Make sure you've executed `start` in the ECS before you `commit`
 # or else the commit won't work (since the servers arent started)
 ```
-After executing the above, you should see something similar to the below screenshot:
+After executing the above, you should see something similar to the below:
+```
+KVClient> connect localhost 50052
+Connected to localhost port 50052!
+KVClient> initTransaction
+Transaction initiated.
+KVClient [In Transaction]> put a a
+Operation added to transaction.
+KVClient [In Transaction]> put b b
+Operation added to transaction.
+KVClient [In Transaction]> get a
+Operation added to transaction.
+KVClient [In Transaction]> put a null
+Operation added to transaction.
+KVClient [In Transaction]> get a
+Operation added to transaction.
+KVClient [In Transaction]> put a d
+Operation added to transaction.
+KVClient [In Transaction]> get a
+Operation added to transaction.
+KVClient [In Transaction]> get b
+Operation added to transaction.
+KVClient [In Transaction]> commit
+Success! Inserted {"a": "a"} to the database.
+Success! Inserted {"b": "b"} to the database.
+Success! Retrieved value "a" from the database.
+Success! Deleted key "a" from the database.
+There is no entry with key: "a" in the database.
+Success! Inserted {"a": "d"} to the database.
+Success! Retrieved value "d" from the database.
+Success! Retrieved value "b" from the database.
+Success! Commit Successful!
+```
 
 You can then check the state after the atomic transaction, 
-that all keys and values are as expected after the transaction completes.
+that all keys and values are as expected after the transaction completes. Here's an example where we check the keys
+`a` and `b` since those are the ones in the example above: 
+```
+KVClient> get a
+Success! Retrieved value "d" from the database.
+KVClient> get b
+Success! Retrieved value "b" from the database.
+```
+
+As we can see, the values are as expected when considering the transaction as an atomic operation.
 
 
 
