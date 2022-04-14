@@ -151,6 +151,36 @@ public class CLITest extends TestCase{
         assertNull(ex);
     }
 
+    /**
+     * Test that the expected response is output to the user
+     * After a commit operation
+     */
+    public void testCommitUserResponse(){
+        Exception ex = null;
+        String EXPECTED_OUTPUT = "The size of the current transaction is: 3";
+        String EXPECTED_OUTPUT2 = "The size of the current transaction is: 0";
+        try {
+            app.newConnection("localhost", port);
+            app.handleCommand("initTransaction");
+            assertTrue(app.currentlyInTransaction());
+            app.handleCommand("put 10 10");
+            app.handleCommand("get 10");
+            app.handleCommand("put 20 5");
+            app.handleCommand("transactionStatus");
+            String output = testOut.toString();
+//            assertTrue(output.contains(EXPECTED_OUTPUT));
+
+            app.handleCommand("commit");
+            app.handleCommand("transactionStatus");
+            String output2 = testOut.toString();
+            assertTrue(output2.contains(EXPECTED_OUTPUT2));
+            assertFalse(app.currentlyInTransaction());
+        } catch(Exception e) {
+            ex = e;
+        }
+        assertNull(ex);
+    }
+
 
 
     /**
