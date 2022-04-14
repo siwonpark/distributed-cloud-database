@@ -197,6 +197,15 @@ public class ECS {
 
     public boolean handleOperations(String initialNodeName, ArrayList<Message> operations) {
         logger.info("Start processing transaction");
+        for (Message operation : operations) {
+            if (operation.getStatus() == StatusType.GET) {
+                logger.info("a get operation, the key is " + operation.getKey());
+            } else if (operation.getStatus() == StatusType.PUT) {
+                logger.info("a put operation, the key is " + operation.getKey() + " the value is " + operation.getValue());
+            } else {
+                logger.error("the operation type is wrong!!!");
+            }
+        }
         ArrayList<Message> replies = new ArrayList<>();
         ArrayList<Message> rollbackMessages = new ArrayList<>();
         StatusType commitStatus = StatusType.COMMIT_SUCCESS;
