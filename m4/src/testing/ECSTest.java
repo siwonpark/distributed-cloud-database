@@ -306,6 +306,7 @@ public class ECSTest extends TestCase {
 
         // add node
         ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+        ECSNode node2 = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
 
         // start server
         ecs.start();
@@ -316,7 +317,7 @@ public class ECSTest extends TestCase {
             kvClient.connect();
 
             // start another kv client
-            KVStore kvClient2 = new KVStore("localhost", node.getNodePort());
+            KVStore kvClient2 = new KVStore("localhost", node2.getNodePort());
             kvClient2.connect();
 
             // define transaction
