@@ -157,8 +157,10 @@ public class CLITest extends TestCase{
      */
     public void testCommitUserResponse(){
         Exception ex = null;
-        String EXPECTED_OUTPUT = "The size of the current transaction is: 3";
-        String EXPECTED_OUTPUT2 = "The size of the current transaction is: 0";
+
+        String EXPECTED_OUTPUT1 = "Success! Inserted {\"10\": \"10\"} to the database.\n";
+        String EXPECTED_OUTPUT2 = "Success! Retrieved value \"10\" from the database.";
+        String EXPECTED_OUTPUT_3 = "Success! Inserted {\"20\": \"5\"} to the database";
         try {
             app.newConnection("localhost", port);
             app.handleCommand("initTransaction");
@@ -166,14 +168,13 @@ public class CLITest extends TestCase{
             app.handleCommand("put 10 10");
             app.handleCommand("get 10");
             app.handleCommand("put 20 5");
-            app.handleCommand("transactionStatus");
-            String output = testOut.toString();
-//            assertTrue(output.contains(EXPECTED_OUTPUT));
-
+            app.handleCommand("get 50");
             app.handleCommand("commit");
             app.handleCommand("transactionStatus");
-            String output2 = testOut.toString();
-            assertTrue(output2.contains(EXPECTED_OUTPUT2));
+            String output = testOut.toString();
+            assertTrue(output.contains(EXPECTED_OUTPUT1));
+            assertTrue(output.contains(EXPECTED_OUTPUT2));
+            assertTrue(output.contains(EXPECTED_OUTPUT2));
             assertFalse(app.currentlyInTransaction());
         } catch(Exception e) {
             ex = e;
