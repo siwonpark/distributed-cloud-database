@@ -118,10 +118,17 @@ public class KVStore implements KVCommInterface {
 		logger.info(String.format("Committing transaction of size %s", operations.size()));
 		Message msg = new Message(operations, KVMessage.StatusType.COMMIT_TRANSACTION);
 		try {
-			// We don't need to connect to a particular server, so don't
-			// Need retryMessageUntilSuccess
-			commModule.sendMessage(msg);
-			Message response = commModule.receiveMessage();
+			if (dynamicCommModule != null) {
+				try {
+					dynamicCommModule.disconnect();
+				} catch (IOException e) {
+					logger.warn("The dynamicCommModule was unable to be closed.");
+				}
+			}
+			dynamicCommModule = new CommModule(this.address, this.port);
+			dynamicCommModule.connect();
+			dynamicCommModule.sendMessage(msg);
+			Message response = dynamicCommModule.receiveMessage();
 			return response; // Pass back to client to display on command line
 		} catch (IOException e){
 			// Inform listeners that connection was lost

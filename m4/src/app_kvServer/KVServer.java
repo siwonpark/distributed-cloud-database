@@ -3,11 +3,13 @@ package app_kvServer;
 
 import ecs.ECSNode;
 
+import org.apache.zookeeper.Op;
 import persistence.DataBase;
 
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import shared.KVAdminMessage.OperationType;
 import shared.MetadataUtils;
 import shared.communication.CommModule;
 
@@ -20,8 +22,12 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import static shared.LogUtils.setLevel;
-import static shared.PrintUtils.printError;
-import static shared.PrintUtils.printPossibleLogLevels;
+import static shared.PrintUtils.*;
+
+import shared.messages.Message;
+import shared.messages.KVMessage.StatusType;
+
+import java.util.concurrent.CountDownLatch;
 
 public class KVServer extends Thread implements IKVServer {
 
@@ -206,6 +212,28 @@ public class KVServer extends Thread implements IKVServer {
 		zkWatcher.setData();
 	}
 
+	public void putKVbyECS(String key, String value) {
+		try{
+			OperationType responseStatus = inStorage(key) ? OperationType.PUT_UPDATE : OperationType.PUT_SUCCESS;
+			value = Objects.equals(value, DELETE_STRING) ? null : value;
+			putKV(key, value);
+			zkWatcher.setPutData(responseStatus);
+		} catch (Exception e){
+			logger.error("putKVbyECS failed, inform ecs of failure");
+			zkWatcher.setPutData(OperationType.PUT_FAILED);
+		}
+	}
+
+	public void getKVbyECS(String key) {
+		try{
+			String value = getKV(key);
+			zkWatcher.setGetData(value, OperationType.GET_SUCCESS);
+		} catch (Exception e){
+			logger.error(e.getMessage());
+			zkWatcher.setGetData(null, OperationType.GET_FAILED);
+		}
+	}
+
 	/**
 	 * Transfer a subset (range) of the KVServer’s data to another KVServer
 	 * (reallocation before removing this server or adding a new KVServer to the ring);
@@ -268,6 +296,21 @@ public class KVServer extends Thread implements IKVServer {
 		assert responsibleServer != null;
 		return responsibleServer.getNodePort() == port &&
 				Objects.equals(responsibleServer.getNodeName(), this.serverName);
+	}
+
+	public Message handleOperations(ArrayList<Message> operations){
+		logger.info("handle transaction of size " + operations.size());
+		try{
+			this.zkWatcher.commitedSignal = new CountDownLatch(1);
+			zkWatcher.setOperations(operations);
+
+			this.zkWatcher.commitedSignal.await();
+			this.zkWatcher.setData();
+			return zkWatcher.transactionReplys;
+		} catch(Exception e){
+			logger.error("failed to handle operations", e);
+			return new Message(new ArrayList<Message>(), StatusType.COMMIT_FAILURE);
+		}
 	}
 
 	@Override

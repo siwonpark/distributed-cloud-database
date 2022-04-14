@@ -5,6 +5,7 @@ import shared.messages.KVMessage.StatusType;
 import shared.messages.Message;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class PrintUtils {
 
@@ -151,7 +152,11 @@ public class PrintUtils {
                 printFailedResponseToUser(key);
                 break;
             case PUT_SUCCESS:
-                printSuccess(String.format("Inserted {\"%s\": \"%s\"} to the database.", key, value));
+                if(Objects.equals(value, DELETE_STRING) || value == null){
+                    printSuccess("Deleted key \"" + key + "\" from the database.");
+                } else {
+                    printSuccess(String.format("Inserted {\"%s\": \"%s\"} to the database.", key, value));
+                }
                 break;
             case DELETE_SUCCESS:
                 printSuccess("Deleted key \"" + key + "\" from the database.");
@@ -166,10 +171,14 @@ public class PrintUtils {
                 printSuccess("Retrieved value \"" + value + "\" from the database.");
                 break;
             case GET_ERROR:
-                printError("There is no entry with key: \"" + key + "\" in the database.");
+                System.out.println("There is no entry with key: \"" + key + "\" in the database.");
                 break;
             case PUT_UPDATE:
-                printSuccess(String.format("Updated key \"%s\" with value \"%s\".", key, value));
+                if(Objects.equals(value, DELETE_STRING) || value == null){
+                    printSuccess("Deleted key \"" + key + "\" from the database.");
+                } else {
+                    printSuccess(String.format("Updated key \"%s\" with value \"%s\".", key, value));
+                }
                 break;
             case SERVER_WRITE_LOCK:
                 printError("The server is currently not accepting write requests");

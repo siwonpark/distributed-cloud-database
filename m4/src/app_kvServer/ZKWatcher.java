@@ -6,11 +6,14 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.data.Stat;
 import shared.KVAdminMessage;
+import shared.KVAdminMessage.OperationType;
+import shared.messages.KVMessage;
+import shared.messages.Message;
 
 import java.io.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.ArrayList;
 
-import static java.lang.Thread.sleep;
 
 public class ZKWatcher implements Watcher {
     private ZooKeeper zooKeeper;
@@ -22,7 +25,10 @@ public class ZKWatcher implements Watcher {
     static String ROOT_PATH = "/ecs";
     static String ACK_PATH = "/ecs/ack";
     static String COMMAND_PATH = "/ecs/command";
+    static String OPERATIONS_PATH = "/ecs/operations";
     public CountDownLatch connectedSignal = new CountDownLatch(1);
+    public CountDownLatch commitedSignal;
+    public Message transactionReplys;
 
     public ZKWatcher(String nodeName, String zkHost, int zkPort, ECSCommandHandler ecsCommandHandler) {
         this.nodeName = nodeName;
@@ -73,6 +79,10 @@ public class ZKWatcher implements Watcher {
         }
     }
 
+    public void watchOperations() throws Exception{
+        zooKeeper.exists(OPERATIONS_PATH + "/" + nodeName, this);
+    }
+
     @Override
     public void process(WatchedEvent event) {
         logger.info("Watch triggered");
@@ -97,11 +107,19 @@ public class ZKWatcher implements Watcher {
             }
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
-                KVAdminMessage data = getData(path);
+                if(path.startsWith(OPERATIONS_PATH)){
+                    if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
+                        logger.info("Received replies to operations at ZkWatcher");
+                        transactionReplys = getReplies();
+                        logger.info(transactionReplys.getStatus().toString());
+                        commitedSignal.countDown();
+                    }
+                }else{
+                    KVAdminMessage data = getData(path);
+                    logger.info("Received operation: " + data.getOperationType().toString());
 
-                logger.info("Received operation: " + data.getOperationType().toString());
-
-                ecsCommandHandler.handleCommand(data);
+                    ecsCommandHandler.handleCommand(data);
+                }
             }
         } else if (KeeperState.Disconnected == keeperState) {
             logger.info("And ZK Server Disconnected");
@@ -111,11 +129,90 @@ public class ZKWatcher implements Watcher {
     public void setData() {
         try {
             logger.info("SENDING ACK to ECS");
+            KVAdminMessage msg = new KVAdminMessage(OperationType.ACK);
             String path = ACK_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
-            zooKeeper.setData(path, new byte[stat.getVersion()], stat.getVersion());
+            zooKeeper.setData(path, serializeData(msg), stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
+        }
+    }
+
+    public byte[] serializeData(KVAdminMessage data) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(data);
+            out.flush();
+            return bos.toByteArray();
+        }
+    }
+
+    public void setGetData(String value, OperationType operationType){
+        try {
+            KVAdminMessage data = new KVAdminMessage(null, value, operationType);
+            byte[] dataBytes = serializeData(data);
+            String path = ACK_PATH + "/" + nodeName;
+
+            Stat stat = zooKeeper.exists(path, false);
+            watchOperations();
+            
+            zooKeeper.setData(path, dataBytes, stat.getVersion());
+        } catch (Exception e) {
+            logger.error("Failed to set data for znode");
+        }
+    }
+
+    public void setPutData(OperationType operationType){
+        try {
+            KVAdminMessage data = new KVAdminMessage(operationType);
+            byte[] dataBytes = serializeData(data);
+            String path = ACK_PATH + "/" + nodeName;
+
+            Stat stat = zooKeeper.exists(path, false);
+            watchOperations();
+
+            zooKeeper.setData(path, dataBytes, stat.getVersion());
+        } catch (Exception e) {
+            logger.error("Failed to set data for znode");
+        }
+    }
+    
+    public Message getReplies() {
+        try {
+            String path = OPERATIONS_PATH + "/" + nodeName;
+            Stat stat = zooKeeper.exists(path, false);
+            byte[] data = zooKeeper.getData(path, this, stat);
+            // return deserializeReplys(data);
+            KVAdminMessage msg = deserializeData(data);
+            logger.info("operationtype from get replies: " + msg.getOperationType());
+            return new Message(
+                    msg.getOperations(),
+                    msg.getOperationType() == OperationType.COMMIT_SUCCESS
+                            ? KVMessage.StatusType.COMMIT_SUCCESS
+                            : KVMessage.StatusType.COMMIT_FAILURE);
+        } catch (Exception e) {
+            logger.error("Failed to get operations");
+            logger.error(e.getMessage());
+            return null;
+        }
+    }
+
+    public boolean setOperations(ArrayList<Message> operations) {
+        try {
+            KVAdminMessage message = new KVAdminMessage(null, null, OperationType.SEND_OPERATIONS);
+            message.setOperations(operations);
+            byte[] dataBytes = serializeData(message);
+            String path = ACK_PATH + "/" + nodeName;
+            
+            Stat stat = zooKeeper.exists(path, false);
+
+            watchOperations();
+            zooKeeper.setData(path, dataBytes, stat.getVersion());
+            return true;
+        } catch (Exception e) {
+            logger.error("Failed to set operations for ecs");
+            logger.error(e);
+            return false;
         }
     }
 

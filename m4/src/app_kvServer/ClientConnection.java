@@ -8,6 +8,7 @@ import shared.messages.Message;
 import java.io.*;
 import java.net.Socket;
 
+import java.util.ArrayList;
 import static shared.PrintUtils.DELETE_STRING;
 
 
@@ -120,7 +121,7 @@ public class ClientConnection implements Runnable {
 			sendMessage(response);
 			return;
 		}
-		else if (key.length() > MAX_KEY_BYTES) {
+		else if (key != null && key.length() > MAX_KEY_BYTES) {
 			String errorMsg = String.format("Key of length %s exceeds max key length (%s Bytes)",
 					key.length(), MAX_KEY_BYTES);
 			sendFailure(errorMsg);
@@ -132,6 +133,16 @@ public class ClientConnection implements Runnable {
 			return;
 		}
 
+		if (message.getStatus() == StatusType.COMMIT_TRANSACTION) {
+			ArrayList<Message> operations = message.getOperations();
+			for (Message op: operations){
+				logger.info(op.getMessageString());
+			}
+			Message repliesToOperations = server.handleOperations(operations);
+			logger.info("get the message from ecs and send it to client");
+			sendMessage(repliesToOperations);
+			return;
+		}
 
 		switch(message.getStatus()) {
 			case GET:
@@ -190,6 +201,7 @@ public class ClientConnection implements Runnable {
 				logger.debug("Received heartbeat request from client");
 				responseStatus = StatusType.HEARTBEAT;
 				break;
+				
 			default:
 				String errorMsg = "Request contained a status unknown to the server: " + message.getStatus();
 				logger.error(errorMsg);
