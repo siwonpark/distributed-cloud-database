@@ -231,7 +231,7 @@ public class ECS {
             try {
                 if (operation.getStatus() == StatusType.GET) {
                     String value = get(operation.getKey());
-                    reply = new Message(operation.getKey(), value, StatusType.GET_SUCCESS);
+                    reply = new Message(operation.getKey(), value, value == null ? StatusType.GET_ERROR : StatusType.GET_SUCCESS);
                 } else {
                     // get previous value
                     String value = get(operation.getKey());
