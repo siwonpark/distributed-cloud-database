@@ -321,14 +321,18 @@ public class ECSTest extends TestCase {
             kvClient2.connect();
 
             // define transaction
-            ArrayList<Message> operations = new ArrayList<>();
+            HashMap<String, String> data = new HashMap<>();
+            ArrayList<String> keys = new ArrayList<>();
 
             for (int i = 0; i < 50; i++) {
-                operations.add(new Message(Integer.toString(i), Integer.toString(i), KVMessage.StatusType.PUT));
+                data.put(Integer.toString(i), Integer.toString(i));
+                keys.add(Integer.toString(i));
             }
 
             // commit large transaction
-            kvClient.commit(operations);
+            ParalleledClient paralleledClient = new ParalleledClient(kvClient, null, data, keys);
+            Thread clientThread = new Thread(paralleledClient);
+            clientThread.start();
 
             // try adding key with other client should get write lock
             KVMessage response = kvClient2.put("checkLock", "checkLock");
