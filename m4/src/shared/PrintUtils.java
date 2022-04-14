@@ -42,13 +42,13 @@ public class PrintUtils {
                 " will be committed with ACID protocols \n");
 
         sb.append("commit");
-        sb.append("\t\t Commit the current transaction \n");
+        sb.append("\t\t\t Commit the current transaction \n");
 
         sb.append("transactionStatus");
-        sb.append("\t\t Print the current transaction status \n");
+        sb.append("\t Print the current transaction status \n");
 
         sb.append("help");
-        sb.append("\t\t\t Prints this help message");
+        sb.append("\t\t\t Prints this help message\n");
 
         sb.append("quit");
         sb.append("\t\t\t Exits the program");
