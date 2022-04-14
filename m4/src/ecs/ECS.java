@@ -1,18 +1,14 @@
 package ecs;
 
 import org.apache.log4j.Logger;
-import org.apache.zookeeper.Op;
-import org.apache.zookeeper.data.Stat;
 import shared.MetadataUtils;
 import shared.KVAdminMessage;
 import shared.KVAdminMessage.OperationType;
-import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
 import shared.messages.Message;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.sql.Array;
 import java.util.*;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
