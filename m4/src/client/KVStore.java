@@ -120,8 +120,10 @@ public class KVStore implements KVCommInterface {
 		try {
 			// We don't need to connect to a particular server, so don't
 			// Need retryMessageUntilSuccess
-			commModule.sendMessage(msg);
-			Message response = commModule.receiveMessage();
+			dynamicCommModule = new CommModule(this.address, this.port);
+			dynamicCommModule.connect();
+			dynamicCommModule.sendMessage(msg);
+			Message response = dynamicCommModule.receiveMessage();
 			return response; // Pass back to client to display on command line
 		} catch (IOException e){
 			// Inform listeners that connection was lost
