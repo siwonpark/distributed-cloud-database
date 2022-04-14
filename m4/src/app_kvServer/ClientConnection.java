@@ -121,7 +121,7 @@ public class ClientConnection implements Runnable {
 			sendMessage(response);
 			return;
 		}
-		else if (key.length() > MAX_KEY_BYTES) {
+		else if (key != null && key.length() > MAX_KEY_BYTES) {
 			String errorMsg = String.format("Key of length %s exceeds max key length (%s Bytes)",
 					key.length(), MAX_KEY_BYTES);
 			sendFailure(errorMsg);
