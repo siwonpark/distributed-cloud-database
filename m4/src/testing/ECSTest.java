@@ -378,13 +378,60 @@ public class ECSTest extends TestCase {
                 operations.add(new Message(Integer.toString(i), Integer.toString(i), KVMessage.StatusType.PUT));
             }
 
-            // commit large transaction
+            // commit transaction
             KVMessage response = kvClient.commit(operations);
             assertEquals(KVMessage.StatusType.COMMIT_SUCCESS, response.getStatus());
 
             // try adding key with other client should get write lock
             response = kvClient.put("checkLock2", "checkLock2");
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    /**
+     * If transaction contains a new key, and it fails, the key should be deleted during the rollback
+     */
+    public void testTransactionRollbackWithNewKey() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            // test key doesn't exist
+            KVMessage response = kvClient.get("new");
+            assertEquals(KVMessage.StatusType.GET_ERROR, response.getStatus());
+
+            operations.add(new Message("new", "value", KVMessage.StatusType.PUT));
+
+            // add key too long
+            operations.add(new Message("quwbfjkqwbfqwbmkdjkqwbdjkqwbdjqbwdkqbwkdbqjwd", "value", KVMessage.StatusType.PUT));
+
+            // commit transaction
+            response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_FAILURE, response.getStatus());
+
+            // check that key has been rolled back
+            response = kvClient.get("new");
+            assertEquals(KVMessage.StatusType.GET_ERROR, response.getStatus());
         } catch (Exception e) {
             ex = e;
         }
