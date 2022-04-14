@@ -160,7 +160,8 @@ public class CLITest extends TestCase{
 
         String EXPECTED_OUTPUT1 = "Success! Inserted {\"10\": \"10\"} to the database.\n";
         String EXPECTED_OUTPUT2 = "Success! Retrieved value \"10\" from the database.";
-        String EXPECTED_OUTPUT_3 = "Success! Inserted {\"20\": \"5\"} to the database";
+        String EXPECTED_OUTPUT3 = "Success! Inserted {\"20\": \"5\"} to the database";
+        String EXPECTED_OUTPUT4 = "There is no entry with key: \"50\" in the database.\n";
         try {
             app.newConnection("localhost", port);
             app.handleCommand("initTransaction");
@@ -174,7 +175,8 @@ public class CLITest extends TestCase{
             String output = testOut.toString();
             assertTrue(output.contains(EXPECTED_OUTPUT1));
             assertTrue(output.contains(EXPECTED_OUTPUT2));
-            assertTrue(output.contains(EXPECTED_OUTPUT2));
+            assertTrue(output.contains(EXPECTED_OUTPUT3));
+            assertTrue(output.contains(EXPECTED_OUTPUT4));
             assertFalse(app.currentlyInTransaction());
         } catch(Exception e) {
             ex = e;
