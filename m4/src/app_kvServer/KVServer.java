@@ -298,6 +298,7 @@ public class KVServer extends Thread implements IKVServer {
 	}
 
 	public Message handleOperations(ArrayList<Message> operations){
+		logger.info("handle transaction of size " + operations.size());
 		zkWatcher.setOperations(operations);
 		try{
 			this.zkWatcher.commitedSignal = new CountDownLatch(1);
