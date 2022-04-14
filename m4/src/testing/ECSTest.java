@@ -439,4 +439,50 @@ public class ECSTest extends TestCase {
 
         assertNull(ex);
     }
+
+    /**
+     * If transaction contains an existing key, and it fails, the key should be rolled back to it's old value
+     */
+    public void testTransactionRollbackWithExistingKey() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            KVMessage response = kvClient.put("existing", "oldvalue");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+
+            operations.add(new Message("existing", "newvalue", KVMessage.StatusType.PUT));
+
+            // add key too long
+            operations.add(new Message("quwbfjkqwbfqwbmkdjkqwbdjkqwbdjqbwdkqbwkdbqjwd", "value", KVMessage.StatusType.PUT));
+
+            // commit transaction
+            response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_FAILURE, response.getStatus());
+
+            // check that key has been rolled back
+            response = kvClient.get("existing");
+            assertEquals("oldvalue", response.getValue());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
 }
