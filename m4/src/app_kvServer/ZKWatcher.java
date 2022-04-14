@@ -110,7 +110,7 @@ public class ZKWatcher implements Watcher {
                 if(path.startsWith(OPERATIONS_PATH)){
                     if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
                         logger.info("Received replies to operations at ZkWatcher");
-                        transactionReplys = getReplys();
+                        transactionReplys = getReplies();
                         logger.info(transactionReplys.getStatus().toString());
                         commitedSignal.countDown();
                     }
@@ -129,9 +129,10 @@ public class ZKWatcher implements Watcher {
     public void setData() {
         try {
             logger.info("SENDING ACK to ECS");
+            KVAdminMessage msg = new KVAdminMessage(OperationType.ACK);
             String path = ACK_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);
-            zooKeeper.setData(path, new byte[stat.getVersion()], stat.getVersion());
+            zooKeeper.setData(path, serializeData(msg), stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");
         }
@@ -163,7 +164,7 @@ public class ZKWatcher implements Watcher {
 
     public void setPutData(OperationType operationType){
         try {
-            KVAdminMessage data = new KVAdminMessage(null, null, operationType);
+            KVAdminMessage data = new KVAdminMessage(operationType);
             byte[] dataBytes = serializeData(data);
             String path = ACK_PATH + "/" + nodeName;
 
@@ -176,7 +177,7 @@ public class ZKWatcher implements Watcher {
         }
     }
     
-    public Message getReplys() {
+    public Message getReplies() {
         try {
             String path = OPERATIONS_PATH + "/" + nodeName;
             Stat stat = zooKeeper.exists(path, false);

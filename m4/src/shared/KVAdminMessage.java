@@ -36,7 +36,8 @@ public class KVAdminMessage implements Serializable {
         PUT_SUCCESS,
         GET_FAILED,
         GET_SUCCESS,
-        SEND_OPERATIONS
+        SEND_OPERATIONS,
+        ACK
     }
 
     public KVAdminMessage(TreeMap<String, ECSNode> metadata, OperationType status) {
@@ -47,6 +48,10 @@ public class KVAdminMessage implements Serializable {
     public KVAdminMessage(String key, String value, OperationType status) {
         this.key = key;
         this.value = value;
+        this.status = status;
+    }
+
+    public KVAdminMessage(OperationType status) {
         this.status = status;
     }
 

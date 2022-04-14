@@ -134,7 +134,7 @@ public class ZKWatcher implements Watcher {
             else if (EventType.NodeDataChanged == eventType) {
                 KVAdminMessage data = getData(path);
                 if (data == null) {
-                    logger.error("null data");
+
                 }
                 if (path.startsWith(OPERATIONS_PATH)){
                     switch (data.getOperationType()) {
