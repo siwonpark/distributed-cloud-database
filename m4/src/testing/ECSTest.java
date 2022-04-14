@@ -8,6 +8,7 @@ import java.util.*;
 import shared.HashUtils;
 import shared.MetadataUtils;
 import shared.messages.KVMessage;
+import shared.messages.Message;
 
 import static testing.AllTests.*;
 
@@ -286,6 +287,51 @@ public class ECSTest extends TestCase {
             ecs.unlockWrite(node.getNodeName());
             response = kvClient.put("lock", "lock");
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
+
+    /**
+     * To keep transactions atomic we test that we lock the participating servers appropriately
+     */
+    public void testTransactionAtomicLock() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // start another kv client
+            KVStore kvClient2 = new KVStore("localhost", node.getNodePort());
+            kvClient2.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            for (int i = 0; i < 25; i++) {
+                operations.add(new Message(Integer.toString(i), Integer.toString(i), KVMessage.StatusType.PUT));
+            }
+
+            // commit large transaction
+            kvClient.commit(operations);
+
+            // try adding key with other client should get write lock
+            KVMessage response = kvClient2.put("checkLock", "checkLock");
+            assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
         } catch (Exception e) {
             ex = e;
         }
