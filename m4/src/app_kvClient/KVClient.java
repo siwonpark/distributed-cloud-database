@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 import static shared.LogUtils.setLevel;
 import static shared.PrintUtils.*;
-
+import static shared.messages.KVMessage.StatusType.COMMIT_SUCCESS;
 
 
 public class KVClient implements IKVClient, ClientSocketListener {
@@ -155,7 +155,11 @@ public class KVClient implements IKVClient, ClientSocketListener {
             if (kvStore != null && kvStore.isRunning()) {
                 try {
                     KVMessage response = kvStore.commit(this.currTransaction);
-                    printResponseToUser(response);
+                    if(response.getStatus() == COMMIT_SUCCESS){
+                        printCommitSuccessToUser(response.getOperations());
+                    } else{
+                        printError("Unable to commit transaction!");
+                    }
                 } catch (Exception e) {
                     String errMsg = String.format("Unable to commit transaction of size %s! ",
                             this.currTransaction.size()) + e;

@@ -2,6 +2,9 @@ package shared;
 
 import shared.messages.KVMessage;
 import shared.messages.KVMessage.StatusType;
+import shared.messages.Message;
+
+import java.util.ArrayList;
 
 public class PrintUtils {
 
@@ -121,6 +124,17 @@ public class PrintUtils {
     public static void printPossibleLogLevels() {
         System.out.println("Possible log levels are:");
         System.out.println("ALL | DEBUG | INFO | WARN | ERROR | FATAL | OFF");
+    }
+
+    /**
+     * Print the result of a transaction success to the user command line
+     * @param operationResponses The responses for each operation in the commit
+     */
+    public static void printCommitSuccessToUser(ArrayList<Message> operationResponses){
+        for(Message response: operationResponses) {
+            printResponseToUser(response);
+        }
+        printSuccess("Commit Successful!");
     }
 
     /**
