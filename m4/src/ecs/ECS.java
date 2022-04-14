@@ -348,6 +348,11 @@ public class ECS {
             logger.error("put failed");
             throw new Exception("put failed");
         }
+
+        if (zkWatcher.operationType == OperationType.PUT_FAILED) {
+            throw new Exception("put failed");
+        }
+
         return zkWatcher.operationType;
     }
 

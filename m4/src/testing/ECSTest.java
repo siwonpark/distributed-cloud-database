@@ -335,6 +335,7 @@ public class ECSTest extends TestCase {
             Thread clientThread = new Thread(paralleledClient);
             clientThread.start();
 
+            // let thread start the transaction process
             sleep(100);
 
             // try adding key with other client should get write lock
@@ -351,7 +352,7 @@ public class ECSTest extends TestCase {
     }
 
     /**
-     * Test that transactions
+     * Test that server is unlocked after transaction and ready to accept more requests
      */
     public void testTransactionUnlockedAfter() {
         Exception ex = null;
