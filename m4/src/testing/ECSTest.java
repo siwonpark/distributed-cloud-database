@@ -485,4 +485,54 @@ public class ECSTest extends TestCase {
 
         assertNull(ex);
     }
+
+    /**
+     * General test to see that all operations are returned with the right statuscode
+     */
+    public void testTransactionResponse() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            operations.add(new Message("key1", "value1", KVMessage.StatusType.PUT));
+            operations.add(new Message("key1", null, KVMessage.StatusType.GET));
+            operations.add(new Message("key2", "value1", KVMessage.StatusType.PUT));
+            operations.add(new Message("key2", "value2", KVMessage.StatusType.PUT));
+            operations.add(new Message("key2", null, KVMessage.StatusType.GET));
+            operations.add(new Message("key3", null, KVMessage.StatusType.GET));
+
+            // commit transaction
+            KVMessage response = kvClient.commit(operations);
+            assertEquals(KVMessage.StatusType.COMMIT_SUCCESS, response.getStatus());
+
+            // check response
+            assertEquals(6, response.getOperations().size());
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getOperations().get(0).getStatus());
+            assertEquals("value1", response.getOperations().get(1).getValue());
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getOperations().get(2).getStatus());
+            assertEquals(KVMessage.StatusType.PUT_UPDATE, response.getOperations().get(3).getStatus());
+            assertEquals("value2", response.getOperations().get(4).getValue());
+            assertEquals("null", response.getOperations().get(5).getValue());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
 }
