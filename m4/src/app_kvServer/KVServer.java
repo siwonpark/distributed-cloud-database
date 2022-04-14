@@ -303,6 +303,7 @@ public class KVServer extends Thread implements IKVServer {
 		try{
 			this.zkWatcher.commitedSignal = new CountDownLatch(1);
 			this.zkWatcher.commitedSignal.await();
+			this.zkWatcher.setData();
 			return zkWatcher.transactionReplys;
 		} catch(Exception e){
 			logger.error(e);

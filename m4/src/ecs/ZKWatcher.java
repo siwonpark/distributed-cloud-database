@@ -217,7 +217,8 @@ public class ZKWatcher implements Watcher {
         try {
             byte[] dataBytes = serializeData(replies);
             String path = OPERATIONS_PATH + "/" + nodeName;
-            zooKeeper.setData(path, dataBytes, -1);
+            Stat stat = zooKeeper.exists(path, false);
+            zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set operations for ecs");
         }
