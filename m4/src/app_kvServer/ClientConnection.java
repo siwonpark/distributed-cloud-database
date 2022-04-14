@@ -96,13 +96,6 @@ public class ClientConnection implements Runnable {
 	 * @throws IOException
 	 */
 	public void handleRequest(Message message) throws IOException {
-		if (message.getStatus() == StatusType.COMMIT_TRANSACTION) {
-			ArrayList<Message> operations = message.getOperations();
-			Message replys2operations = server.handleOperations(operations);
-			logger.info("get the message from ecs and send it to client");
-			sendMessage(replys2operations);
-			return;
-		}
 		StatusType responseStatus;
 		String key = message.getKey();
 		String value = message.getValue();
@@ -138,8 +131,15 @@ public class ClientConnection implements Runnable {
 					value.length(), MAX_VALUE_BYTES);
 			sendFailure(errorMsg);
 			return;
-		} 
+		}
 
+		if (message.getStatus() == StatusType.COMMIT_TRANSACTION) {
+			ArrayList<Message> operations = message.getOperations();
+			Message replys2operations = server.handleOperations(operations);
+			logger.info("get the message from ecs and send it to client");
+			sendMessage(replys2operations);
+			return;
+		}
 
 		switch(message.getStatus()) {
 			case GET:
