@@ -138,19 +138,6 @@ public class ZKWatcher implements Watcher {
                 }
                 if (path.startsWith(OPERATIONS_PATH)){
                     switch (data.getOperationType()) {
-                        case GET_FAILED:
-                        case GET_SUCCESS:
-                            logger.info("Received get from znode " + path);
-                            this.value = data.getValue();
-                            awaitSignal.countDown();
-                            break;
-                        case PUT_SUCCESS:
-                        case PUT_FAILED:
-                        case PUT_UPDATE:
-                            logger.info("Received put from znode " + path);
-                            this.operationType = data.getOperationType();
-                            awaitSignal.countDown();
-                            break;
                         case SEND_OPERATIONS:
                             final ArrayList<Message> operations = data.getOperations();
                             final String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
@@ -166,6 +153,21 @@ public class ZKWatcher implements Watcher {
                     }
                 }else{
                     logger.info("Received acknowledgement from znode " + path);
+                    switch (data.getOperationType()) {
+                        case GET_FAILED:
+                        case GET_SUCCESS:
+                            logger.info("Received get from znode " + path);
+                            this.value = data.getValue();
+                            break;
+                        case PUT_SUCCESS:
+                        case PUT_FAILED:
+                        case PUT_UPDATE:
+                            logger.info("Received put from znode " + path);
+                            this.operationType = data.getOperationType();
+                            break;
+                        default:
+                            logger.info("Triggered status: " + data.getOperationType());
+                    }
                     awaitSignal.countDown();
                 }
             }

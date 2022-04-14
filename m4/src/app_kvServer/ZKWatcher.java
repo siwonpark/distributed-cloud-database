@@ -151,7 +151,7 @@ public class ZKWatcher implements Watcher {
         try {
             KVAdminMessage data = new KVAdminMessage(null, value, operationType);
             byte[] dataBytes = serializeData(data);
-            String path = OPERATIONS_PATH + "/" + nodeName;
+            String path = ACK_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
             watchOperations();
@@ -166,7 +166,7 @@ public class ZKWatcher implements Watcher {
         try {
             KVAdminMessage data = new KVAdminMessage(operationType);
             byte[] dataBytes = serializeData(data);
-            String path = OPERATIONS_PATH + "/" + nodeName;
+            String path = ACK_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
             watchOperations();
