@@ -339,4 +339,45 @@ public class ECSTest extends TestCase {
 
         assertNull(ex);
     }
+
+    /**
+     * Test that transactions
+     */
+    public void testTransactionUnlockedAfter() {
+        Exception ex = null;
+
+        // start with no nodes
+        ecs.shutdown();
+
+        // add node
+        ECSNode node = (ECSNode) ecs.addNode(CACHE_STRATEGY, CACHE_SIZE);
+
+        // start server
+        ecs.start();
+
+        try {
+            // start kv client
+            KVStore kvClient = new KVStore("localhost", node.getNodePort());
+            kvClient.connect();
+
+            // define transaction
+            ArrayList<Message> operations = new ArrayList<>();
+
+            for (int i = 0; i < 10; i++) {
+                operations.add(new Message(Integer.toString(i), Integer.toString(i), KVMessage.StatusType.PUT));
+            }
+
+            // commit large transaction
+            kvClient.commit(operations);
+
+            // try adding key with other client should get write lock
+            KVMessage response = kvClient.put("checkLock2", "checkLock2");
+            assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+        } catch (Exception e) {
+            ex = e;
+        }
+
+
+        assertNull(ex);
+    }
 }
