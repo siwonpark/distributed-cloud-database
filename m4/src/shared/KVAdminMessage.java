@@ -26,8 +26,11 @@ public class KVAdminMessage implements Serializable {
         COMMIT_SUCCESS,
         COMMIT_FAILED,
         PUT,
+        PUT_UPDATE,
+        PUT_FAILED,
         GET,
         PUT_SUCCESS,
+        GET_FAILED,
         GET_SUCCESS
     }
 
@@ -42,7 +45,7 @@ public class KVAdminMessage implements Serializable {
         this.status = status;
     }
 
-  public void setKeyStart(String keyStart) {
+    public void setKeyStart(String keyStart) {
         this.keyStart = keyStart;
     }
 
@@ -59,22 +62,22 @@ public class KVAdminMessage implements Serializable {
     }
 
     public String[] getMoveRange() {
-        return new String[] {this.keyStart, this.keyEnd};
+        return new String[]{this.keyStart, this.keyEnd};
     }
 
-    public OperationType getOperationType(){
+    public OperationType getOperationType() {
         return this.status;
     }
 
-    public String getKey(){
+    public String getKey() {
         return this.key;
     }
 
-    public String getValue(){
+    public String getValue() {
         return this.value;
     }
 
-    public TreeMap<String, ECSNode> getMetadata(){
+    public TreeMap<String, ECSNode> getMetadata() {
         return this.metadata;
     }
 }

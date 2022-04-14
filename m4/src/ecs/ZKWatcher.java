@@ -5,6 +5,7 @@ import org.apache.zookeeper.*;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.data.Stat;
+import shared.PrintUtils;
 import shared.messages.Message;
 import shared.KVAdminMessage;
 import shared.KVAdminMessage.OperationType;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
 public class ZKWatcher implements Watcher {
+    private ECS ecs;
     private ZooKeeper zooKeeper;
     private Logger logger = Logger.getRootLogger();
     static String ROOT_PATH = "/ecs";
@@ -31,6 +33,11 @@ public class ZKWatcher implements Watcher {
 
     // use this to pass value from server when ecs calls get
     public String value;
+    public OperationType operationType;
+
+    public ZKWatcher(ECS ecs) {
+        this.ecs = ecs;
+    }
 
     public ZooKeeper connect() {
         try {
@@ -143,17 +150,34 @@ public class ZKWatcher implements Watcher {
                          * if success the StatusType should be StatusType.COMMIT_SUCCESS 
                          *      each Message in a ArrayList should be new by "public Message(String key, String value, StatusType status)" and corresponds to the element in the opertaions arraylist
                         */
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ecs.handleOperations(nodeName, operations);
+                                System.out.print(PrintUtils.ECS_PROMPT);
+                            }
+                        }).start();
                     }else{
                         logger.info("Received acknowledgement from znode " + path);
                         awaitSignal.countDown();
                     }
                 } else {
-                    if(data.getOperationType() == OperationType.GET_SUCCESS){
-                        logger.info("Received get success from znode " + path);
-                        this.value = data.getValue();
-                        awaitSignal.countDown();
-                    }else{
-                        logger.error("contained a status wrong to the ecs " + path);
+                    switch (data.getOperationType()) {
+                        case GET_FAILED:
+                        case GET_SUCCESS:
+                            logger.info("Received get from znode " + path);
+                            this.value = data.getValue();
+                            awaitSignal.countDown();
+                            break;
+                        case PUT_SUCCESS:
+                        case PUT_FAILED:
+                        case PUT_UPDATE:
+                            logger.info("Received put from znode " + path);
+                            this.operationType = data.getOperationType();
+                            awaitSignal.countDown();
+                            break;
+                        default:
+                            logger.error("contained a status wrong to the ecs " + path);
                     }
                 }
             }

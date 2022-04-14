@@ -3,11 +3,13 @@ package app_kvServer;
 
 import ecs.ECSNode;
 
+import org.apache.zookeeper.Op;
 import persistence.DataBase;
 
 import logger.LogSetup;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import shared.KVAdminMessage.OperationType;
 import shared.MetadataUtils;
 import shared.communication.CommModule;
 
@@ -212,19 +214,22 @@ public class KVServer extends Thread implements IKVServer {
 
 	public void putKVbyECS(String key, String value) {
 		try{
+			OperationType responseStatus = inStorage(key) ? OperationType.PUT_UPDATE : OperationType.PUT_SUCCESS;
 			putKV(key, value);
-			zkWatcher.setData();
+			zkWatcher.setPutData(responseStatus);
 		} catch (Exception e){
-			logger.error("putKVbyECS failed, do nothing and don't send any ack back");
+			logger.error("putKVbyECS failed, inform ecs of failure");
+			zkWatcher.setPutData(OperationType.PUT_FAILED);
 		}
 	}
 
 	public void getKVbyECS(String key) {
 		try{
 			String value = getKV(key);
-			zkWatcher.setGetData(value);
+			zkWatcher.setGetData(value, OperationType.GET_SUCCESS);
 		} catch (Exception e){
-			logger.error("getKVbyECS failed, do nothing and don't send any ack back");
+			logger.error("getKVbyECS failed, inform ecs of failure");
+			zkWatcher.setGetData(null, OperationType.GET_FAILED);
 		}
 	}
 

@@ -7,6 +7,7 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.data.Stat;
 import shared.KVAdminMessage;
 import shared.KVAdminMessage.OperationType;
+import shared.messages.KVMessage;
 import shared.messages.Message;
 
 import java.io.*;
@@ -144,18 +145,30 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-    public void setGetData(String value){
+    public void setGetData(String value, OperationType operationType){
         try {
-            KVAdminMessage data = new KVAdminMessage(null, value, OperationType.GET_SUCCESS);
+            KVAdminMessage data = new KVAdminMessage(null, value, operationType);
             byte[] dataBytes = serializeData(data);
             String path = ACK_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            if (stat == null) {
-                stat = zooKeeper.exists(path, false);
-            }
             watchNode(nodeName);
             
+            zooKeeper.setData(path, dataBytes, stat.getVersion());
+        } catch (Exception e) {
+            logger.error("Failed to set data for znode");
+        }
+    }
+
+    public void setPutData(OperationType operationType){
+        try {
+            KVAdminMessage data = new KVAdminMessage(null, null, operationType);
+            byte[] dataBytes = serializeData(data);
+            String path = ACK_PATH + "/" + nodeName;
+
+            Stat stat = zooKeeper.exists(path, false);
+            watchNode(nodeName);
+
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
             logger.error("Failed to set data for znode");

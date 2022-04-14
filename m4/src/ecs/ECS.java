@@ -1,11 +1,18 @@
 package ecs;
 
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.Op;
+import org.apache.zookeeper.data.Stat;
 import shared.MetadataUtils;
 import shared.KVAdminMessage;
+import shared.KVAdminMessage.OperationType;
+import shared.messages.KVMessage;
+import shared.messages.KVMessage.StatusType;
+import shared.messages.Message;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.sql.Array;
 import java.util.*;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -188,6 +195,91 @@ public class ECS {
         }
     }
 
+    public boolean handleOperations(String initialNodeName, ArrayList<Message> operations) {
+        logger.info("Start processing transaction");
+        ArrayList<Message> replies = new ArrayList<>();
+        ArrayList<Message> rollbackMessages = new ArrayList<>();
+        StatusType commitStatus = StatusType.COMMIT_SUCCESS;
+
+        logger.info("Locking writes for all participating servers");
+        for (Message operation : operations) {
+            ECSNode responsibleServer =
+                    MetadataUtils.getResponsibleServerForKey(operation.getKey(), hashRing);
+
+            if (responsibleServer == null || lockWrite(responsibleServer)) {
+                logger.error("Failed to lock participating server");
+                return false;
+            }
+        }
+
+        for (Message operation : operations) {
+            logger.info("Processing operation");
+            Message reply;
+
+            try {
+                if (operation.getStatus() == StatusType.GET) {
+                    String value = get(operation.getKey());
+                    reply = new Message(operation.getKey(), value, StatusType.GET_SUCCESS);
+                } else {
+                    // get previous value
+                    String value = get(operation.getKey());
+                    rollbackMessages.add(new Message(operation.getKey(), value, StatusType.PUT));
+
+                    OperationType operationType = put(operation.getKey(), operation.getValue());
+                    StatusType statusType = operationType == OperationType.PUT_SUCCESS ? StatusType.PUT_SUCCESS : StatusType.PUT_UPDATE;
+                    reply = new Message(
+                            operation.getKey(),
+                            operation.getValue(),
+                            statusType);
+                }
+                replies.add(reply);
+            } catch (Exception e) {
+                logger.error("Error processing operation");
+                commitStatus = StatusType.COMMIT_FAILURE;
+
+                StatusType statusType = operation.getStatus() == StatusType.GET ? StatusType.GET_ERROR : StatusType.PUT_ERROR;
+                reply = new Message(operation.getKey(), operation.getValue(), statusType);
+                replies.add(reply);
+
+                // process rollback
+                for (Message rollbackMessage: rollbackMessages) {
+                    logger.info("Rolling back key " + rollbackMessage.getKey() + "to value " + rollbackMessage.getValue());
+                    try {
+                        put(rollbackMessage.getKey(), rollbackMessage.getValue());
+                    } catch (Exception e2) {
+                        logger.error("rollback failed for key " + rollbackMessage.getKey());
+                    }
+                }
+
+                break;
+            }
+
+        }
+
+        // once all operations are done unlock nodes
+        logger.info("Unlocking writes for all participating servers");
+        for (Message operation : operations) {
+            ECSNode responsibleServer =
+                    MetadataUtils.getResponsibleServerForKey(operation.getKey(), hashRing);
+
+            if (responsibleServer == null || unlockWrite(responsibleServer)) {
+                logger.error("Failed to unlock participating server");
+                return false;
+            }
+        }
+
+        Message allReplies = new Message(replies, commitStatus);
+
+        zkWatcher.setReplys(initialNodeName, allReplies);
+
+        if (!awaitNodes(1, 10000)) {
+            logger.error("Node was not responsive to lock write");
+            return false;
+        }
+
+        return true;
+    }
+
     public boolean moveData(ECSNode fromNode, ECSNode toNode, String keyStart, String keyEnd) {
         if (!lockWrite(fromNode)) {
             return false;
@@ -236,23 +328,31 @@ public class ECS {
         return true;
     }
 
-    public boolean put(ECSNode node, String key, String value) {
-        logger.info("PUT " + key + " : " + value + " in " + node.getNodeName());
-        KVAdminMessage data = new KVAdminMessage(key, value, KVAdminMessage.OperationType.PUT);
-        zkWatcher.setData(node.getNodeName(), data);
+    public OperationType put(String key, String value) throws Exception {
+        ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, hashRing);
+        if (responsibleServer == null) {
+            throw new Exception("no server");
+        }
+        logger.info("PUT " + key + " : " + value + " in " + responsibleServer.getNodeName());
+
+        KVAdminMessage data = new KVAdminMessage(key, value, OperationType.PUT);
+        zkWatcher.setData(responsibleServer.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
             logger.error("put failed");
-            return false;
+            throw new Exception("put failed");
         }
-
-        return true;
+        return zkWatcher.operationType;
     }
 
-    public String get(ECSNode node, String key) throws Exception{
-        logger.info("GET " + key + " from " + node.getNodeName());
-        KVAdminMessage data = new KVAdminMessage(key, null, KVAdminMessage.OperationType.GET);
-        zkWatcher.setData(node.getNodeName(), data);
+    public String get(String key) throws Exception {
+        ECSNode responsibleServer = MetadataUtils.getResponsibleServerForKey(key, hashRing);
+        if (responsibleServer == null) {
+            throw new Exception("no server");
+        }
+        logger.info("GET " + key + " from " + responsibleServer.getNodeName());
+        KVAdminMessage data = new KVAdminMessage(key, null, OperationType.GET);
+        zkWatcher.setData(responsibleServer.getNodeName(), data);
 
         if (!awaitNodes(1, 10000)) {
             logger.error("Node was not responsive to unlock write");
@@ -274,7 +374,7 @@ public class ECS {
     /**
      * Wait for all nodes to report status or until timeout expires
      *
-     * @param count number of nodes to wait for
+     * @param count   number of nodes to wait for
      * @param timeout the timeout in milliseconds
      * @return true if all nodes reported successfully, false otherwise
      */
@@ -434,7 +534,7 @@ public class ECS {
 
     private void startZKWatcher() {
         // Connect with Zookeeper watcher client
-        zkWatcher = new ZKWatcher();
+        zkWatcher = new ZKWatcher(this);
         zkWatcher.connect();
 
         // create root node
@@ -445,7 +545,7 @@ public class ECS {
 
         // Create operations node
         zkWatcher.create(ZKWatcher.OPERATIONS_PATH);
-        
+
         // Create metadata node
         zkWatcher.create(ZKWatcher.COMMAND_PATH + "/metadata");
 
