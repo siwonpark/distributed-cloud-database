@@ -133,43 +133,38 @@ public class ZKWatcher implements Watcher {
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
                 KVAdminMessage data = getData(path);
+                String[] pathParts = path.split("/");
+                final String nodeName = pathParts[pathParts.length - 1];
                 if (data == null) {
                     logger.error("null data");
                 }
-                if (path.startsWith(OPERATIONS_PATH)){
-                    switch (data.getOperationType()) {
-                        case SEND_OPERATIONS:
-                            final ArrayList<Message> operations = data.getOperations();
-                            final String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ecs.handleOperations(nodeName, operations);
-                                    System.out.print(PrintUtils.ECS_PROMPT);
-                                }
-                            }).start();
-                        default:
-                            logger.info("Triggered status: " + data.getOperationType());
-                    }
-                }else{
-                    logger.info("Received acknowledgement from znode " + path);
-                    switch (data.getOperationType()) {
-                        case GET_FAILED:
-                        case GET_SUCCESS:
-                            logger.info("Received get from znode " + path);
-                            this.value = data.getValue();
-                            break;
-                        case PUT_SUCCESS:
-                        case PUT_FAILED:
-                        case PUT_UPDATE:
-                            logger.info("Received put from znode " + path);
-                            this.operationType = data.getOperationType();
-                            break;
-                        default:
-                            logger.info("Triggered status: " + data.getOperationType());
-                    }
-                    awaitSignal.countDown();
+                logger.info("Received acknowledgement from znode " + path);
+                switch (data.getOperationType()) {
+                    case GET_FAILED:
+                    case GET_SUCCESS:
+                        logger.info("Received get from znode " + path);
+                        this.value = data.getValue();
+                        break;
+                    case PUT_SUCCESS:
+                    case PUT_FAILED:
+                    case PUT_UPDATE:
+                        logger.info("Received put from znode " + path);
+                        this.operationType = data.getOperationType();
+                        break;
+                    case SEND_OPERATIONS:
+                        final ArrayList<Message> operations = data.getOperations();
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ecs.handleOperations(nodeName, operations);
+                                System.out.print(PrintUtils.ECS_PROMPT);
+                            }
+                        }).start();
+                    default:
+                        logger.info("Triggered status: " + data.getOperationType());
                 }
+                awaitSignal.countDown();
+                watchNode(nodeName);
             }
             // Delete node
             else if (EventType.NodeDeleted == eventType) {

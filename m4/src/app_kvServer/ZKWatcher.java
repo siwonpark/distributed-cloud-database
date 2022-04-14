@@ -222,7 +222,7 @@ public class ZKWatcher implements Watcher {
             KVAdminMessage message = new KVAdminMessage(null, null, OperationType.SEND_OPERATIONS);
             message.setOperations(operations);
             byte[] dataBytes = serializeData(message);
-            String path = OPERATIONS_PATH + "/" + nodeName;
+            String path = ACK_PATH + "/" + nodeName;
             
             Stat stat = zooKeeper.exists(path, false);
 
