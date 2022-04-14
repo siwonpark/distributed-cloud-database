@@ -337,6 +337,8 @@ public class ECSTest extends TestCase {
             // try adding key with other client should get write lock
             KVMessage response = kvClient2.put("checkLock", "checkLock");
             assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
+
+            clientThread.join();
         } catch (Exception e) {
             ex = e;
         }
