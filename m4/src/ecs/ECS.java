@@ -215,7 +215,7 @@ public class ECS {
             ECSNode responsibleServer =
                     MetadataUtils.getResponsibleServerForKey(operation.getKey(), hashRing);
 
-            if (responsibleServer == null || lockWrite(responsibleServer)) {
+            if (responsibleServer == null || !lockWrite(responsibleServer)) {
                 logger.error("Failed to lock participating server");
                 return false;
             }
