@@ -335,7 +335,7 @@ public class ECSTest extends TestCase {
             Thread clientThread = new Thread(paralleledClient);
             clientThread.start();
 
-            sleep(50);
+            sleep(100);
 
             // try adding key with other client should get write lock
             KVMessage response = kvClient2.put("checkLock", "checkLock");
