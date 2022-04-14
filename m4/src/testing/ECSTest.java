@@ -343,6 +343,9 @@ public class ECSTest extends TestCase {
             assertEquals(KVMessage.StatusType.SERVER_WRITE_LOCK, response.getStatus());
 
             clientThread.join();
+
+            kvClient.disconnect();
+            kvClient2.disconnect();
         } catch (Exception e) {
             ex = e;
         }
@@ -385,6 +388,8 @@ public class ECSTest extends TestCase {
             // try adding key with other client should get write lock
             response = kvClient.put("checkLock2", "checkLock2");
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getStatus());
+
+            kvClient.disconnect();
         } catch (Exception e) {
             ex = e;
         }
@@ -432,6 +437,8 @@ public class ECSTest extends TestCase {
             // check that key has been rolled back
             response = kvClient.get("new");
             assertEquals(KVMessage.StatusType.GET_ERROR, response.getStatus());
+
+            kvClient.disconnect();
         } catch (Exception e) {
             ex = e;
         }
@@ -478,6 +485,8 @@ public class ECSTest extends TestCase {
             // check that key has been rolled back
             response = kvClient.get("existing");
             assertEquals("oldvalue", response.getValue());
+
+            kvClient.disconnect();
         } catch (Exception e) {
             ex = e;
         }
@@ -528,6 +537,8 @@ public class ECSTest extends TestCase {
             assertEquals(KVMessage.StatusType.PUT_UPDATE, response.getOperations().get(3).getStatus());
             assertEquals("value2", response.getOperations().get(4).getValue());
             assertNull(response.getOperations().get(5).getValue());
+
+            kvClient.disconnect();
         } catch (Exception e) {
             ex = e;
         }
