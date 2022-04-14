@@ -305,7 +305,7 @@ public class KVServer extends Thread implements IKVServer {
 			return zkWatcher.transactionReplys;
 		} catch(Exception e){
 			logger.error(e);
-			return new Message(new ArrayList<>(), StatusType.COMMIT_FAILURE);
+			return new Message(new ArrayList<Message>(), StatusType.COMMIT_FAILURE);
 		}
 	}
 

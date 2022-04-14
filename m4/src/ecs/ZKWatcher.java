@@ -135,8 +135,8 @@ public class ZKWatcher implements Watcher {
                 KVAdminMessage data = getData(path);
                 if(data == null){
                     if(path.startsWith(OPERATIONS_PATH)){
-                        ArrayList<Message> operations = getOperations(path);
-                        String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
+                        final ArrayList<Message> operations = getOperations(path);
+                        final String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
                         // TODO handle operations
 
                         /**
