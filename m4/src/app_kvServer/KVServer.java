@@ -216,6 +216,16 @@ public class KVServer extends Thread implements IKVServer {
 		try{
 			OperationType responseStatus = inStorage(key) ? OperationType.PUT_UPDATE : OperationType.PUT_SUCCESS;
 			value = Objects.equals(value, DELETE_STRING) ? null : value;
+			if (key != null && key.length() > ClientConnection.MAX_KEY_BYTES) {
+				String errorMsg = String.format("Key of length %s exceeds max key length (%s Bytes)",
+						key.length(), ClientConnection.MAX_KEY_BYTES);
+				throw new Exception(errorMsg);
+			} else if (value != null && value.length() > ClientConnection.MAX_VALUE_BYTES){
+				String errorMsg = String.format("Value of length %s exceeds max key length (%s Bytes)",
+						value.length(), ClientConnection.MAX_VALUE_BYTES);
+				throw new Exception(errorMsg);
+			}
+
 			putKV(key, value);
 			zkWatcher.setPutData(responseStatus);
 		} catch (Exception e){
