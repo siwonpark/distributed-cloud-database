@@ -231,14 +231,15 @@ public class ECS {
                 } else {
                     // get previous value
                     String value = get(operation.getKey());
-                    rollbackMessages.add(new Message(operation.getKey(), value, StatusType.PUT));
-
                     OperationType operationType = put(operation.getKey(), operation.getValue());
                     StatusType statusType = operationType == OperationType.PUT_SUCCESS ? StatusType.PUT_SUCCESS : StatusType.PUT_UPDATE;
                     reply = new Message(
                             operation.getKey(),
                             operation.getValue(),
                             statusType);
+
+                    // add to rollback messages if call succeed
+                    rollbackMessages.add(new Message(operation.getKey(), value, StatusType.PUT));
                 }
                 replies.add(reply);
             } catch (Exception e) {
