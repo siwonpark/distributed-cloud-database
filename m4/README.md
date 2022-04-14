@@ -115,6 +115,10 @@ Success! Retrieved value "b" from the database.
 
 As we can see, the values are as expected when considering the transaction as an atomic operation.
 
+## Testing
+
+Running `ant test` from the `/m4` directory will run our full suite of tests, 
+which includes the new tests we added in M4, and the tests from previous milestones.
 
 
 ## Help
