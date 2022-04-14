@@ -5,6 +5,7 @@ import shared.messages.KVMessage.StatusType;
 import shared.messages.Message;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class PrintUtils {
 
@@ -151,7 +152,11 @@ public class PrintUtils {
                 printFailedResponseToUser(key);
                 break;
             case PUT_SUCCESS:
-                printSuccess(String.format("Inserted {\"%s\": \"%s\"} to the database.", key, value));
+                if(Objects.equals(value, DELETE_STRING) || value == null){
+                    printSuccess("Deleted key \"" + key + "\" from the database.");
+                } else {
+                    printSuccess(String.format("Inserted {\"%s\": \"%s\"} to the database.", key, value));
+                }
                 break;
             case DELETE_SUCCESS:
                 printSuccess("Deleted key \"" + key + "\" from the database.");

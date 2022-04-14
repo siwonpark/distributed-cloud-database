@@ -215,8 +215,8 @@ public class KVServer extends Thread implements IKVServer {
 	public void putKVbyECS(String key, String value) {
 		try{
 			OperationType responseStatus = inStorage(key) ? OperationType.PUT_UPDATE : OperationType.PUT_SUCCESS;
-			String valueToPut = Objects.equals(value, DELETE_STRING) ? null : value;
-			putKV(key, valueToPut);
+			value = Objects.equals(value, DELETE_STRING) ? null : value;
+			putKV(key, value);
 			zkWatcher.setPutData(responseStatus);
 		} catch (Exception e){
 			logger.error("putKVbyECS failed, inform ecs of failure");
