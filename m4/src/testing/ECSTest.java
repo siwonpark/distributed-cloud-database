@@ -527,7 +527,7 @@ public class ECSTest extends TestCase {
             assertEquals(KVMessage.StatusType.PUT_SUCCESS, response.getOperations().get(2).getStatus());
             assertEquals(KVMessage.StatusType.PUT_UPDATE, response.getOperations().get(3).getStatus());
             assertEquals("value2", response.getOperations().get(4).getValue());
-            assertEquals("null", response.getOperations().get(5).getValue());
+            assertNull(response.getOperations().get(5).getValue());
         } catch (Exception e) {
             ex = e;
         }
