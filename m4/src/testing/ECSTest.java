@@ -323,7 +323,7 @@ public class ECSTest extends TestCase {
             // define transaction
             ArrayList<Message> operations = new ArrayList<>();
 
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 50; i++) {
                 operations.add(new Message(Integer.toString(i), Integer.toString(i), KVMessage.StatusType.PUT));
             }
 
