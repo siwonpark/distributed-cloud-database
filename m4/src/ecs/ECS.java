@@ -277,13 +277,13 @@ public class ECS {
             }
         }
 
-        KVAdminMessage allReplies = new KVAdminMessage(null, null, commitStatus);
+        KVAdminMessage allReplies = new KVAdminMessage(commitStatus);
         allReplies.setOperations(replies);
 
         zkWatcher.setReplies(initialNodeName, allReplies);
 
         if (!awaitNodes(1, 10000)) {
-            logger.error("Node was not responsive to unlock write");
+            logger.error("Node was not responsive setReplies");
             return false;
         }
 

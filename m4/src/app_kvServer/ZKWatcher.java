@@ -151,10 +151,10 @@ public class ZKWatcher implements Watcher {
         try {
             KVAdminMessage data = new KVAdminMessage(null, value, operationType);
             byte[] dataBytes = serializeData(data);
-            String path = ACK_PATH + "/" + nodeName;
+            String path = OPERATIONS_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            // watchNode(nodeName);
+            watchOperations();
             
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
@@ -166,10 +166,10 @@ public class ZKWatcher implements Watcher {
         try {
             KVAdminMessage data = new KVAdminMessage(operationType);
             byte[] dataBytes = serializeData(data);
-            String path = ACK_PATH + "/" + nodeName;
+            String path = OPERATIONS_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            // watchNode(nodeName);
+            watchOperations();
 
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
