@@ -174,7 +174,11 @@ public class PrintUtils {
                 printError("There is no entry with key: \"" + key + "\" in the database.");
                 break;
             case PUT_UPDATE:
-                printSuccess(String.format("Updated key \"%s\" with value \"%s\".", key, value));
+                if(Objects.equals(value, DELETE_STRING) || value == null){
+                    printSuccess("Deleted key \"" + key + "\" from the database.");
+                } else {
+                    printSuccess(String.format("Updated key \"%s\" with value \"%s\".", key, value));
+                }
                 break;
             case SERVER_WRITE_LOCK:
                 printError("The server is currently not accepting write requests");
