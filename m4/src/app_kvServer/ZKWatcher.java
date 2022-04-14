@@ -197,26 +197,6 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-//    public byte[] serializeOperations(ArrayList<Message> operations) throws IOException {
-//        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//                ObjectOutputStream out = new ObjectOutputStream(bos)) {
-//            out.writeObject(operations);
-//            out.flush();
-//            return bos.toByteArray();
-//        }
-//    }
-
-//    public Message deserializeReplys(byte[] data) throws IOException, ClassNotFoundException {
-//        if (data.length == 0) {
-//            logger.error("Byte array received from get was empty");
-//            return null;
-//        }
-//        try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
-//                ObjectInputStream in = new ObjectInputStream(bis)) {
-//            return (Message) in.readObject();
-//        }
-//    }
-
     public boolean setOperations(ArrayList<Message> operations) {
         try {
             KVAdminMessage message = new KVAdminMessage(null, null, OperationType.SEND_OPERATIONS);

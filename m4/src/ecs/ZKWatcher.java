@@ -58,26 +58,6 @@ public class ZKWatcher implements Watcher {
         }
     }
 
-//    public byte[] serializeReplys(Message data) throws IOException {
-//        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//                ObjectOutputStream out = new ObjectOutputStream(bos)) {
-//            out.writeObject(data);
-//            out.flush();
-//            return bos.toByteArray();
-//        }
-//    }
-
-//    public ArrayList<Message> deserializeOperations(byte[] data) throws IOException, ClassNotFoundException {
-//        if (data.length == 0) {
-//            logger.error("Byte array received from get was empty");
-//            return null;
-//        }
-//        try( ByteArrayInputStream bis = new ByteArrayInputStream(data);
-//             ObjectInputStream in = new ObjectInputStream(bis)) {
-//            return (ArrayList<Message>) in.readObject();
-//        }
-//    }
-
     public void create(String path) {
         try {
             Stat stat = zooKeeper.exists(path, false);
@@ -89,18 +69,6 @@ public class ZKWatcher implements Watcher {
             logger.error("Failed to create z-node");
         }
     }
-
-//    public ArrayList<Message> getOperations(String path) {
-//        try {
-//            Stat stat = zooKeeper.exists(path, false);
-//            byte[] data = zooKeeper.getData(path, this, stat);
-//            return deserializeOperations(data);
-//        } catch (Exception e) {
-//            logger.error("Failed to get operations");
-//            logger.error(e.getMessage());
-//            return null;
-//        }
-//    }
 
     @Override
     public void process(WatchedEvent event) {
