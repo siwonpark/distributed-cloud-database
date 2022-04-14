@@ -110,7 +110,9 @@ public class ZKWatcher implements Watcher {
             else if (EventType.NodeDataChanged == eventType) {
                 if(path.startsWith(OPERATIONS_PATH)){
                     if(path.equals(OPERATIONS_PATH + "/" + nodeName)){
+                        logger.info("Received replies to operations at ZkWatcher");
                         transactionReplys = getReplys();
+                        logger.info(transactionReplys.getStatus().toString());
                         commitedSignal.countDown();
                     }
                 }else{
@@ -152,7 +154,7 @@ public class ZKWatcher implements Watcher {
             String path = ACK_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            watchNode(nodeName);
+            // watchNode(nodeName);
             
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {
@@ -167,7 +169,7 @@ public class ZKWatcher implements Watcher {
             String path = ACK_PATH + "/" + nodeName;
 
             Stat stat = zooKeeper.exists(path, false);
-            watchNode(nodeName);
+            // watchNode(nodeName);
 
             zooKeeper.setData(path, dataBytes, stat.getVersion());
         } catch (Exception e) {

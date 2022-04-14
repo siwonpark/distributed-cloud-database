@@ -99,6 +99,7 @@ public class ClientConnection implements Runnable {
 		if (message.getStatus() == StatusType.COMMIT_TRANSACTION) {
 			ArrayList<Message> operations = message.getOperations();
 			Message replys2operations = server.handleOperations(operations);
+			logger.info("get the message from ecs and send it to client");
 			sendMessage(replys2operations);
 			return;
 		}
