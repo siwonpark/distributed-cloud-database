@@ -22,8 +22,8 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import static shared.LogUtils.setLevel;
-import static shared.PrintUtils.printError;
-import static shared.PrintUtils.printPossibleLogLevels;
+import static shared.PrintUtils.*;
+
 import shared.messages.Message;
 import shared.messages.KVMessage.StatusType;
 
@@ -215,7 +215,8 @@ public class KVServer extends Thread implements IKVServer {
 	public void putKVbyECS(String key, String value) {
 		try{
 			OperationType responseStatus = inStorage(key) ? OperationType.PUT_UPDATE : OperationType.PUT_SUCCESS;
-			putKV(key, value);
+			String valueToPut = Objects.equals(value, DELETE_STRING) ? null : value;
+			putKV(key, valueToPut);
 			zkWatcher.setPutData(responseStatus);
 		} catch (Exception e){
 			logger.error("putKVbyECS failed, inform ecs of failure");
