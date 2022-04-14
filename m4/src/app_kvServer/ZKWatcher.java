@@ -184,6 +184,7 @@ public class ZKWatcher implements Watcher {
             byte[] data = zooKeeper.getData(path, this, stat);
             // return deserializeReplys(data);
             KVAdminMessage msg = deserializeData(data);
+            logger.info("operationtype from get replies: " + msg.getOperationType());
             return new Message(
                     msg.getOperations(),
                     msg.getOperationType() == OperationType.COMMIT_SUCCESS
