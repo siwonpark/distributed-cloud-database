@@ -208,6 +208,7 @@ public class ECS {
         }
         ArrayList<Message> replies = new ArrayList<>();
         ArrayList<Message> rollbackMessages = new ArrayList<>();
+        HashSet<ECSNode> lockedServers = new HashSet<>();
         OperationType commitStatus = OperationType.COMMIT_SUCCESS;
 
         logger.info("Locking writes for all participating servers");
@@ -215,10 +216,12 @@ public class ECS {
             ECSNode responsibleServer =
                     MetadataUtils.getResponsibleServerForKey(operation.getKey(), hashRing);
 
-            if (responsibleServer == null || !lockWrite(responsibleServer)) {
+            if (!lockedServers.contains(responsibleServer) && (responsibleServer == null || !lockWrite(responsibleServer))) {
                 logger.error("Failed to lock participating server");
                 return false;
             }
+
+            lockedServers.add(responsibleServer);
         }
 
         for (Message operation : operations) {
@@ -267,11 +270,8 @@ public class ECS {
 
         // once all operations are done unlock nodes
         logger.info("Unlocking writes for all participating servers");
-        for (Message operation : operations) {
-            ECSNode responsibleServer =
-                    MetadataUtils.getResponsibleServerForKey(operation.getKey(), hashRing);
-
-            if (responsibleServer == null || !unlockWrite(responsibleServer)) {
+        for (ECSNode lockedServer: lockedServers) {
+            if (!unlockWrite(lockedServer)) {
                 logger.error("Failed to unlock participating server");
                 return false;
             }
@@ -283,7 +283,7 @@ public class ECS {
         zkWatcher.setReplies(initialNodeName, allReplies);
 
         if (!awaitNodes(1, 10000)) {
-            logger.error("Node was not responsive to lock write");
+            logger.error("Node was not responsive to unlock write");
             return false;
         }
 

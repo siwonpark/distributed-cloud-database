@@ -134,7 +134,7 @@ public class ZKWatcher implements Watcher {
             else if (EventType.NodeDataChanged == eventType) {
                 KVAdminMessage data = getData(path);
                 if (data == null) {
-
+                    logger.error("null data");
                 }
                 if (path.startsWith(OPERATIONS_PATH)){
                     switch (data.getOperationType()) {
@@ -162,7 +162,7 @@ public class ZKWatcher implements Watcher {
                                 }
                             }).start();
                         default:
-                            logger.error("contained a status wrong to the ecs " + path);
+                            logger.info("Triggered status: " + data.getOperationType());
                     }
                 }else{
                     logger.info("Received acknowledgement from znode " + path);
