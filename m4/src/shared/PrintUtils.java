@@ -186,12 +186,6 @@ public class PrintUtils {
             case SERVER_STOPPED:
                 printError("Client requests are currently not being processed by the server");
                 break;
-            case COMMIT_SUCCESS:
-                // TODO: handle successful commit response
-                break;
-            case COMMIT_FAILURE:
-                // TODO: handle commit failure response
-                break;
             default:
                 break;
         }
