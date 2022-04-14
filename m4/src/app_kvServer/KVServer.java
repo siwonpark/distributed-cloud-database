@@ -307,7 +307,7 @@ public class KVServer extends Thread implements IKVServer {
 			this.zkWatcher.setData();
 			return zkWatcher.transactionReplys;
 		} catch(Exception e){
-			logger.error(e);
+			logger.error("failed to handle operations", e);
 			return new Message(new ArrayList<Message>(), StatusType.COMMIT_FAILURE);
 		}
 	}
