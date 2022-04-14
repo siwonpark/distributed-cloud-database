@@ -133,35 +133,7 @@ public class ZKWatcher implements Watcher {
             // Update node
             else if (EventType.NodeDataChanged == eventType) {
                 KVAdminMessage data = getData(path);
-                if(data == null){
-                    if(path.startsWith(OPERATIONS_PATH)){
-                        final ArrayList<Message> operations = data.getOperations();
-                        final String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
-                        // TODO handle operations
-
-                        /**
-                         * how to send replys back to server?
-                         * 
-                         * call setReplys(nodeName, replys) to send replys to server
-                         * 
-                         * replys is a Message new with an ArrayList of Message and a StatusType,
-                         * if failed the StatusType should be StatusType.COMMIT_FAILURE 
-                         *      and ArrayList could be empty
-                         * if success the StatusType should be StatusType.COMMIT_SUCCESS 
-                         *      each Message in a ArrayList should be new by "public Message(String key, String value, StatusType status)" and corresponds to the element in the opertaions arraylist
-                        */
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ecs.handleOperations(nodeName, operations);
-                                System.out.print(PrintUtils.ECS_PROMPT);
-                            }
-                        }).start();
-                    }else{
-                        logger.info("Received acknowledgement from znode " + path);
-                        awaitSignal.countDown();
-                    }
-                } else {
+                if (path.startsWith(OPERATIONS_PATH)){
                     switch (data.getOperationType()) {
                         case GET_FAILED:
                         case GET_SUCCESS:
@@ -176,9 +148,22 @@ public class ZKWatcher implements Watcher {
                             this.operationType = data.getOperationType();
                             awaitSignal.countDown();
                             break;
+                        case SEND_OPERATIONS:
+                            final ArrayList<Message> operations = data.getOperations();
+                            final String nodeName = path.substring(OPERATIONS_PATH.length() + 1);
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ecs.handleOperations(nodeName, operations);
+                                    System.out.print(PrintUtils.ECS_PROMPT);
+                                }
+                            }).start();
                         default:
                             logger.error("contained a status wrong to the ecs " + path);
                     }
+                }else{
+                    logger.info("Received acknowledgement from znode " + path);
+                    awaitSignal.countDown();
                 }
             }
             // Delete node
